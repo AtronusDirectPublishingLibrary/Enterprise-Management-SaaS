@@ -1,4 +1,5 @@
-const BASE = "http://localhost:5000/api";
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE = API_BASE;
 
 async function request(method, path, body) {
   const opts = {
@@ -26,6 +27,7 @@ export const api = {
   get: (p) => request("GET", p),
   post: (p, b) => request("POST", p, b),
   put: (p, b) => request("PUT", p, b),
+  patch: (p, b) => request("PATCH", p, b),
   del: (p) => request("DELETE", p),
 };
 

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import LandingPage from "./pages/LandingPage";
@@ -13,32 +14,28 @@ import Login from "./pages/Login";
 import PublicForm from "./pages/PublicForm";
 import MainLayout from "./layouts/MainLayout";
 import DatabasePage from "./pages/DatabasePage";
-import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ArchivePage from "./pages/ArchivePage";
 import HeroSettingsAdmin from "./pages/HeroSettingsAdmin";
-import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+
 import LanguageSettings from "./pages/LanguageSettings";
 import ManageNews from "./pages/ManageNews";
 import ManageDocuments from "./pages/ManageDocuments";
 import Goals from "./pages/Goals";
 import Portfolios from "./pages/Portfolios";
 import Users from "./pages/Users";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
+const PlansPage = lazy(() => import("./pages/PlansPage"));
+const PlanAlertSettings = lazy(() => import("./pages/PlanAlertSettings"));
+const SharedPlanPage = lazy(() => import("./pages/SharedPlanPage"));
+const PlanPrintPage = lazy(() => import("./pages/PlanPrintPage"));
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-success" role="status" /></div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
-}
-
-function Placeholder({ title }) {
-  return (
-    <div className="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-      <h2 style={{ color: "var(--brand-primary)", fontWeight: 700 }}>{title}</h2>
-      <p>This module is currently under development.</p>
-    </div>
-  );
 }
 
 export default function App() {
@@ -49,6 +46,13 @@ export default function App() {
   }
 
   return (
+    <Suspense
+      fallback={
+        <div className="d-flex vh-100 justify-content-center align-items-center">
+          <div className="spinner-border text-success" role="status" />
+        </div>
+      }
+    >
     <Routes>
       {/* Public Corporate Routes */}
       <Route element={<PublicLayout />}>
@@ -62,6 +66,12 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
       </Route>
 
+      {/* Restricted, read-only plan shared with a link */}
+      <Route path="/share/:token" element={<SharedPlanPage />} />
+
+      {/* Printable board pack */}
+      <Route path="/plans/:planId/print" element={<RequireAuth><PlanPrintPage /></RequireAuth>} />
+
       {/* Auth & Intake */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/request" element={<PublicForm />} />
@@ -72,16 +82,18 @@ export default function App() {
         {/* Main Dashboard and Database Wrapper */}
         <Route element={<DatabasePage />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/database/roadmap" element={<Placeholder title="Roadmap" />} />
-          <Route path="/database/strategic-plan" element={<Placeholder title="Strategic Plan" />} />
+          <Route path="/database/roadmap" element={<PlansPage type="ROADMAP" />} />
+          <Route path="/database/strategic-plan" element={<PlansPage type="STRATEGIC" />} />
           <Route path="/database/pms/*" element={<Projects />} />
-          <Route path="/database/aop" element={<Placeholder title="Annual Operational Plan" />} />
-          <Route path="/database/archive" element={<ArchivePage />} />`n          <Route path="/database/hero-settings" element={<HeroSettingsAdmin />} />
+          <Route path="/database/aop" element={<PlansPage type="AOP" />} />
+          <Route path="/database/archive" element={<ArchivePage />} />
+          <Route path="/database/hero-settings" element={<HeroSettingsAdmin />} />
         </Route>
 
         <Route path="/users" element={<Users />} />
         <Route path="/executive" element={<ExecutiveDashboard />} />
         <Route path="/language-settings" element={<LanguageSettings />} />
+        <Route path="/plan-alerts" element={<PlanAlertSettings />} />
         <Route path="/manage-news" element={<ManageNews />} />
         <Route path="/manage-documents" element={<ManageDocuments />} />
         <Route path="/goals" element={<Goals />} />
@@ -89,5 +101,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 }

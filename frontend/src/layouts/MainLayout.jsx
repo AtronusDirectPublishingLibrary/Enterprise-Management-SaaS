@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, Archive, Settings, ChevronLeft, ShieldAlert, TrendingUp, Briefcase, Globe, Newspaper, FileText } from "lucide-react";
+import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, Archive, Settings, ChevronLeft, ShieldAlert, TrendingUp, Briefcase, Globe, Newspaper, FileText, BellRing } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import NotificationBell from "../components/NotificationBell";
 
@@ -63,7 +63,7 @@ export default function MainLayout() {
           
           <div style={{ width: "260px", flexShrink: 0 }}>
             <h5 className="mb-0 fw-bold" style={{ color: "var(--brand-secondary)", letterSpacing: "1px" }}>
-              Ethiobiopharma
+              Ethio-Biopharma
             </h5>
           </div>
 
@@ -182,6 +182,7 @@ export default function MainLayout() {
                 {renderTab({ path: "/database/hero-settings", label: "Settings", icon: <Settings size={18} /> })}
                 {renderTab({ path: "/users", label: "Users", icon: <UsersIcon size={18} /> })}
                 {renderTab({ path: "/language-settings", label: "Language Settings", icon: <Globe size={18} /> })}
+                {renderTab({ path: "/plan-alerts", label: "Plan Alerts", icon: <BellRing size={18} /> })}
                 {renderTab({ path: "/manage-news", label: "Manage News", icon: <Newspaper size={18} /> })}
                 {renderTab({ path: "/manage-documents", label: "Manage Documents", icon: <FileText size={18} /> })}
                 

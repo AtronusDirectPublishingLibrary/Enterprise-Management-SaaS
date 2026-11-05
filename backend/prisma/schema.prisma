@@ -191,13 +191,21 @@ model HeroImage {
   @@map("HeroImage")
 }
 
+// A hero slide: copy + the image it transitions with, plus optional CTA.
 model HeroText {
   id        String   @id @default(cuid())
   title     String
   subtitle  String?
+  tagline   String?
+  ctaLabel  String?  @map("cta_label")
+  ctaUrl    String?  @map("cta_url")
+  imageUrl  String?  @map("image_url")
+  sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([isActive, sortOrder])
   @@map("HeroText")
 }
 
@@ -377,4 +385,243 @@ model News {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("news")
+}
+
+// ─── Corporate planning: Strategic Plan / Roadmap / AOP by period ──────────────
+
+model Plan {
+  id          String   @id @default(cuid())
+  type        String // "STRATEGIC" | "ROADMAP" | "AOP"
+  title       String
+  periodLabel String   @map("period_label") // "2026-2030", "2026/27 EFY"
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  status      String   @default("Draft") // Draft | Active | Closed
+  summary     String?
+  vision      String?
+  mission     String?
+  owner       String?
+  isPublished Boolean  @default(false) @map("is_published")
+  reviewedBy   String?   @map("reviewed_by")
+  reviewedAt   DateTime? @map("reviewed_at")
+  approvedBy   String?   @map("approved_by")
+  approvedAt   DateTime? @map("approved_at")
+  publishedAt  DateTime? @map("published_at")
+  revision     Int       @default(1)
+  parentPlanId String? @map("parent_plan_id")
+  createdBy   String   @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  parent   Plan?       @relation("PlanHierarchy", fields: [parentPlanId], references: [id], onDelete: SetNull)
+  children  Plan[]      @relation("PlanHierarchy")
+  items     PlanItem[]
+  alerts    PlanAlert[]
+  reports   PlanReport[]
+  shares    PlanShare[]
+  revisions PlanRevision[]
+
+  @@unique([type, periodLabel])
+  @@index([type, status])
+  @@index([parentPlanId])
+  @@map("plan")
+}
+
+// Single adjacency-list tree so a plan can hold pillars, goals, objectives,
+// strategies, activities, KPIs and milestones at any depth without migrations.
+model PlanItem {
+  id          String   @id @default(cuid())
+  planId      String   @map("plan_id")
+  parentId    String?  @map("parent_id")
+  linkedItemId String? @map("linked_item_id")
+  kind        String // PILLAR | GOAL | OBJECTIVE | STRATEGY | ACTIVITY | KPI | MILESTONE
+  code        String? // "SO1", "Pillar 2"
+  title       String
+  description String?
+  owner       String?
+  sortOrder   Int      @default(0) @map("sort_order")
+
+  // KPI definition
+  unit         String?
+  baseline     Float?
+  targetValue  Float?  @map("target_value")
+  currentValue Float?  @map("current_value")
+  direction    String? // increase | decrease
+  frequency    String? // Annual | Quarterly | Monthly
+  dataSource   String? @map("data_source")
+  isFeatured   Boolean @default(false) @map("is_featured")
+
+  // Activity / milestone schedule
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
+  budget    Float?
+  status    String    @default("Planned") // Planned | In Progress | Completed | At Risk
+  progress  Int       @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  plan         Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  parent       PlanItem?      @relation("PlanItemTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     PlanItem[]     @relation("PlanItemTree")
+  linkedItem   PlanItem?      @relation("ItemAlignment", fields: [linkedItemId], references: [id], onDelete: SetNull)
+  alignedItems PlanItem[]     @relation("ItemAlignment")
+  targets      PlanKpiTarget[]
+  alerts       PlanAlert[]
+
+  @@index([planId, parentId, sortOrder])
+  @@index([linkedItemId])
+  @@map("plan_item")
+}
+
+// Year-by-year (or quarter-by-quarter) target/actual readings for a KPI.
+model PlanKpiTarget {
+  id          String  @id @default(cuid())
+  itemId      String  @map("item_id")
+  periodLabel String  @map("period_label") // "2026", "Q4 2028"
+  target      Float?
+  targetLabel String? @map("target_label") // qualitative target, e.g. "ISO 13485 certified"
+  actual      Float?
+  note        String?
+
+  item PlanItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, periodLabel])
+  @@map("plan_kpi_target")
+}
+
+// Reporting obligation for a plan period (monthly, quarterly, annual...).
+model PlanReport {
+  id          String    @id @default(cuid())
+  planId      String    @map("plan_id")
+  title       String
+  type        String // MONTHLY | QUARTERLY | SEMI_ANNUAL | ANNUAL | AD_HOC
+  periodLabel String    @map("period_label")
+  dueDate     DateTime  @map("due_date")
+  owner       String?
+  status      String    @default("Pending") // Pending | Submitted | Approved | Waived
+  submittedAt DateTime? @map("submitted_at")
+  submittedBy String?   @map("submitted_by")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  plan   Plan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  alerts PlanAlert[]
+
+  @@index([planId, dueDate])
+  @@index([status, dueDate])
+  @@map("plan_report")
+}
+
+// Target-performance or reporting-deadline alert raised by the watch run.
+model PlanAlert {
+  id             String    @id @default(cuid())
+  planId         String    @map("plan_id")
+  itemId         String?   @map("item_id")
+  reportId       String?   @map("report_id")
+  dedupeKey      String    @unique @map("dedupe_key")
+  periodLabel    String    @default("") @map("period_label")
+  severity       String // INFO | WARNING | CRITICAL
+  rule           String // TARGET_MISSED | BEHIND_PACE | DUE_SOON | OVERDUE | REPORT_DUE
+  title          String
+  message        String
+  expected       Float?
+  actual         Float?
+  progress       Float?
+  status         String    @default("Open") // Open | Acknowledged | Resolved
+  emailsSent     Int       @default(0) @map("emails_sent")
+  acknowledgedBy String?   @map("acknowledged_by")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  plan   Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  item   PlanItem?      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  report PlanReport?    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  mails  PlanAlertMail[]
+
+  @@index([planId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("plan_alert")
+}
+
+// Audit trail of every alert email attempt (SENT / SKIPPED / FAILED).
+model PlanAlertMail {
+  id        String   @id @default(cuid())
+  alertId   String   @map("alert_id")
+  to        String
+  subject   String
+  status    String // SENT | SKIPPED | FAILED
+  error     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  alert PlanAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("plan_alert_mail")
+}
+
+// Immutable snapshot captured at approval/publish (or manually).
+model PlanRevision {
+  id        String   @id @default(cuid())
+  planId    String   @map("plan_id")
+  revision  Int
+  status    String
+  note      String?
+  snapshot  Json
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId, createdAt])
+  @@map("plan_revision")
+}
+
+// A restricted, token-based read-only link to one plan, with a comment channel.
+model PlanShare {
+  id           String    @id @default(cuid())
+  planId       String    @map("plan_id")
+  token        String    @unique
+  label        String?
+  isActive     Boolean   @default(true) @map("is_active")
+  expiresAt    DateTime? @map("expires_at")
+  createdBy    String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastViewedAt DateTime? @map("last_viewed_at")
+  viewCount    Int       @default(0) @map("view_count")
+
+  plan     Plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+  comments PlanShareComment[]
+
+  @@index([planId])
+  @@map("plan_share")
+}
+
+model PlanShareComment {
+  id          String   @id @default(cuid())
+  shareId     String   @map("share_id")
+  planId      String   @map("plan_id")
+  authorName  String   @map("author_name")
+  authorEmail String?  @map("author_email")
+  body        String
+  context     String?
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  share PlanShare @relation(fields: [shareId], references: [id], onDelete: Cascade)
+
+  @@index([planId, isRead, createdAt])
+  @@map("plan_share_comment")
+}
+
+// Admin-editable runtime configuration (alert thresholds, recipients, etc.)
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_setting")
 }

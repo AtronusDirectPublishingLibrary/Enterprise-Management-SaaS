@@ -74,7 +74,7 @@ export default function ArchivePage() {
   return (
     <div className="pb-4">
       
-      {/* KPI STAT CARDS - Harmonized with Ethiobiopharma Brand */}
+      {/* KPI STAT CARDS - Harmonized with Ethio-Biopharma Brand */}
       <div className="row g-3 mb-4">
         <StatCard label="Total Documents" value={stats.total} bg="linear-gradient(135deg, var(--brand-primary) 0%, #1a1a5e 100%)" />
         <StatCard label="Active" value={stats.active} bg="linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)" />

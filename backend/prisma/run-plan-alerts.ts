@@ -1,0 +1,17 @@
+import "dotenv/config";
+import { runPlanAlerts } from "../src/lib/planAlerts";
+import { prisma } from "../src/lib/prisma";
+
+async function main() {
+  const summary = await runPlanAlerts();
+  console.log("Plan alert run:", JSON.stringify(summary, null, 2));
+}
+
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

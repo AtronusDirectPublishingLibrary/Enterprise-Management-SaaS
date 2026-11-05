@@ -26,3 +26,6 @@ Thumbs.db
 # Local backups and agent tooling
 *_bak_*/
 .freebuff/
+
+# Screen recordings and their local tooling
+recordings/

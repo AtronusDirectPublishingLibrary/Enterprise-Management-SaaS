@@ -7,7 +7,7 @@ async function main() {
   await prisma.heroText.deleteMany();
 
   const texts = [
-    { title: "Unlocking the Economic Potential of Ethiopia", subtitle: "Ethiobiopharma is driving national health security by managing public assets, enabling strategic bio-investments, and fostering transformative partnerships." },
+    { title: "Unlocking the Economic Potential of Ethiopia", subtitle: "Ethio-Biopharma is driving national health security by managing public assets, enabling strategic bio-investments, and fostering transformative partnerships." },
     { title: "Innovating for a Healthier Tomorrow", subtitle: "Our state-of-the-art research facilities and strategic partnerships are paving the way for groundbreaking biomedical discoveries." },
     { title: "Sovereign Wealth for Sovereign Health", subtitle: "Managing Africa's largest health fund to ensure sustainable, equitable, and world-class healthcare for all Ethiopians." }
   ];

@@ -31,6 +31,8 @@ import templateRoutes from "./routes/templates";
 import formRoutes from "./routes/forms";
 import goalRoutes from "./routes/goals";
 import timeRoutes from "./routes/timeTracking";
+import planRoutes from "./routes/plans";
+import { runPlanAlerts } from "./lib/planAlerts";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -38,7 +40,16 @@ const PORT = Number(process.env.PORT) || 5000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const ALLOWED_ORIGINS = CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) =>
+      !origin || ALLOWED_ORIGINS.includes(origin)
+        ? callback(null, true)
+        : callback(new Error(`Origin ${origin} is not allowed by CORS`)),
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(rateLimit({ windowMs: 60_000, max: 200 }));
@@ -73,12 +84,31 @@ app.use("/api/templates", templateRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/time", timeRoutes);
+app.use("/api/plans", planRoutes);
 
 app.use("/uploads", express.static("uploads"));
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Ethiobiopharma API listening on http://localhost:${PORT}`);
+  console.log(`Ethio-Biopharma API listening on http://localhost:${PORT}`);
   console.log(`  CORS origin: ${CORS_ORIGIN}`);
 });
+
+// Background KPI / reporting-deadline watch. Disable with PLAN_ALERTS_AUTORUN=false.
+if (process.env.PLAN_ALERTS_AUTORUN !== "false") {
+  const intervalHours = Math.max(1, Number(process.env.PLAN_ALERT_INTERVAL_HOURS) || 6);
+  const tick = () => {
+    runPlanAlerts()
+      .then((summary) => {
+        if (summary.created || summary.emailsSent || summary.emailsFailed) {
+          console.log(
+            `[plan-alerts] plans=${summary.evaluated.plans} new=${summary.created} resolved=${summary.resolved} mail=${summary.emailsSent}/${summary.emailsFailed}`
+          );
+        }
+      })
+      .catch((error) => console.error("[plan-alerts] run failed", error));
+  };
+  setTimeout(tick, 15_000);
+  setInterval(tick, intervalHours * 3_600_000).unref();
+}

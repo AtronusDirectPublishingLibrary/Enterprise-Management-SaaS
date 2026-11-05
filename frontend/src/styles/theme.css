@@ -597,7 +597,7 @@ body {
 /* Alternate color for odd items (using nth-child since we map over them) */
 .hero-text-container > div:nth-child(even) .hero-title,
 .hero-text-container > div:nth-child(even) .hero-subtitle {
-  color: var(--brand-secondary); /* Ethiobiopharma Gold */
+  color: var(--brand-secondary); /* Ethio-Biopharma Gold */
 }
 
 /* --- FIX HERO TEXT LAYOUT --- */
