@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime uploads (created by backend/src/middleware/upload.ts)
+backend/uploads/
+
+# Logs and caches
+*.log
+npm-debug.log*
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local backups and agent tooling
+*_bak_*/
+.freebuff/
