@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+﻿import { useEffect, useState, useCallback, useRef } from "react";
 import { api } from "../lib/api";
 import { Plus, Edit2, Trash2, ExternalLink } from "lucide-react";
 import { useAuth } from "../lib/auth";
@@ -77,7 +77,7 @@ export default function ArchivePage() {
       {/* KPI STAT CARDS - Harmonized with Ethio-Biopharma Brand */}
       <div className="row g-3 mb-4">
         <StatCard label="Total Documents" value={stats.total} bg="linear-gradient(135deg, var(--brand-primary) 0%, #1a1a5e 100%)" />
-        <StatCard label="Active" value={stats.active} bg="linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)" />
+        <StatCard label="Active" value={stats.active} bg="linear-gradient(135deg, #0B2545 0%, #081a30 100%)" />
         <StatCard label="Expired" value={stats.expired} bg="linear-gradient(135deg, var(--brand-accent) 0%, #8a3a3a 100%)" />
         <StatCard label="Under Review" value={stats.review} bg="linear-gradient(135deg, var(--brand-secondary) 0%, #b38f1c 100%)" color="var(--brand-dark)" />
         <StatCard label="Draft" value={stats.draft} bg="linear-gradient(135deg, #3498db 0%, #2980b9 100%)" />
@@ -124,7 +124,7 @@ export default function ArchivePage() {
             {filtered.map(d => (
               <tr key={d.id}>
                 <td><strong>{d.title}</strong></td>
-                <td>{d.docNumber || "â€”"}</td>
+                <td>{d.docNumber || "Ã¢â‚¬â€"}</td>
                 <td>{d.thematic === "Other" ? d.thematicOther : d.thematic}</td>
                 <td>{d.type === "Other" ? d.typeOther : d.type}</td>
                 <td><span className={"badge-status " + slug(d.status)}>{d.status}</span></td>
@@ -133,7 +133,7 @@ export default function ArchivePage() {
                     <a href={`http://localhost:5000${d.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success py-0 px-2">
                       <ExternalLink size={14} />
                     </a>
-                  ) : "â€”"}
+                  ) : "Ã¢â‚¬â€"}
                 </td>
                 <td>
                   <button className="btn btn-sm btn-link text-secondary p-0 me-2" onClick={() => { setEditDoc(d); setShowModal(true); }}>

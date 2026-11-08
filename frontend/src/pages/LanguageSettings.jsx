@@ -94,7 +94,7 @@ export default function LanguageSettings() {
             <input className="form-control form-control-sm" placeholder="English text" value={newEn} onChange={e => setNewEn(e.target.value)} required />
           </div>
           <div className="col-md-4">
-            <label className="form-label small fw-semibold">Amharic (Ã¡Å Â Ã¡Ë†â€º)</label>
+            <label className="form-label small fw-semibold">Amharic (አማርኛ)</label>
             <input className="form-control form-control-sm" placeholder="Amharic text" value={newAm} onChange={e => setNewAm(e.target.value)} required />
           </div>
           <div className="col-md-2">
@@ -104,20 +104,20 @@ export default function LanguageSettings() {
       </div>
 
       {/* Translation Table */}
-      <div className="app-table bg-white shadow-sm rounded p-3">
-        <table className="table mb-0 align-middle">
+      <div className="bg-white shadow-sm rounded p-3" style={{ overflowX: "auto", width: "100%" }}>
+        <table className="table mb-0 align-middle" style={{ minWidth: "800px" }}>
           <thead className="table-light">
             <tr>
-              <th style={{ width: "20%" }}>Key (Identifier)</th>
+              <th style={{ width: "200px" }}>Key (Identifier)</th>
               <th style={{ width: "35%" }}>English (EN)</th>
-              <th style={{ width: "35%" }}>Amharic (Ã¡Å Â Ã¡Ë†â€º)</th>
-              <th style={{ width: "10%" }} className="text-end">Actions</th>
+              <th style={{ width: "35%" }}>Amharic (አማርኛ)</th>
+              <th style={{ width: "100px" }} className="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
             {translations.map((t) => (
               <tr key={t.id}>
-                <td><code>{t.key}</code></td>
+                <td style={{ wordBreak: "break-all" }}><code>{t.key}</code></td>
                 <td>
                   <input 
                     className="form-control form-control-sm" 

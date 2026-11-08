@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Plus, Trash2, Link2 } from "lucide-react";
 import { api } from "../lib/api";
 
@@ -8,7 +8,7 @@ const STATUSES = ["Planned", "In Progress", "Completed", "At Risk"];
 const KIND_COLORS = {
   PILLAR: "#7c3aed",
   GOAL: "var(--brand-primary)",
-  OBJECTIVE: "#0f766e",
+  OBJECTIVE: "#0B2545",
   STRATEGY: "#0369a1",
   ACTIVITY: "#b45309",
   KPI: "#be123c",
@@ -76,6 +76,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
       linkedItemId: form.linkedItemId || null,
       status: form.status,
       progress: Number(form.progress) || 0,
+      budget: form.budget === "" || form.budget == null ? null : Number(form.budget),
       startDate: form.startDate || null,
       endDate: form.endDate || null,
       ...(isKpi(form.kind)
@@ -165,7 +166,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
                       <option value="">Not aligned</option>
                       {linkable.map((linked) => (
                         <option key={linked.id} value={linked.id}>
-                          {linked.code ? `${linked.code} · ` : ""}{linked.title} ({linked.kind})
+                          {linked.code ? `${linked.code} Â· ` : ""}{linked.title} ({linked.kind})
                         </option>
                       ))}
                     </select>
@@ -274,7 +275,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>Cancel</button>
-              <button type="submit" className="btn-brand btn-sm" disabled={saving}>{saving ? "Saving…" : "Save item"}</button>
+              <button type="submit" className="btn-brand btn-sm" disabled={saving}>{saving ? "Savingâ€¦" : "Save item"}</button>
             </div>
           </form>
         </div>

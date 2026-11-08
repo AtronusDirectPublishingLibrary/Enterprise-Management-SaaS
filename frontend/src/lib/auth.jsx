@@ -18,20 +18,21 @@ export function AuthProvider({ children }) {
 
   async function login(username, password) {
     const res = await api.post("/auth/login", { username, password });
-    setUser({
+    const userData = {
       username: res.username,
       role: res.role,
       email: res.email,
       forceChange: res.forceChange,
       permissions: res.permissions,
-    });
-    return res;
+    };
+    setUser(userData);
+    return userData;
   }
 
   async function logout() {
     try { await api.post("/auth/logout", {}); } catch { /* ignore */ }
     setUser(null);
-    navigate("/"); // <-- Redirects to the landing page upon logout
+    navigate("/");
   }
 
   return (

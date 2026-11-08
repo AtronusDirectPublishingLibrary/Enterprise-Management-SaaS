@@ -1,0 +1,1951 @@
+/* ==========================================================================
+   EBPE design foundation
+   Tokens, type scale and the public-site shell. Imported after theme.css so
+   the public pages share one coherent system without touching app screens.
+   ========================================================================== */
+
+:root {
+  /* Core palette */
+  --ink: #0b1f33;
+  --ink-soft: #33455a;
+  --ink-muted: #56626f;
+  --ivory: #f7f4ec;
+  --ivory-2: #efe9dc;
+  --navy: #0b2545;
+  --navy-deep: #071a31;
+  --shell-bg: #071a31;
+  --gold: #c9a227;
+  --gold-ink: #7a5c10; /* AA on ivory (5.9:1) */
+  --line: rgba(11, 37, 69, 0.14);
+  --line-strong: rgba(11, 37, 69, 0.28);
+  --white-70: rgba(255, 255, 255, 0.72);
+  --white-85: rgba(255, 255, 255, 0.86);
+
+  /* Type */
+  --font-display: "Fraunces Variable", "Noto Sans Ethiopic Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "Inter Variable", "Noto Sans Ethiopic Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --step--1: clamp(0.8rem, 0.78rem + 0.08vw, 0.86rem);
+  --step-0: clamp(1rem, 0.97rem + 0.14vw, 1.06rem);
+  --step-1: clamp(1.15rem, 1.08rem + 0.35vw, 1.35rem);
+  --step-2: clamp(1.4rem, 1.26rem + 0.7vw, 1.8rem);
+  --step-3: clamp(1.85rem, 1.55rem + 1.35vw, 2.6rem);
+  --step-4: clamp(2.35rem, 1.85rem + 2.3vw, 3.7rem);
+  --step-5: clamp(2.8rem, 2.05rem + 3.9vw, 5.1rem);
+
+  /* Shape, depth, motion */
+  --radius-s: 4px;
+  --radius-m: 10px;
+  --radius-l: 18px;
+  --shadow-1: 0 1px 2px rgba(11, 31, 51, 0.05), 0 12px 32px rgba(11, 31, 51, 0.07);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --speed: 220ms;
+  --header-h: 76px;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.public-site {
+  background: var(--ivory);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.public-site main {
+  flex: 1 0 auto;
+  padding-top: calc(var(--header-h) + var(--banner-h, 0px));
+}
+
+.public-site.is-home main {
+  padding-top: 0;
+}
+
+.public-site ::selection {
+  background: rgba(201, 162, 39, 0.28);
+}
+
+.public-site a:focus-visible,
+.public-site button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 200;
+  background: var(--ivory);
+  color: var(--ink);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-s);
+  font-weight: 600;
+  transition: top var(--speed) var(--ease);
+}
+
+.skip-link:focus {
+  top: calc(var(--header-h) + var(--banner-h, 0px) + 0.75rem);
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  color: #fff;
+  border-bottom: 1px solid transparent;
+  transition: background var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+
+.site-header.is-solid,
+.site-header.is-over-hero.is-scrolled {
+  background: var(--shell-bg);
+  backdrop-filter: blur(12px);
+  border-bottom-color: rgba(201, 162, 39, 0.35);
+}
+
+.site-header-inner {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand:hover {
+  color: #fff;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border-radius: 2px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.brand-text strong {
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.brand-text small {
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--white-70);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  margin-left: auto;
+}
+
+.site-nav a {
+  color: var(--white-85);
+  text-decoration: none;
+  font-size: 0.83rem;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid transparent;
+  transition: color var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+
+.site-nav a:hover,
+.site-nav a.active {
+  color: #fff;
+  border-bottom-color: var(--gold);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 0.15rem;
+}
+
+.lang-switch button {
+  background: transparent;
+  border: 0;
+  color: var(--white-70);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+
+.btn-login {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  transition: background var(--speed) var(--ease), border-color var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.btn-login:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy-deep);
+}
+
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-s);
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-login-mobile {
+  display: none;
+}
+
+/* ---------- Layout primitives ---------- */
+
+.container-wide {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+}
+
+.section {
+  padding: clamp(3.5rem, 8vw, 7rem) 0;
+}
+
+.section[id] {
+  scroll-margin-top: calc(var(--header-h) + var(--banner-h, 0px) + 16px);
+}
+
+.section--tight {
+  padding: clamp(2.5rem, 5vw, 4rem) 0;
+}
+
+.section--navy {
+  background: var(--navy-deep);
+  color: #fff;
+}
+
+.section--ivory-2 {
+  background: var(--ivory-2);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--gold-ink);
+  margin: 0 0 1rem;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: currentColor;
+}
+
+.section--navy .eyebrow {
+  color: var(--gold);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 450;
+  font-size: var(--step-3);
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  margin: 0;
+  max-width: 24ch;
+  font-variation-settings: "opsz" 72;
+}
+
+.display em {
+  font-style: italic;
+  color: var(--gold-ink);
+}
+
+.section--navy .display em {
+  color: var(--gold);
+}
+
+.lede {
+  font-size: var(--step-1);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 1.1rem 0 0;
+}
+
+.section--navy .lede {
+  color: var(--white-70);
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.section-head__aside {
+  max-width: 34ch;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn-solid,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1.4rem;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: transform var(--speed) var(--ease), background var(--speed) var(--ease), color var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+
+.btn-solid {
+  background: var(--gold);
+  color: var(--navy-deep);
+  border: 1px solid var(--gold);
+}
+
+.btn-solid:hover {
+  background: #d9b23a;
+  border-color: #d9b23a;
+  color: var(--navy-deep);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+.btn-outline:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-outline--ink {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.btn-outline--ink:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: rgba(11, 37, 69, 0.04);
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gold-ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.link-arrow:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  min-height: min(94vh, 900px);
+  display: flex;
+  align-items: flex-end;
+  color: #fff;
+  background: var(--navy-deep);
+  overflow: hidden;
+}
+
+.hero-media,
+.hero-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-media img {
+  object-fit: cover;
+  object-position: center 58%;
+  filter: saturate(0.92);
+}
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 26, 49, 0.78) 0%, rgba(7, 26, 49, 0.32) 42%, rgba(7, 26, 49, 0.9) 100%),
+    linear-gradient(90deg, rgba(7, 26, 49, 0.55) 0%, rgba(7, 26, 49, 0) 65%);
+}
+
+.public-site.has-banner .hero-inner {
+  padding-top: calc(var(--header-h) + var(--banner-h) + clamp(2.25rem, 7vh, 6rem));
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: calc(var(--header-h) + clamp(3rem, 9vh, 7rem)) clamp(1rem, 4vw, 2rem) clamp(3rem, 7vh, 5.5rem);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 1.4rem;
+}
+
+.hero-kicker::before {
+  content: "";
+  width: 34px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 430;
+  font-size: var(--step-5);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  max-width: 17ch;
+  margin: 0;
+  font-variation-settings: "opsz" 144;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.hero .lede {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 54ch;
+  font-size: var(--step-1);
+  line-height: 1.55;
+  margin-top: 1.6rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2.2rem;
+}
+
+.hero-note {
+  margin: 1.6rem 0 0;
+  font-size: var(--step--1);
+  color: var(--white-70);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Rotating hero ---------- */
+
+.hero-slide {
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1100ms var(--ease), transform 9000ms linear;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* The copy re-mounts with a new key on each slide, so these animations run
+   again: a soft fade for the block and a staggered rise for each line. */
+.hero--slideshow .hero-copy {
+  animation: hero-copy-fade 700ms var(--ease) both;
+}
+
+.hero--slideshow .hero-copy > * {
+  animation: hero-line-in 850ms var(--ease) both;
+}
+
+.hero--slideshow .hero-copy > *:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.hero--slideshow .hero-copy > *:nth-child(3) {
+  animation-delay: 170ms;
+}
+
+.hero--slideshow .hero-copy > *:nth-child(4) {
+  animation-delay: 260ms;
+}
+
+.hero--slideshow .hero-copy > *:nth-child(5) {
+  animation-delay: 340ms;
+}
+
+@keyframes hero-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-copy-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-controls {
+  position: absolute;
+  right: clamp(1rem, 4vw, 2rem);
+  bottom: clamp(1.1rem, 3vh, 2rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.hero-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hero-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition: width var(--speed) var(--ease), background var(--speed) var(--ease);
+}
+
+.hero-dot:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.hero-dot.is-active {
+  width: 30px;
+  background: var(--gold);
+}
+
+.hero-toggle {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(7, 26, 49, 0.4);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: color var(--speed) var(--ease), border-color var(--speed) var(--ease), background var(--speed) var(--ease);
+}
+
+.hero-toggle:hover {
+  color: #fff;
+  border-color: var(--gold);
+  background: rgba(7, 26, 49, 0.65);
+}
+
+/* ---------- Facts strip ---------- */
+
+.facts {
+  background: var(--ivory);
+  border-bottom: 1px solid var(--line);
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.fact {
+  padding: 1.9rem 1.6rem 2.1rem;
+  border-left: 1px solid var(--line);
+}
+
+.fact:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.fact-value {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin: 0 0 0.6rem;
+  font-variation-settings: "opsz" 72;
+}
+
+.fact-label {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  max-width: 24ch;
+}
+
+.facts-note {
+  padding: 0 0 1rem;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Capabilities ---------- */
+
+.capabilities {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(1.2rem, 2.4vw, 2.2rem);
+}
+
+.capability {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 1.4rem;
+}
+
+.capability-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--gold-ink);
+  margin-bottom: 1.6rem;
+}
+
+.capability-index {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-muted);
+}
+
+.capability h3 {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.7rem;
+  color: var(--navy);
+}
+
+.capability p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+
+.capability-meta {
+  margin: 1.1rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--gold-ink);
+  font-weight: 600;
+}
+
+/* ---------- Roadmap ---------- */
+
+.roadmap {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+}
+
+.phase {
+  padding: 1.7rem 1.4rem 0 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.phase:last-child {
+  border-right: 0;
+}
+
+.phase-years {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--gold);
+  font-weight: 600;
+  margin: 0 0 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.phase h3 {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 450;
+  line-height: 1.25;
+  margin: 0 0 0.7rem;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.phase p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--white-70);
+}
+
+/* ---------- Campus ---------- */
+
+.campus {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+.campus-media {
+  margin: 0;
+}
+
+.campus-media img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-s);
+}
+
+.campus-media figcaption {
+  margin-top: 0.8rem;
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+}
+
+.fact-list {
+  margin: 2rem 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.fact-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+
+.fact-row dt {
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin: 0;
+}
+
+.fact-row dd {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Plan cards ---------- */
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1rem, 2.2vw, 1.8rem);
+}
+
+.plan-card {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 1.6rem 1.5rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-radius: var(--radius-s);
+  transition: border-color var(--speed) var(--ease), transform var(--speed) var(--ease);
+}
+
+.plan-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.plan-card .plan-type {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  font-weight: 600;
+}
+
+.plan-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.25;
+  font-weight: 500;
+  margin: 0;
+  color: var(--navy);
+}
+
+.plan-card .plan-period {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.plan-card .plan-meta {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Partners ---------- */
+
+.partners {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.2rem, 3vw, 2.5rem);
+}
+
+.partner {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 1.3rem;
+}
+
+.partner h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0 0 0.4rem;
+  color: var(--navy);
+}
+
+.partner p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* ---------- CTA ---------- */
+
+.cta-band {
+  background: var(--ivory-2);
+  border-top: 1px solid var(--line);
+}
+
+.cta-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.cta-inner .display {
+  max-width: 20ch;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  background: var(--shell-bg);
+  background-image: none;
+  color: var(--white-70);
+  border-top: 3px solid var(--gold);
+  padding: clamp(1.7rem, 3vw, 2.4rem) 0 clamp(1.25rem, 2.2vw, 1.75rem);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 0.85fr 0.85fr 1.15fr;
+  gap: clamp(1.5rem, 3.2vw, 3rem);
+  align-items: start;
+}
+
+.footer-brand-col {
+  max-width: 40ch;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+  color: #fff;
+}
+
+.footer-brand .brand-mark {
+  width: 32px;
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.footer-note {
+  margin-top: 0.9rem !important;
+  font-size: 0.72rem !important;
+  line-height: 1.55 !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  max-width: 36ch;
+}
+
+.footer-contact address {
+  font-style: normal;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--white-70);
+}
+
+.footer-contact-link {
+  display: inline-flex;
+  margin-top: 0.9rem;
+  color: var(--gold) !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.45);
+  padding-bottom: 2px;
+}
+
+.footer-contact-link:hover {
+  color: #fff !important;
+  border-bottom-color: #fff;
+}
+
+.footer-brand strong {
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.site-footer p {
+  font-size: 0.84rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 38ch;
+}
+
+.footer-col h2 {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.footer-col a {
+  color: var(--white-70);
+  text-decoration: none;
+  font-size: 0.84rem;
+  transition: color var(--speed) var(--ease);
+}
+
+.footer-col a:hover {
+  color: #fff;
+}
+
+.footer-copyright {
+  margin-top: 1.15rem !important;
+  font-size: 0.72rem !important;
+  line-height: 1.55 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  letter-spacing: 0.02em;
+}
+
+.footer-social {
+  margin-top: 1.15rem;
+}
+
+.footer-social-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+
+.social-links {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.social-links a {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  color: var(--white-70);
+  transition: background var(--speed) var(--ease), color var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+
+.social-links a:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy-deep) !important;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 991px) {
+  .site-nav {
+    position: fixed;
+    top: calc(var(--header-h) + var(--banner-h, 0px));
+    left: 0;
+    right: 0;
+    background: var(--shell-bg);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0.5rem 1.25rem 1.25rem;
+    border-bottom: 1px solid rgba(201, 162, 39, 0.35);
+    transform: translateY(-8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--speed) var(--ease), transform var(--speed) var(--ease), visibility var(--speed);
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+  }
+
+  .site-nav.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .site-nav a {
+    width: 100%;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.95rem;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+
+  .btn-login {
+    display: none;
+  }
+
+  .nav-login-mobile {
+    display: block;
+    margin-top: 1rem;
+    width: auto;
+  }
+
+  .nav-login-mobile a {
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.6rem 1rem !important;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .facts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fact:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .fact {
+    border-top: 1px solid var(--line);
+    padding: 1.4rem 1.2rem;
+  }
+
+  .fact:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .capabilities {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .roadmap {
+    grid-template-columns: 1fr;
+  }
+
+  .phase {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 1.4rem 0;
+  }
+
+  .phase:last-child {
+    border-bottom: 0;
+  }
+
+  .campus {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .partners {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 575px) {
+  .brand-text strong {
+    font-size: 0.72rem;
+  }
+
+  .capabilities {
+    grid-template-columns: 1fr;
+  }
+
+  .facts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fact {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .fact:nth-child(2) {
+    border-top: 1px solid var(--line);
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    min-height: 88vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-site *,
+  .public-site *::before,
+  .public-site *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Legacy-theme containment
+   theme.css still carries !important rules on bare `header`, `nav` and
+   `footer` elements from earlier rebrands (forced navy, forced sticky, blue
+   backgrounds). These scoped !important rules keep the public shell on the new
+   design tokens without disturbing the internal application screens.
+   -------------------------------------------------------------------------- */
+
+/* `section:not(.hero-section)` in the legacy sheet paints every section cream
+   with !important, which left white roadmap copy on a light background. */
+#root .public-site .section.section--navy {
+  background: var(--navy-deep) !important;
+  background-color: var(--navy-deep) !important;
+  color: #fff;
+}
+
+.public-site .site-header {
+  position: fixed !important;
+  top: var(--banner-h, 0px) !important;
+  z-index: 100 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-top: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.public-site .site-header.is-solid,
+.public-site .site-header.is-over-hero.is-scrolled {
+  background: var(--shell-bg) !important;
+  background-color: var(--shell-bg) !important;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.35) !important;
+}
+
+.public-site .site-nav {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  width: auto !important;
+}
+
+@media (max-width: 991px) {
+  .public-site .site-nav {
+    position: fixed !important;
+    top: calc(var(--header-h) + var(--banner-h, 0px)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background: var(--navy-deep) !important;
+    background-color: var(--navy-deep) !important;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28) !important;
+  }
+}
+
+.public-site .site-footer {
+  position: static !important;
+  z-index: auto !important;
+  background: var(--shell-bg) !important;
+  background-color: var(--shell-bg) !important;
+  color: var(--white-70) !important;
+  box-shadow: none !important;
+  border-top: 3px solid var(--gold) !important;
+  border-bottom: 0 !important;
+}
+
+.public-site .site-footer p,
+.public-site .site-footer a,
+.public-site .site-footer span {
+  color: var(--white-70) !important;
+}
+
+.public-site .site-footer a:hover {
+  color: #ffffff !important;
+}
+
+.public-site .site-footer h2,
+.public-site .site-footer .footer-brand strong {
+  color: var(--gold) !important;
+}
+
+.public-site .site-footer .footer-brand strong {
+  color: #ffffff !important;
+}
+
+.public-site .nav-toggle,
+.public-site .btn-login {
+  box-shadow: none !important;
+}
+
+/* One legacy block targets `#root > div > header` (ID specificity), so the
+   public shell needs matching ID-level overrides. */
+#root .public-site .site-header {
+  position: fixed !important;
+  top: var(--banner-h, 0px) !important;
+  z-index: 100 !important;
+  width: 100% !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+#root .public-site .site-header.is-solid,
+#root .public-site .site-header.is-over-hero.is-scrolled {
+  background: var(--shell-bg) !important;
+  background-color: var(--shell-bg) !important;
+  border-bottom-color: rgba(201, 162, 39, 0.35) !important;
+}
+
+#root .public-site .site-nav {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  width: auto !important;
+}
+
+@media (max-width: 991px) {
+  #root .public-site .site-nav {
+    position: fixed !important;
+    top: calc(var(--header-h) + var(--banner-h, 0px)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background: var(--shell-bg) !important;
+    background-color: var(--shell-bg) !important;
+  }
+}
+
+#root .public-site .site-footer {
+  position: static !important;
+  z-index: auto !important;
+  display: block !important;
+  flex: none !important;
+  background: var(--shell-bg) !important;
+  background-color: var(--shell-bg) !important;
+  width: 100% !important;
+  padding: clamp(1.7rem, 3vw, 2.4rem) 0 clamp(1.25rem, 2.2vw, 1.75rem) !important;
+  background-image: none !important;
+}
+
+/* The legacy sheet stretches `footer > div` to the full viewport, which pushed the
+   footer text past the header's 1240px column. Give both the same measure so
+   the left/right edges line up when the footer is on screen. */
+#root .public-site .site-footer > .container-wide {
+  width: 100% !important;
+  max-width: 1240px !important;
+  margin: 0 auto !important;
+  padding-left: clamp(1rem, 4vw, 2rem) !important;
+  padding-right: clamp(1rem, 4vw, 2rem) !important;
+}
+
+/* `[class*="footer"]` in the legacy sheet forces display:flex on every footer
+   block, which stacked the grid. Restore the intended layout at ID specificity. */
+#root .public-site .footer-grid {
+  display: grid !important;
+  grid-template-columns: 1.6fr 0.85fr 0.85fr 1.15fr !important;
+  gap: clamp(1.5rem, 3.2vw, 3rem) !important;
+  margin-bottom: 0 !important;
+}
+
+#root .public-site .footer-brand-col,
+#root .public-site .footer-col,
+#root .public-site .footer-contact {
+  display: block !important;
+  flex: none !important;
+}
+
+#root .public-site .footer-brand {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+@media (max-width: 991px) {
+  #root .public-site .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 575px) {
+  #root .public-site .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.1rem 1.25rem !important;
+  }
+
+  #root .public-site .site-footer .footer-brand-col,
+  #root .public-site .site-footer .footer-contact {
+    grid-column: 1 / -1;
+  }
+
+  #root .public-site .site-footer .footer-brand-col p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  #root .public-site .site-footer .footer-col h2 {
+    margin-bottom: 0.6rem !important;
+  }
+
+  #root .public-site .site-footer .footer-copyright {
+    font-size: 0.7rem !important;
+    line-height: 1.45 !important;
+  }
+
+  #root .public-site .site-footer .footer-copyright {
+    margin-top: 0.8rem !important;
+  }
+
+  /* Keep the whole footer inside the screen below the fixed header. */
+  #root .public-site .site-footer {
+    padding-top: 0.85rem !important;
+    padding-bottom: 0.6rem !important;
+  }
+
+  #root .public-site .site-footer .footer-col li,
+  #root .public-site .site-footer .footer-col a {
+    line-height: 1.45 !important;
+  }
+
+  #root .public-site .site-footer .footer-col ul {
+    gap: 0.1rem !important;
+  }
+
+  #root .public-site .site-footer .footer-brand {
+    margin-bottom: 0.35rem !important;
+  }
+
+  #root .public-site .site-footer .footer-copyright {
+    margin-top: 0.5rem !important;
+  }
+
+  #root .public-site .site-footer .footer-grid {
+    row-gap: 0.8rem !important;
+  }
+
+  #root .public-site .site-footer .footer-contact address {
+    line-height: 1.5 !important;
+  }
+
+  #root .public-site .site-footer .footer-contact-link {
+    margin-top: 0.4rem !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Footer compaction
+   The legacy sheet targets `[class*="footer"]` with flex-grow, column layout
+   and 4rem of top padding, which inflated every footer block and made the
+   footer taller than the screen. These ID-level resets keep it compact so the
+   whole footer is visible when the header and footer edges meet.
+   -------------------------------------------------------------------------- */
+
+#root .public-site .site-footer .footer-note,
+#root .public-site .site-footer .footer-copyright,
+#root .public-site .site-footer .footer-social,
+#root .public-site .site-footer .footer-social-label {
+  display: block !important;
+  flex: none !important;
+  padding: 0 !important;
+}
+
+/* Every footer block inherits `background-color: #0b2545` and 4rem of top
+   padding from `[class*="footer"]` in the legacy sheet, which painted the
+   footer in two blues and pushed the columns down. */
+#root .public-site .site-footer .footer-grid,
+#root .public-site .site-footer .footer-brand-col,
+#root .public-site .site-footer .footer-col,
+#root .public-site .site-footer .footer-contact,
+#root .public-site .site-footer .footer-brand,
+#root .public-site .site-footer .footer-note,
+#root .public-site .site-footer .footer-copyright,
+#root .public-site .site-footer .footer-social {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+#root .public-site .site-footer .footer-grid,
+#root .public-site .site-footer .footer-brand-col,
+#root .public-site .site-footer .footer-col,
+#root .public-site .site-footer .footer-contact {
+  padding: 0 !important;
+}
+
+/* Social icons must stay in one horizontal row (the column `ul` rule above
+   was stacking them vertically). */
+#root .public-site .site-footer .footer-social .social-links {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+#root .public-site .site-footer .footer-social .social-links li {
+  display: block !important;
+  flex: none !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+#root .public-site .site-footer .footer-contact-link {
+  display: inline-flex !important;
+  flex: none !important;
+  padding: 0 0 2px !important;
+}
+
+#root .public-site .site-footer p,
+#root .public-site .site-footer a,
+#root .public-site .site-footer li,
+#root .public-site .site-footer address {
+  font-size: 0.84rem !important;
+  font-weight: 400 !important;
+  line-height: 1.7 !important;
+}
+
+#root .public-site .site-footer .footer-note,
+#root .public-site .site-footer .footer-copyright {
+  font-size: 0.72rem !important;
+  line-height: 1.55 !important;
+}
+
+#root .public-site .site-footer .footer-brand strong {
+  font-size: 0.8rem !important;
+  line-height: 1.2 !important;
+}
+
+#root .public-site .site-footer .footer-note {
+  margin: 0.9rem 0 0 !important;
+}
+
+#root .public-site .site-footer .footer-copyright {
+  margin: 1.15rem 0 0 !important;
+}
+
+#root .public-site .site-footer .footer-col h2 {
+  margin: 0 0 0.85rem !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+#root .public-site .site-footer .footer-col ul {
+  padding: 0 !important;
+  gap: 0.2rem !important;
+}
+
+#root .public-site .site-footer .footer-col li {
+  margin: 0 !important;
+}
+
+#root .public-site .site-footer .footer-contact address {
+  font-size: 0.84rem !important;
+  line-height: 1.6 !important;
+}
+
+/* The visitor band sits between main and the footer, outside the legacy
+   "every section is cream" rule, and must never stretch. */
+#root .public-site .visitor-band {
+  flex: 0 0 auto !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Welcome banner (gold, above the header)
+   -------------------------------------------------------------------------- */
+
+.welcome-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--banner-h, 44px);
+  z-index: 110;
+  background: var(--gold);
+  color: var(--navy-deep);
+  border-bottom: 1px solid rgba(11, 37, 69, 0.18);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+}
+
+.welcome-banner-inner {
+  height: 100%;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.welcome-banner-mark {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  padding-right: 0.9rem;
+  border-right: 1px solid rgba(11, 37, 69, 0.3);
+}
+
+.welcome-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.welcome-banner-link {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+
+.welcome-banner-link:hover {
+  color: var(--navy-deep);
+  border-bottom-color: transparent;
+}
+
+.welcome-banner-close {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  margin-left: 0.1rem;
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  color: var(--navy-deep);
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.welcome-banner-close:hover {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Media section
+   -------------------------------------------------------------------------- */
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.2rem, 3vw, 2.2rem);
+}
+
+.media-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  transition: border-color var(--speed) var(--ease), transform var(--speed) var(--ease);
+}
+
+.media-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.media-frame {
+  background: #061628;
+  aspect-ratio: 16 / 9;
+}
+
+.media-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #061628;
+}
+
+.media-body {
+  padding: 1.1rem 1.25rem 1.35rem;
+}
+
+.media-body h3 {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+  color: var(--navy);
+}
+
+.media-body p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Visitor counter band, above the footer
+   -------------------------------------------------------------------------- */
+
+.visitor-band {
+  background: #ffffff;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.visitor-band-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2.5rem;
+  flex-wrap: wrap;
+  padding-top: 1.15rem;
+  padding-bottom: 1.15rem;
+}
+
+.visitor-band-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.visitor-title {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--gold-ink);
+}
+
+.visitor-source {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+}
+
+.visitor-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(74px, auto));
+  gap: clamp(1rem, 3vw, 2.75rem);
+}
+
+.visitor-stat {
+  text-align: right;
+}
+
+.visitor-value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.7rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.visitor-label {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 991px) {
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visitor-band-inner {
+    align-items: flex-start;
+  }
+
+  .visitor-stats {
+    width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .visitor-stat {
+    text-align: left;
+  }
+}
+
+@media (max-width: 575px) {
+  .welcome-banner-mark {
+    display: none;
+  }
+
+  .welcome-banner-text {
+    font-size: 0.78rem;
+  }
+
+  .visitor-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 1.1rem;
+  }
+
+  /* Keep the hero note clear of the slide controls on narrow screens. */
+  .hero-note {
+    padding-right: 118px;
+  }
+}
+
+/* The "follow us" label sits beside the icon row on small screens so the whole
+   footer still fits under the fixed header at the end of the page. */
+@media (max-width: 575px) {
+  #root .public-site .site-footer .footer-social {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.35rem 0.7rem !important;
+    margin-top: 0.55rem !important;
+  }
+
+  #root .public-site .site-footer .footer-social-label {
+    display: block !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Full-height footer
+   The footer is the last block on the page, so giving it the height that is
+   left below the fixed header means that at maximum scroll its top border sits
+   directly under the header instead of leaving a strip of page content between
+   the two bars. The columns are centred in whatever space is left.
+   -------------------------------------------------------------------------- */
+
+#root .public-site .site-footer {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-height: calc(100vh - var(--header-h, 76px) - var(--banner-h, 0px)) !important;
+  min-height: calc(100dvh - var(--header-h, 76px) - var(--banner-h, 0px)) !important;
+}

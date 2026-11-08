@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, Archive, Settings, ChevronLeft, ShieldAlert, TrendingUp, Briefcase, Globe, Newspaper, FileText, BellRing } from "lucide-react";
+import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, CalendarRange, Archive, Settings, ChevronLeft, ShieldAlert, TrendingUp, Briefcase, Globe, Newspaper, FileText, BellRing, CheckSquare, Film, Megaphone, Menu, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import NotificationBell from "../components/NotificationBell";
 
@@ -13,6 +14,12 @@ export default function MainLayout() {
   const isPms = pmsRoutes.includes(location.pathname);
   const isArchive = location.pathname === "/database/archive";
   const isSettings = location.pathname === "/database/hero-settings";
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Close the drawer whenever the person moves to another page.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   // Left Pane Tabs
     const dbTabs = [
@@ -20,6 +27,7 @@ export default function MainLayout() {
     { path: "/database/aop", label: "Annual Plan", icon: <CalendarDays size={18} /> },
     { path: "/database/strategic-plan", label: "Strategic Plan", icon: <Target size={18} /> },
     { path: "/database/roadmap", label: "Roadmap", icon: <Map size={18} /> },
+    { path: "/planning-calendar", label: "Planning Calendar", icon: <CalendarRange size={18} /> },
     { path: "/database/archive", label: "Document Archive", icon: <Archive size={18} /> },
   ];
 
@@ -60,15 +68,24 @@ export default function MainLayout() {
               style={{ background: "var(--brand-primary)", color: "white", borderBottom: "3px solid var(--brand-secondary)", zIndex: 10 }}>
         
         <div className="d-flex align-items-center">
-          
-          <div style={{ width: "260px", flexShrink: 0 }}>
+          <button
+            type="button"
+            className="btn btn-sm d-lg-none me-2 p-1"
+            style={{ background: "rgba(255,255,255,0.12)", color: "white", border: "none" }}
+            onClick={() => setNavOpen((open) => !open)}
+            aria-label="Toggle navigation"
+          >
+            {navOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
+          <div className="app-brand">
             <h5 className="mb-0 fw-bold" style={{ color: "var(--brand-secondary)", letterSpacing: "1px" }}>
               Ethio-Biopharma
             </h5>
           </div>
 
           {/* TOP NAVIGATION TABS - Contextual Rendering */}
-          <nav className="d-flex gap-2 align-items-center">
+          <nav className="d-none d-lg-flex gap-2 align-items-center">
             
             {/* Show Dashboard & PMS when on Dashboard or PMS */}
             {(isDashboard || isPms) && (
@@ -149,9 +166,9 @@ export default function MainLayout() {
 
         <div className="d-flex align-items-center gap-3 text-white">
           <NotificationBell style={{ color: "white" }} />
-          <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>{user?.username}</span>
+          <span className="d-none d-sm-inline" style={{ fontSize: "0.8rem", opacity: 0.8 }}>{user?.username}</span>
           <button className="btn btn-sm d-flex align-items-center gap-1" style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "none" }} onClick={logout}>
-            <LogOut size={14} /><span>Logout</span>
+            <LogOut size={14} /><span className="d-none d-sm-inline">Logout</span>
           </button>
         </div>
       
@@ -160,34 +177,37 @@ export default function MainLayout() {
 
 
       <div className="d-flex flex-grow-1 overflow-hidden">
-        <aside style={{ 
-          width: "260px", 
-          flexShrink: 0,
-          background: "linear-gradient(180deg, var(--brand-primary) 0%, var(--brand-dark) 100%)", 
-          color: "white",
-          padding: "1.5rem 1rem",
-          overflowY: "auto"
-        }}>
+        {navOpen ? <div className="app-nav-backdrop d-lg-none" onClick={() => setNavOpen(false)} /> : null}
+        <aside className={`app-sidebar ${navOpen ? "is-open" : ""}`}>
           
           <div className="d-flex flex-column gap-2 mb-4">
             {dbTabs.map(renderTab)}
+            {renderTab({ path: "/my-hr", label: "My HR Portal", icon: <UsersIcon size={18} /> })}
+            {renderTab({ path: "/my-approvals", label: "My Approvals", icon: <CheckSquare size={18} /> })}
           </div>
 
-          {isAdmin && (
+
+
+          {["admin","executive"].includes(user?.role) && (
             <div className="mt-2">
               <div className="text-white px-3 mb-2 d-flex align-items-center gap-2" style={{ opacity: 0.6, fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700, letterSpacing: "1px" }}>
-                <ShieldAlert size={14} /> Admin Panel
+                <ShieldAlert size={14} /> HR & Admin
               </div>
               <div className="d-flex flex-column gap-2">
-                {renderTab({ path: "/database/hero-settings", label: "Settings", icon: <Settings size={18} /> })}
-                {renderTab({ path: "/users", label: "Users", icon: <UsersIcon size={18} /> })}
-                {renderTab({ path: "/language-settings", label: "Language Settings", icon: <Globe size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/database/hero-settings", label: "Settings", icon: <Settings size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/users", label: "Users", icon: <UsersIcon size={18} /> })}
+                {renderTab({ path: "/hr", label: "HR Suite", icon: <UsersIcon size={18} /> })}
+                {renderTab({ path: "/hr-analytics", label: "Executive HR", icon: <TrendingUp size={18} /> })}
+                {renderTab({ path: "/recruitment", label: "Recruitment", icon: <UsersIcon size={18} /> })}
+                {renderTab({ path: "/hr-operations", label: "Induction & Appraisals", icon: <TrendingUp size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/payroll", label: "Payroll", icon: <Briefcase size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/language-settings", label: "Language Settings", icon: <Globe size={18} /> })}
                 {renderTab({ path: "/plan-alerts", label: "Plan Alerts", icon: <BellRing size={18} /> })}
-                {renderTab({ path: "/manage-news", label: "Manage News", icon: <Newspaper size={18} /> })}
-                {renderTab({ path: "/manage-documents", label: "Manage Documents", icon: <FileText size={18} /> })}
-                
-                
-                </div>
+                {user?.role === "admin" && renderTab({ path: "/manage-news", label: "Manage News", icon: <Newspaper size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/manage-documents", label: "Manage Documents", icon: <FileText size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/public-site", label: "Public Site", icon: <Megaphone size={18} /> })}
+                {user?.role === "admin" && renderTab({ path: "/manage-media", label: "Manage Media", icon: <Film size={18} /> })}
+              </div>
             </div>
           )}
         </aside>

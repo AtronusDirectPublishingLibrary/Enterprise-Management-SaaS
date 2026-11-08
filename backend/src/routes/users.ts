@@ -14,7 +14,7 @@ const UserInput = z.object({
   username: z.string().min(2),
   password: z.string().min(4).optional(),
   role: z.enum(["admin", "project_manager", "pi", "viewer"]),
-  assignedDirectorate: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
   email: z.string().email().optional().or(z.literal("")).nullable().optional(),
 });
 
@@ -27,8 +27,8 @@ router.get("/", async (_req, res, next) => {
         username: true, 
         role: true, 
         associatedGrants: true,
-        assignedDirectorate: true, 
-        assignedDivision: true,
+        department: true, 
+        subDepartment: true,
         piName: true, 
         coPiName: true, 
         email: true,
@@ -58,7 +58,7 @@ router.post("/", async (req, res, next) => {
         username: d.username,
         passwordHash,
         role: d.role,
-        assignedDirectorate: d.assignedDirectorate || null,
+        department: d.department || null,
         email: d.email || null,
         forceChange: true,
       },
@@ -78,7 +78,7 @@ router.put("/:username", async (req, res, next) => {
       firstName: d.firstName || null,
       lastName: d.lastName || null,
       role: d.role,
-      assignedDirectorate: d.assignedDirectorate || null,
+      department: d.department || null,
       email: d.email || null,
     };
 

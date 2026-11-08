@@ -1,0 +1,1524 @@
+ETHIO-BIOPHARMA ENTERPRISE
+
+    5-Year Strategic Plan (2026-2030)
+
+                                                   February 2026
+                                         Addis Ababa, Ethiopia
+Table of Contents
+
+ACRONYMS AND ABBREVIATIONS........................................................................................... III
+
+EXECUTIVE SUMMARY............................................................................................................VI
+
+1. INTRODUCTION ...............................................................................................................1
+
+2. STRATEGIC CONTEXT & RATIONALE ...................................................................................2
+
+3. INSTITUTIONAL MANDATE & BUSINESS MODEL ..................................................................3
+
+3.1. BUSINESS UNITS AND SYNERGY ............................................................................................3
+3.2. THE INTEGRATED CAMPUS MODEL .........................................................................................4
+3.3. THE FINANCIAL CROSS-SUBSIDIZATION STRATEGY .....................................................................4
+
+4. SITUATIONAL ANALYSIS OF THE PHARMACEUTICAL SECTOR ...............................................4
+
+4.1. MARKET OVERVIEW AND IMPORT DEPENDENCY ............................................................................4
+4.2. PRODUCTION CAPACITY AND PORTFOLIO ....................................................................................5
+4.3 POLICY AND ENABLING ENVIRONMENT........................................................................................6
+4.4 KEY CHALLENGES .................................................................................................................6
+4.5. SWOT ANALYSIS..................................................................................................................7
+4.6. PESTEL ANALYSIS................................................................................................................8
+
+5. VISION, MISSION, AND STRATEGIC AMBITION .................................................................. 10
+
+VISION 2035........................................................................................................................... 10
+MISSION ................................................................................................................................ 10
+CORE VALUES ......................................................................................................................... 10
+
+6. THE FIVE STRATEGIC PILLARS ......................................................................................... 11
+
+PILLAR 1: INFRASTRUCTURE AND INTEGRATED CAMPUS CONSTRUCTION ................................................. 11
+PILLAR 2: TECHNOLOGY TRANSFER, MANUFACTURING, R&D AND INNOVATION ........................................ 11
+PILLAR 3: REGULATORY EXCELLENCE ............................................................................................. 12
+PILLAR 4: HUMAN CAPITAL AND TALENT MANAGEMENT ...................................................................... 12
+PILLAR 5: MARKET DEVELOPMENT ................................................................................................. 13
+
+7. PHASED IMPLEMENTATION ROADMAP............................................................................. 13
+
+PHASE 1: GROUNDBREAKING & QUICK-WIN BUILD-OUT (2026 - 2028)................................................. 13
+PHASE 2: SHIELDVAX COMMISSIONING & QUICK-WIN SCALE-UP (2028 - 2030) ..................................... 13
+
+I
+8. STRATEGIC OBJECTIVES AND IMPELEMENTATION SCHEDULE ........................................... 14
+
+SO1: RAPID INFRASTRUCTURE DEVELOPMENT AND MARKET ENTRY........................................................ 14
+SO2: SHIELDVAX FACILITY CONSTRUCTION AND READINESS ............................................................... 15
+SO3: WORKFORCE AND CAPACITY BUILDING................................................................................... 15
+SO4: FINANCIAL SUSTAINABILITY FOUNDATION ................................................................................ 15
+SO5: REGULATORY AND QUALITY SYSTEMS ..................................................................................... 16
+
+9. FINANCING & INVESTMENT STRATEGY............................................................................. 16
+
+9.1. BLENDED FINANCE MECHANISM ......................................................................................... 16
+9.2. FINANCIAL DISCIPLINE AND FX HEDGING .............................................................................. 16
+
+10. DIGITALIZATION AND AI STRATEGY ................................................................................ 17
+
+10.1.  SMART MANUFACTURING................................................................................................. 17
+10.2.  ARTIFICIAL INTELLIGENCE APPLICATIONS ............................................................................. 17
+10.3.  DATA GOVERNANCE ....................................................................................................... 17
+
+11. GOVERNANCE AND ORGANIZATIONAL STRUCTURE ....................................................... 17
+
+11.1.  ETHIOPIAN INVESTMENT HOLDINGS.................................................................................... 17
+11.2.  THE BOARD OF DIRECTORS .............................................................................................. 18
+11.3.  ETHO-BIO PHARMA ENTERPRISE ....................................................................................... 18
+11.4.  BUSINESS UNIT STRUCTURE ............................................................................................. 18
+
+12. RISK MANAGEMENT...................................................................................................... 19
+
+13. SUSTAINABILITY AND ENVIRONMENTAL, SOCIAL AND GOVERNANCE IMPACT.................. 20
+
+14. FINANCIAL ANALYSIS AND FUNDING STRATEGY ............................................................. 20
+
+14.1.  FINANCIALS AND BUDGET REQUIRED FOR THE VACCINE MANUFACTURING UNIT (SHIELDVAX)............ 20
+14.2.  FINANCIALS AND CASH FLOW FOR QUICK-WIN BUSINESS UNITS ............................................... 21
+14.3.  CONSOLIDATED BUDGET SUMMARY AND GAP ASSESSMENT ...................................................... 23
+14.4.  FUNDING STRATEGY & CAPITAL MOBILIZATION ...................................................................... 24
+
+15. MONITORING, EVALUATION & KPIS................................................................................ 25
+
+16. REFERENCES ............................................................................................................... 28
+
+II
+Acronyms and abbreviations
+
+AfCFTA  African Continental Free Trade Area
+
+AHRI    Armauer Hansen Research Institute
+
+AI      Artificial Intelligence
+
+AMA     African Medicines Agency
+
+API     Active Pharmaceutical Ingredient
+
+ARV     Antiretroviral
+
+AU      African Union
+
+CAPEX   Capital Expenditure
+
+CEPI    Coalition for Epidemic Preparedness Innovations
+
+COMESA Common Market for Eastern and Southern Africa
+
+DFI     Development Finance Institution
+
+DS      Drug Substance
+
+EAC     East African Community
+
+EBITDA  Earnings Before Interest, Taxes, Depreciation, and Amortization
+
+EBPE    Ethio-BioPharma Enterprise
+
+EFDA    Ethiopian Food and Drug Authority
+
+EIH     Ethiopian Investment Holdings
+
+EML     Essential Medicines List
+
+EPCM    Engineering Procurement Construction Management
+
+EPSS    Ethiopian Pharmaceuticals Supply Service
+
+ERP     Enterprise Resource Planning
+
+ESG     Environmental, Social, and Governance
+
+ETB     Ethiopian Birr
+
+III
+FX       Foreign Exchange
+Gavi     Global Alliance for Vaccines and Immunization
+GMP      Good Manufacturing Practice
+HSDIP    Health Sector Development Implementation Plan
+HVAC     Heating, Ventilation, and Air Conditioning
+ICB      International Competitive Bidding
+IQ / OQ  Installation Qualification / Operational Qualification
+IoT      Internet of Things
+IRR      Internal Rate of Return
+ISO      International Organization for Standardization
+JV       Joint Venture
+KPI      Key Performance Indicator
+ML3      Maturity Level 3
+MoH      Ministry of Health
+NPV      Net Present Value
+PAVM     Partnerships for African Vaccine Manufacturing
+PESTEL   Political, Economic, Social, Technological, Environmental, and Legal
+PPE      Personal Protective Equipment
+QA       Quality Assurance
+QMS      Quality Management System
+R&D      Research and Development
+RDT      Rapid Diagnostic Test
+SO       Strategic Objective
+SWOT     Strengths, Weaknesses, Opportunities, and Threats
+
+IV
+WHO     World Health Organization
+WHO-PQ  World Health Organization Prequalification
+
+V
+Executive Summary
+
+The Ethio-BioPharma Enterprise (EBPE) Strategic Plan for the 2026-2030 period establishes
+a comprehensive framework for achieving pharmaceutical and vaccine sovereignty of
+Ethiopia. Established in 2025 as a state-owned strategic enterprise under the oversight of
+Ethiopian Investment Holdings (EIH), EBPE serves as the primary vehicle for transforming
+Ethiopia from an import-dependent nation into a regional biopharmaceutical manufacturing
+hub- addressing the vulnerabilities exposed by the global COVID-19 pandemic.
+
+The strategic architecture of EBPE is built upon an integrated campus model located in
+Kilinto Industrial Park, designed to co-locate multiple synergistic business units including
+human vaccine production (ShieldVax), generic medicines, diagnostics, Personal Protective
+Equipment (PPE) and medical supplies manufacturing. This integrated model leverages
+shared infrastructure, utilities, and workforce development systems to maximize
+operational efficiency while enabling coordinated growth across the enterprise.
+
+A core element of EBPE's financial architecture is the Quick-Win cross-subsidization model.
+Under this model, the diagnostics, and medicines units will be operationalized first to
+generate early revenue streams and internal liquidity. A portion of these profits will be
+reinvested to support the development and scaling of the ShieldVax vaccine manufacturing
+facility. By 2030, EBPE aims to commission an advanced vaccine fill-finish facility, achieve
+operational profitability across all business units, and contribute to government goal of
+localizing the manufaturing of essential medicines.
+
+The financial investment for the five-year period centers on the development of a world-
+class biopharmaceutical ecosystem, requiring a total capital investment exceeding USD
+207 million by 2030. A critical cornerstone of this roadmap is the ShieldVax vaccine facility,
+which serves the dual strategic objectives of achieving national self-reliance in vaccine
+manufacturing and ensuring robust pandemic preparedness for future global health
+emergencies.
+
+The ShieldVax project requires a total investment of USD 150 million within this strategic
+window to support the phased development of fill-finish operations, with commercial
+production projected to commence in 2029. While the facility is a vital security asset, it is
+also financially transformative; over a 30-year horizon, cumulative revenues are projected
+to exceed USD 6.5 billion. With a calculated internal rate of return (IRR) of 11.8% and a
+projected break-even point in approximately 15 years, ShieldVax represents a sustainable
+intersection of public health sovereignty and long-term economic viability.
+
+To mitigate the financing challenges typical of such long-term biopharmaceutical projects,
+the Medicines and Diagnostics, PPE & Medical Supplies units will serve as EBPE's "Quick-
+Win" early revenue generators. Designed to capture segments of Ethiopia's rapidly
+expanding pharmaceutical market and advance national import-substitution goals, both
+units demonstrate strong commercial viability. Financial projections indicate highly
+attractive returns: the rapid diagnostic test (RDT) segment boasts an IRR of 39.26% with a
+
+VI
+rapid payback period of 4.33 years, while the Medicines unit achieves operational
+profitability and positive free cash flow by its third year of operation. Through a deliberate
+cross-subsidization strategy, these units will generate the early operating cash flows and
+internal liquidity required to sustain the capital-intensive development of the broader
+enterprise.
+To date, the enterprise has secured or identified USD 81.0 million in high-potential financing,
+including USD 7.0 million in equity from Ethiopian Investment Holdings (EIH) and an
+anticipated USD 74.0 million from the World Bank's HEPRR program through Ministry of
+Health (MoH). However, this funding is allocated exclusively to the ShieldVax facility.
+Consequently, the enterprise faces a consolidated funding gap of USD 126.04 million,
+comprising USD 69.0 million to sustain ShieldVax, USD 49.8 million for the Medicines unit,
+and USD 7.24 million for Diagnostics and Medical Supplies. To bridge this gap, EBPE will
+deploy a multi-tiered, blended finance strategy. This includes structured debt-to-equity
+financing for the Quick-Win units (targeting 30% and 40% equity for Medicines and
+Diagnostics, respectively), concessional loans from development finance institutions (DFI),
+and strategic joint ventures (JV) with global pharmaceutical firms. This approach will allow
+the enterprise to mobilize capital while maintaining financial sustainability and ensuring
+that investments are aligned with the phased development of the integrated campus.
+Alignment with continental goals is a cornerstone of this strategic plan. It is systematically
+mapped to the African Union's Agenda 2063, The Lusaka Agenda, and the Africa CDC's
+Partnerships for African Vaccine Manufacturing (PAVM) roadmap which targets the local
+production of 60% of Africa's vaccines and pharmaceuticals by 2040. Furthermore, the
+enterprise leverages Ethiopia's unique competitive advantages, including its status as a
+logistical epicenter supported by Ethiopian Airlines, its vast domestic market of over 130
+million population and ever-expanding health insurance scheme, to de-risk high-tech
+manufacturing investments. The 2026-2030 Strategic Plan serves as a definitive roadmap
+for achieving health security, economic resilience, and industrial excellence, ensuring that
+Ethiopia emerges as a pivotal actor in the African biopharmaceutical landscape.
+
+VII
+1. Introduction
+
+Ethiopia's pharmaceutical sector is strategically important but remains hihgly dependent on
+imports, which supply over 80% of the market. This vulnerability was starkly exposed during
+the COVID-19 pandemic, when global supply chain disruptions severely constrained access
+to essential medicines and vaccines. In response, the Government of Ethiopia prioritized
+local pharmaceutical manufacturing, thorugh national spolicy frameworks and trategies
+including the National Health Policy, Manufacturing Industry Policy, The Home Grown
+Economic Reform, Health Sector Medium Term Development and Investment Plan (HSDIP),
+the National Strategy and Plan of Action for Pharmaceutical Manufacturing Development
+(NSPA-Pharma) 2015-2025, PAVM and the African Union's Lusaka Agenda, which taims to
+increase local pharmaceuticals production across Africa to 60% by 2040.
+
+Ethiopia's local pharmaceuticals production remained low due to dependency for
+importation of more than 90% of active pharmaceutical ingredinets (API) and excipients, low
+capacity utilization, constrained by foreign exchange shortages, and limited technological
+capability. Notably, no local manufacturer holds World Health Organization Prequalification
+(WHO-PQ) for pharmaceuticals and vaccines, resulting in the continued dependence on
+imported products for most donor-funded procurement.
+
+Market assessments further highlight the structural imbalance between domestic
+production and national demand. In EFY 2016, local production accounted for 13.9% of
+medicines, 17.5% of medical supplies, and only 1.9% of medical equipment. Chemicals and
+laboratory reagents represented an exception, with 63.4% local production, indicating that
+targeted investment and enabling policy frameworks can significantly improve domestic
+production capacity.
+
+The pharmaceutical market, including vaccines, is also heavily donor-dependent, with more
+than 50% of national procurement and approximately 85% of Ethiopian Pharmaceuticals
+Supply Service (EPSS) purchases financed externally. Vaccine supply is almost entirely
+import-based, exposing Ethiopia to external shocks and geopolitical supply constraints.
+
+To address these systemic challenges, the Government established Ethio-BioPharma Group
+in 2023, along with its subsidiary ShieldVax Enterprise following a Council of Ministers
+Regulation, to build national capacity for local manufacturing of pharmaceuticals. The
+immediate strategy focuses on operationaliziing ShieldVax and developing human vaccine
+fill-and-finish capabilities as a foundation for eventual full-scale product development and
+manufacturing. As part of institutional restructuring to enhance sustainability and
+commercial viability, the current reform process proposes dissolving ShieldVax as a
+separate legal entity and integrating it as a business unit under EBPE, thereby streamlining
+
+1
+governance and strengthening operational efficiency while preserving public service
+objectives.
+
+The establishment of EBPE under EIH represents a shift in Ethiopia's approach to developing
+strategic manufacturing industry capabilities. By positioning the enterprise under EIH, the
+Government oe Ethiopia (GoE) signals a shift toward professionally governed, commercially
+oriented state participation in high-technology manufacturing. This arrangement provides
+EBPE with structured oversight, institutional credibility, and the governance architecture
+necessary to manage complex, large-scale transformation initiatives.
+
+This 2026 - 2030 Strategic Plan is designed to operationalize the enterprise's mandate
+through a phased build-out of infrastructure, workforce, and regulatory systems. It moves
+beyond the conceptual phase into the active construction and commissioning of an
+integrated biopharmaceutical campus. It sets the stage for a narrative of industrial
+transformation, where Ethiopia utilizes its logistical dominance, diplomatic influence, and
+demographic scale to secure its health future.
+
+2. Strategic Context & Rationale
+
+The strategic rationale for EBPE is rooted in resolving systemic dependencies that threaten
+national security, economic stability, and long-term health resilience. Across Africa,
+approximately 99% of vaccines and more than 70% of medicines are imported, creating
+structural exposure to external supply disruptions. For Ethiopia which imports more than
+80% of pharmaceuticals, this dependency translates into supply chain vulnerability,
+sustained pressure on foreign exchange reserves, and limited pandemic preparedness.
+
+Positioning EBPE under EIH reflects a deliberate strategic decision to anchor
+pharmaceutical industrialization within a strong sovereign investment framework capable of
+mobilizing capital and enforcing financial discipline. As Ethiopia's strategic investment arm,
+EIH provides governance discipline, financial oversight, and access to long-term capital
+required for large-scale, capital-intensive biopharmaceutical projects. This structure
+enables EBPE to operate as a commercially disciplined enterprise while advancing national
+health security objectives, effectively bridging public policy ambition with industrial
+execution and transforming pharmaceutical sovereignty into a viable and investable national
+agenda.
+
+EBPE serves as the operational vehicle for implementing Ethiopia's pharmaceutical
+manufacturing agenda. It translates the government ambitions under the national health
+policy, manufacturing industry policy and the home-grown economic reform and related
+frameworks into tangible investments in infrastructure, innovation, technology transfer, and
+workforce development, with the overarching objective of ensuring national health security.
+
+2
+The enterprise is also strategically positioned within a shifting global health architecture.
+International partners such as Global Alliance for Vaccine and Immunization (Gavi), the
+Coalition for Epidemic Preparedness Innovations (CEPI), Africa CDC and the World Bank are
+increasingly supporting regional manufacturing hubs to decentralize global supply chains
+and strengthen regional self-reliance. This creates a timely opportunity for Ethiopia to
+position itself as a credible destination for biopharmaceutical investment and strategic
+partnerships.
+
+Ethiopia's alrge domestic demand provides an anchor market that mitigates the commercial
+risks associated with vaccine and biopharmaceutical production. With a population
+exceeding 130 million and a triple burden of communicable and rising non-communicable
+diseases and injuries, there is a huge sustained long-term demand for pharmaceuticals. The
+cargo and logistics capabilities of Ethiopian Airlines provide a competitive advantage for
+regional distribution within Common Market for Eastern and Southern Africa (COMESA) and
+the East African Community (EAC), positioning Ethiopia as a potential pharmaceutical
+gateway for Eastern and Southern Africa. Additionally, EBPE's mission is underpinned by the
+African Union's Agenda 2063, Lusaka Agenda and the PAVM roadmap, which targets the
+local production of 60% of Africa's vaccine and other health products need by 2040.
+
+Together, these factors establish a compelling case for EBPE as both a national security
+instrument and a commercially viable industrial platform capable of advancing
+pharmaceutical sovereignty, regional integration, and sustainable economic
+transformation. By establishing a fully integrated biopharmaceutical campus, EBPE aims to
+transform Ethiopia from a passive recipient of global health aid into a self-reliant producer
+and a leading exporter within the African Continental Free Trade Area (AfCFTA).
+
+3. Institutional Mandate & Business Model
+
+EBPE's institutional mandate is to achieve pharmaceutical and vaccine sovereignty through
+a self-sustaining ecosystem of manufacturing businesses. The enterprise operates through
+an integrated corporate, managing a portfolio of specialized units on a unified campus.
+
+3.1. Business Units and Synergy
+
+The business units are designed to be synergistic, sharing infrastructure, utilities, and
+
+corporate functions to achieve maximum efficiency.
+
+· ShieldVax: The flagship unit dedicated to end-to-end human vaccine manufacturing. It
+    will first focus on fill-and-finish operations for essential vaccines before moving into drug
+    substance production.
+
+· Medicine and Input Material Unit: A unit focused on manufacturing essential generic
+    medicines (tablets, capsules, and injectables,etc). This unit incorporates the future
+
+3
+    production of Active Pharmaceutical Ingredients (APIs) and excipients to reduce import
+    dependency for its own production lines.
+
+· Diagnostics, PPE, and Medical Supplies Unit: A unit designed for rapid revenue generation.
+    It focuses on the production of rapid diagnostic tests (RDTs), molecular diagnostics, PPE,
+    medical supplies and surgical kits.
+
+3.2. The Integrated Campus Model
+
+The integrated campus model is a critical operational innovation. By co-locating all units,
+EBPE achieves economies of scale in shared utilities, shared infrastructure (utilities, waste
+management, R&D labs), centralized corporate level procurement. This proximity facilitates
+a unified talent development program where staff can be cross trained across different
+manufacturing disciplines.
+
+3.3. The Financial Cross-Subsidization Strategy
+
+To overcome the financing challenges typical of biopharmaceutical projects in emerging
+markets, EBPE employs a tiered launch strategy. The "Quick-Win" units (PPE, Diagnostics,
+and medicines) are engineered for rapid commissioning and early revenue generation. A
+formal mandate requires the reinvestment of its profits into the capital and operational
+expenses of the ShieldVax vaccine facility. This ensures that the flagship project is
+supported by a stable internal revenue stream, reducing the risk of project stalling due to
+external funding fluctuations.
+
+4. Situational Analysis of the Pharmaceutical Sector
+
+Ethiopia's pharmaceutical sector is strategically vital for strengthening national health
+security, mitigating reliance on imports, and reducing foreign exchange pressures. Despite
+this strategic importance, the country remains heavily dependent on imports for both
+finished pharmaceutical products and essential production inputs.
+
+4.1. Market Overview and Import Dependency
+
+The Ethiopian pharmaceutical and medical device market is on a rapid expansion trajectory.
+Valued at approximately USD 1 billion in 2021, the market grew to an estimated USD 1.8
+billion by 2025, with projections indicating it could exceed USD 4 billion by 2030, driven by
+population growth and expanded health coverage. Despite this robust demand, local
+production has historically captured only a limited share of the market. In 2021, local
+manufacturers supplied approximately USD 59.1 million worth of medicines and supplies,
+representing just 6.1% of the total market value. By 2022, approximately 4% of total
+purchased products were locally manufactured, a level that remains significantly lower that
+
+4
+African peers and marks a sharp decline from previous years when local production
+accounted for nearly a quarter of the market share.
+
+Public procurement, managed primarily by the EPSS, constitutes a major component of the
+market. EPSS data indicate a decline in local sourcing for general pharmaceuticals, which
+fell from 24% in 2010 EFY to just 8% in 2014 EFY. This performance remains significantly
+below the national target to source 47% of pharmaceuticals from local manufacturers by
+2017 EFY. However, specific sub-sector analysis reveals areas where targeted policy
+interventions have improved local participation. EPSS's trend analysis covering the period
+2012-2017 EFY notes that in targeted categories where EPSS manages the procurement of
+the commodities, the local manufacturing share of total procurement has risen to 41%
+(show the below figure), driven by specific policy interventions.
+
+                                                                                                       41%
+                                                                                     37%
+
+   16%                                   11%
+                     13%  8%
+
+   2012EFY  2013EFY       2014EFY  2015EFY    2016EFY  2017EFY
+
+Figure 1: Local manufacturer percentage share trend (2012-2017 EFY)
+
+Assessment data reveals notable discrepancies across product categories. In the
+medicines sector, local production accounted for 9% of total consumption in 2014 EFY,
+rising marginally to 13.9% by 2016 EFY. Medical supplies saw a moderate increase from 13%
+to 17.5% over the same period. Conversely, the chemicals and laboratory reagents category
+demonstrated significant import substitution potential, growing from 17% to 63.4% by 2016
+EFY. The sector remains heavily characterized by donor dependence, which funds over 50%
+of all pharmaceutical procurement and 85% of EPSS purchases. Consequently, essential
+program medicines such as antiretrovirals (ARVs), antimalarials, and anti-tuberculosis
+drugs remain nearly 100% imported, primarily from India and China.
+
+4.2. Production Capacity and Portfolio
+
+As of 2024, Ethiopia has approximately 13 local manufacturers of pharmaceuticals,
+comprising a mix of local ownership, JV, and foreign direct investment. A critical operational
+
+5
+bottleneck is the sector's low capacity utilization, which averages between 14% and 18%,
+far below the 60% threshold required for operational sustainability. This underutilization has
+contributed to a decline in production volumes where tablet production fell by 46% and
+capsule production by 69% between 2018/19 and 2022/23. However, some improvement
+has been observed in recent years.
+
+The product portfolio of local firms is currently limited to basic formulations, including
+common antibiotics, analgesics, and selected chronic disease medicines. While local
+production meets approximately 50% of the consumption demand for antibiotics, there is a
+complete absence of local manufacturing for other essential medicines like ARVs and anti-
+TB drugs. This gap represents a missed opportunity in a USD 100 million import market.
+Furthermore, no local manufacturer held WHO-PQ certification, and only six possessed
+Good Manufacturing Practice (GMP) certification, effectively excluding local firms from the
+large donor-funded market segment.
+
+4.3 Policy and Enabling Environment
+
+The government has instituted a range of policy incentives to stimulate the sector. Economic
+reforms include the establishment of Kilinto Industrial Park dedicated for pharmaceutical
+manufacturing. Fiscal incentives include corporate income tax holidays of up to six years,
+customs duty exemptions on capital goods and eligible inputs, and full export duty
+exemptions. In the procurement domain, EPSS has revised its pharmaceutical procurement
+specific directives which gives preference to domestically manufactured pharmaceuticals
+and up to a 25% price preference for local manufacturers in international open tenders and
+up to a 30% advance payment for local manufacturers. Additionally, the introduction of
+long-term framework agreements spanning up to seven years aims to provide market
+stability.
+
+Regulatory advancements have also been achieved. The Ethiopian Food and Drug Authority
+(EFDA) successfully attained WHO Maturity Level 3 (ML3) in September 2025, a milestone
+that signifies a stable and well-functioning regulatory system. This achievement is a critical
+prerequisite for enabling local manufacturers to access international and donor-funded
+markets and eventually achieve WHO-PQ.
+
+4.4 Key Challenges
+
+Despite the supportive policy framework, the sector faces a multitude of challenges. Access
+to working capital and foreign exchange is universally identified as the most critical barrier
+by local manufacturers. Manufacturers face delays averaging 2 - 3 months to access FX,
+compounded by high transaction costs and interest rates ranging from 15% to 22% limiting
+the investment by the private sector.
+
+6
+High import dependency extends to APIs and packaging materials, exacerbated by the lack
+of local pooled procurement mechanisms among manufacturers. Technical and human
+capital gaps also persist, characterized by a shortage of skilled personnel for equipment
+calibration and maintenance, forcing reliance on foreign experts. Finally, procurement
+inflexibilities, such as EPSS spot tenders lacking price variation adjustment mechanisms
+and limited margin for framework agreement force manufacturers to absorb severe FX and
+inflation shocks.
+
+4.5. SWOT Analysis
+
+This SWOT analysis facilitates matching the external threats and opportunities with the
+internal weaknesses and strengths of the local manufacturing sector. By categorizing the
+insights gathered from the broader situational assessment, this process ensures that
+strategic decisions are firmly rooted in leveraging existing capabilities and market
+opportunities, while proactively mitigating vulnerabilities in the sector and external risks.
+
+Table 1: SWOT Analysis of the local pharmaceutical manufacturing sector
+
+Strength                                          Weakness
+· Strategic Alignment & Institutional
+                                                  · Import Dependency: Over 90% of
+    Support: Strong mandate as a state-               API and excipients are imported.
+    backed enterprise with high-level
+    prioritization within national health and     · Product Portfolio Gaps: A narrow
+    industrial policies.                              product portfolio, leaving major
+                                                      supply gaps in essential medicines.
+· Infrastructure & Investment: Kilinto
+    Pharmaceutical Industrial Park provides       · Human Capital Constraints:
+    dedicated Infrastructure.                         Existing gaps in specialized technical
+                                                      skills required for advanced
+· Market Need & Potential: Growing                    biomanufacturing and equipment
+    domestic demand for essential medicines           maintenance.
+    projected to exceed $4 billion by 2030.
+                                                  Threat
+· Financial Visibility: A clear, long-term        · Global Competition: Intense global
+    financial roadmap with projected high-
+    revenue portfolios and a defined path to          competition and pressure from low-
+    profitability.                                    cost generic imports (e.g. India and
+                                                      China.
+Opportunities                                     · Supply Chain Vulnerabilities:
+· Government Support & Policy Backing:                Global supply chain disruptions
+
+    Strong government commitment and
+    prioritization through national policies and
+    strategies
+
+7
+· Market Expansion & Trade: Significant         consistently threaten raw material
+    unmet local demand and strong potential     availability.
+
+   for regional export under the AfCFTA.        · Regulatory Complexity: The high
+
+· Policy Incentives: Strong preference for      cost and lengthy duration of
+    local manufacturers, including a 25% price  achieving international WHO-PQ
+    preference, a 30% advance on EPSS           standards for new products.
+
+   contracts, and targeted tax relief.          · Macroeconomic Volatility: Chronic
+
+· Procurement            Improvements: foreign exchange shortages and
+   Implementation of long-term framework fluctuating costs of raw materials on
+                                                the global market.
+   agreement.
+
+· Supply Chain Resilience: Long-term · Operational Bottlenecks: Customs
+    opportunities for technology transfer delays, logistics issues, and
+    partnerships, to develop local API unreliable utilities.
+    production, and utilize pooled
+    procurement for raw materials
+
+4.6. PESTEL Analysis
+
+To ultimately answer the critical question of "Where are we now?" and inform "Where should
+we go?", we utilize the PESTEL framework. This tool allows us to systematically evaluate the
+broader macro-environment by analyzing the Political, Economic, Social, Technological,
+Environmental, and Legal factors shaping the pharmaceutical sector. For public sector
+entities like EBPE, this diagnostic process transforms complex external data into actionable
+insights, providing the evidence-based foundation necessary for strategic planning while
+concurrently assessing alignment with national goals, systemic constraints, and public
+health outcomes.
+
+Factor         Opportunities                             Threats
+Political
+               Government               Prioritization:  Geopolitical Disruptions: Global
+                                                         tensions affect key maritime
+               Strongly    prioritizes          local    routes, increasing sailing times
+                                                         and transportation costs for
+               pharmaceutical manufacturing.             essential imported inputs.
+
+               Continental Alignment: National           Policy Inconsistency: Delays in
+               efforts align with the African
+               Union's Agenda 2063 and Lusaka            policy     implementation,
+               Agenda.                                   coherence among policies and
+
+               Strategic Partnerships: AfCFTA,           gap in execution of local incentive
+               BRICS membership and regional
+               harmonization and Africa Pooled           packages.
+               Procurement Mechanism (APPM).
+
+8
+Economic       Market Growth & Scale: 130 M+          Critical FX Shortages: Delays (2-
+               anchor market exepected to grow        3 months) in accessing foreign
+Social         to over $4 billion by 2030.            exchange.
+Technological
+Environmental  Robust Incentives: Up to 6-year        Capital     Constraints:
+Legal/         corporate income tax holidays,
+Regulatory     customs duty exemptions, and a         Manufacturers suffer from
+               25% price preference in public
+               tenders and the introduction of        critically low capacity utilization
+               multi-year framework agreements.       due to lack of access to
+
+               Dedicated Infrastructure: Kilinto      affordable credit due to high
+               Pharmaceutical Industrial Park         interest rate and extreme
+               provides specialized infrastructure
+               for manufacturers.                     collateral requirements.
+
+               Growing Healthcare Demand:             Fierce Competition: Intense
+               Shifting disease burden toward         competition from low-cost
+               NCDs increases demand for              generic imports suppresses local
+               medicines.                             market share.
+
+               Socio-Economic Development:            Critical Skills Shortage: Deficit
+               Significant FX savings, job creation,  of skilled technical personnel for
+               and improve national health            calibration, QA and maintenance.
+               security.
+                                                      Weak Academic Linkages:
+               Digital Integration: Enterprise        Inadequate  collaboration
+               resource planning (ERP) systems,
+               adoption of latest technologies and    between academia and the
+               AI driven R&D.
+                                                      industry
+               Future API Production: Long-term
+               opportunity to develop local API       Outdated Tech & Low R&D: The
+               production capabilities, mitigating    industry relies on outdated
+               external reliance.                     technology, and minimal
+                                                      investment in R&D.
+               Green Supply Chain: Stricter
+               environmental governance for           Digital Vulnerabilities: Risks
+               modern eco-friendly incineration.      related to system interoperability,
+                                                      and cyber-attacks.
+               Revenue from Waste: Circular
+               economy principles.                    Stringent Compliance      Costs:
+                                                      Severe penalties for       waste
+               Strengthened Oversight: EFDA           disposal.
+               ML3 status lays the foundation for
+               AMA alignment and WHO-PQ.              Infrastructure Gaps: High energy
+                                                      and water resource, lack of
+                                                      broader industrial waste disposal
+                                                      infrastructure
+
+                                                      Certification Deficits: No local
+                                                      manufacturer holds WHO-PQ
+                                                      certification, and only six possess
+                                                      local GMP certification.
+
+9
+    Procurement & Customs              Bureaucratic  Hurdles:
+    Reforms: New procurement laws      Regulatory review times and
+    accommodate the unique nature
+    of pharmaceutical and revised      certification processes are
+    customs directives enable
+    expedited clearance for certified  lengthy.
+    manufacturers.
+                                       Rigid Tendering: Difficulties
+                                       competing in public tenders
+                                       blocking price adjustments.
+
+5. Vision, Mission, and Strategic Ambition
+
+The strategic direction for the 2026-2030 period is align with the 10-year roadmap and
+guided by a clear vision to position EBPE as a cornerstone of Ethiopia health security.
+
+Vision 2035
+
+To be among leading integrated biopharmaceutical campus in Africa, ensuring health
+security and pharmaceutical sovereignty for Ethiopia and the continent through self-reliant,
+sustainable manufacturing.
+
+Mission
+
+To develop, manufacture, and deliver high-quality, affordable essential medicines,
+vaccines, diagnostics and medical supplies to meet public health needs through building a
+self-sustaining ecosystem of manufacturing businesses, fostering innovation, building local
+capacity, and creating strategic partnerships.
+
+Core Values
+
+1. Quality: Adherence to the highest national and international standards (WHO-GMP, ISO)
+in all our processes and products to ensure safety and efficacy.
+
+2. Integrity: Operating with transparency, accountability, and ethical conduct in all our
+endeavors.
+
+3. Innovation: Embracing advanced technologies, continuous improvement, and R&D to
+address evolving health challenges.
+
+4. Collaboration: Building strong partnerships with government, international
+organizations, academia, research institutes and the private sector for shared success.
+
+5. Sustainability: Ensuring the long-term financial, operational, and environmental viability
+of our enterprise and its positive impact on society.
+
+6. People-Centricity: investing in our workforce, value their contribution, and are
+committed to improving the health and well-being of the communities we serve.
+
+10
+The strategic ambition for the next five years is to transition from an infrastructure project
+into a revenue-generating pharmaceuticals manufacturing enterprise. This includes the
+successful launch of the "Quick-Win" business units and the ShieldVax vaccine facility.
+
+6. The Five Strategic Pillars
+
+The implementation of the EBPE strategy is supported by five strategic pillars that address
+infrastructure, technology, regulation, people, and markets.
+
+Pillar 1: Infrastructure and Integrated Biopharmaceutical Campus
+Development
+
+The primary focus is the establishment of an integrated biopharmaceutical campus in
+Kilinto Industrial Park. This integrated campus will serve as the physical heart of EBPE,
+balancing quick-win units with the long-term infrastructure for vaccine production,
+expansion of the quick-wins, and maximizing shared utilization of utilities.
+
+Pillar 2: Technology Transfer, Smart Manufacturing, R&D and Innovation
+
+EBPE will take the leadership in shifting the domestic pharmaceutical industry toward high-
+tech manufacturing of vaccines, biologics and advanced medicines by following a
+structured technology transfer process to absorb international knowledge. This pillar
+focuses on forming technology transfer partnerships with international firms to start with
+fill-finish and proceed to innovate beyond simple generics. Long-term intiatives include
+developing local API capabilities and implementing digital systems supported by AI to
+leverage latest developments in the sector.
+
+The technology trasfer for vaccine, medicines and other health products manufacturing will
+generally be done in three phases:
+
+Phase 1: Packaging and Secondary Processing (Years 1-2)
+
+During this initial phase, EBPE will establish early operational capability by focusing on
+packaging and basic quality control (QC) activities using unlabelled, in-bulk vaccine vials
+supplied by the technology transfer partner. Activities will include material receipt and
+storage, primary and secondary packaging and labeling, and basic QC testing (such as
+description and identity). This phase enables rapid entry into the vaccine value chain while
+building foundational operational systems, regulatory processes, and workforce readiness.
+
+Phase 2: Fill-and-Finish Operations (Years 2-4)
+
+In this phase, EBPE will expand into fill-and-finish manufacturing using formulated, ready-
+to-fill (RTF) bulk vaccines supplied by the partner. In addition to continuing activities from
+
+11
+Phase 1, EBPE will undertake pooling and mixing of bulk materials, aseptic filling and
+sealing, final lot testing, stability testing, and expanded QC operations. This phase
+represents a significant progression in technical capability and regulatory complexity,
+allowing EBPE to increase value addition and strengthen its manufacturing capacity.
+
+Phase 3: Drug Substance Handling and Formulation (Years 5-8)
+
+In the final phase, EBPE will transition to handling purified bulk (drug substance) supplied by
+the partner and will assume full responsibility for downstream manufacturing operations.
+Activities will include compounding, formulation, drug substance QC and release, as well
+as all activities from the previous phases. This phase positions EBPE as an advanced
+vaccine manufacturer with integrated downstream capabilities, aligned with the long-term
+objective of achieving end-to-end manufacturing readiness.
+
+Pillar 3: Regulatory Excellence and Quality Assurance
+
+EBPE will institutionalize regulatory excellence and quality assurance as the fundamental
+backbone of its operational lifecycle, ensuring that regulatory approval is an integrated, non-
+negotiable component of every project phase from inception to market. Central to this
+strategy is the mandate that early and continuous engagement with the EFDA is critical.
+EBPE will maintain a proactive partnership with the EFDA to ensure facility designs,
+processes, and products align with national standards from day one. By leveraging the
+EFDA's WHO ML3 status, the Enterprise will systematically guide its manufacturing units
+toward achieving WHO-PQ, a vital milestone for entering donor-funded, regional, and
+international markets.
+
+Furthermore, EBPE will implement and maintain rigorous ISO certifications--specifically
+focusing on ISO 9001 for quality management and ISO 13485 where applicable--to
+standardize operational excellence and build global trust. This comprehensive framework
+will not only secure local market authorization but also ensure full alignment with AMA for
+regional harmonization, positioning EBPE as a compliant and competitive leader in the
+global biopharmaceutical landscape.
+
+Pillar 4: Human Capital Development and Talent Management
+
+Over the next five years, EBPE will establish a dedicated Workforce Development Center
+within its compound, institutionalizing specialized training in GMP, product development,
+QA/QC, advanced biomanufacturing, regulatory science, and equipment calibration and
+maintenance. This center will serve as the foundation for mitigating critical skill gaps while
+fostering a culture of operational excellence. To ensure long-term sustainability, EBPE will
+implement a comprehensive Leadership and Succession Planning Framework,
+
+12
+complemented by a Diaspora Talent Engagement Initiative designed to facilitate high-level
+knowledge transfer.
+
+Furthermore, the strategy prioritizes a robust talent pipeline through postgraduate
+scholarships in pharmaceutical sciences and international technical partnerships that
+provide staff with global exposure. Retention will be driven by a meritocratic environment
+featuring performance-based incentives, clear career progression pathways, and a
+steadfast commitment to gender inclusion and youth employment. By integrating digital
+skills training and structured professional development, EBPE will build a resilient, high-
+caliber workforce capable of maintaining a competitive edge in the global
+biopharmaceutical landscape.
+
+Pillar 5: Market Development and Strategic Partnership
+
+Leveraging Ethiopia's domestic market of over 130 million people as anchor demand is
+critical to de-risking investments. EBPE will utilize EPSS's domestic preference and long-
+term framework agreements to ensure market stability and penetrate the private sector
+market. The strategy also targets exports within the APPM, AfCFTA framework and
+international market.
+
+7. Phased Implementation Roadmap
+
+The enterprise follows a phased approach to manage risk and capital intensity while
+ensuring alignment with national ambitions.
+
+Phase 1: Groundbreaking & Quick-Win Build-Out (2026 - 2028)
+
+Objective: Simultaneous campus groundbreaking and parallel construction of all business
+units to commission revenue-generating units within 18 - 24 months.
+
+· Diagnostics, PPE & Medical Supplies: Combined facility construction to be completed
+    by Q1 2028, with a synchronized commercial launch between Q1 - Q4 2028.
+
+· Medicines (Generics): Main construction completed by Q1 2028; commercial launch
+    by Q3 2028.
+
+· ShieldVax Civil Works: Structural frame and cleanroom installation reaching civil
+    completion by Q4 2027.
+
+· Workforce Target: 200-250 staff recruited.
+
+Phase 2: ShieldVax Commissioning & Quick-Win Scale-Up (2028 - 2030)
+
+Objective: Commission the vaccine fill-finish facility and scale quick-win units to reach
+profitability and regional export readiness.
+
+13
+· ShieldVax: Installation and qualification of equipment (IQ/OQ) in early 2028; facility
+    commissioning and validation by Q4 2028; first commercial batches produced in 2029
+    and reaching 16 million doses per year operational throughput in 2030. The target for
+    2030 was set based on the initial plan to localize 100% of government-funded traditional
+    vaccines, including Td (Tetanus-Diphtheria Toxoid) and BCG and finding a technolgoty
+    trasfer parnter. The phase of the technology trasfer at this tage would be limited to phase
+    1 or 2 of the technolgy trasfer mentiond under pillar 2 of the Sterategic Plan.
+
+· Medicines & Input Materials Scale-Up: Achievement of 30% and 40% production
+    capacity for generics by mid 2029 and end of 2030, respectively. API and excipient
+    feasibility studies and pilot production lines initiated by 2030 to support the unit's
+    vertical integration.
+
+· Diagnostics, PPE & Medical Supplies Scale-Up: Achievement of 30% and 40%
+    production capacity for diagnostics, PPE and medical supplies by end of 2029 and end
+    of 2030, respectively.
+
+· Profitability: Quick-win units for PPE and Medicines reach operational profitability in
+    2030, triggering the cross-subsidization reinvestment policy.
+
+· Expansion Initiation: API and excipinets manufacturing feasibility studies initiated.
+
+· Workforce Target: 400+ staff will be in place by the end of 2030.
+
+8. Strategic Objectives and Implementation Schedule
+
+The core of the 2026-2030 plan is defined by five Strategic Objectives (SOs) that cover
+infrastructure, operational readiness, workforce, finance, and quality.
+
+SO1: Rapid Infrastructure Development and Market Entry
+
+Deliver and commission the Diagnostics, Generic Medicines, and PPE units within 18-24
+months of groundbreaking.
+
+Major Activities        Timeline      Key Deliverables
+Facility Design &       Q2 - Q3 2026  Approved facility and utility designs.
+Engineering
+Civil Works &           Q4 2026 - Q4  Completion of building shell and roofing.
+Construction            2027
+Equipment Installation  Q3 2027 - Q4  Installed and connected production
+                        2027          equipment
+Commissioning &         Q1 - Q3 2028  IQ/OQ protocols completed.
+Validation
+Product Registration    Q3 2028       Market authorization for first 5 generic
+(EFDA)                                products.
+
+14
+SO2: ShieldVax Facility Construction and Readiness
+
+Complete the construction and validation of the vaccine fill-finish facility, preparing it for
+commercial manufacturing.
+
+Major Activities             Timeline   Key Deliverables
+                                        Equipment list, process flow diagrams and
+Final Design & Tech          Q3 2026 -  architectural plans finalized.
+Transfer Lock-in             Q4 2026    Site clearing, earthworks and foundation
+                                        compalted for main buildings, admin,
+Site Preparation &           Q1 2027 -  warehouse and utility blocks.
+Foundations                  Q2 2027
+                                        Completed structural framework, enclosure
+Civil construction           Q3 - Q4    (walls and roofing), and architectural finishes
+                             2027       for the main building and utilities annex.
+
+Utility & HVAC Installation  Q4 2027 -  Utility systems, cleanroom and HVAC
+                             Q2 2028    installed.
+Core Equipment (Vial
+Filling Line)                Q2 2028 -  Installation of vial washer, lyophilizers, fillers
+Commissioning,               Q3 2028    and sealing machines.
+Qualification & Process      Q4 2028 -  IQ /OQ/PQ and media fill,
+Validation                   Q2 2029    Aseptic process validation completed.
+
+SO3: Workforce and Capacity Building
+
+Recruit and train a workforce of over 400 staff by 2030.
+
+Major Activities             Timeline      Key Deliverables
+                             Q2 2026
+Skills Gap & Competency                    Required roles, competency profiles and
+Analysis                     Q2 2026       recruitment plan.
+
+EBPE workforce               Q3 2026 -     GMP and regulatory curricula
+development roadmap          Ongoing       established.
+                             Q2 2028 - Q1
+Technical Recruitment        2029          Phased hiring corresponding to facility
+Campaign                                   readiness.
+Partner-led Tech Transfer                  Hands-on intensive training for
+Training                                   ShieldVax team.
+
+SO4: Financial Sustainability Foundation
+
+Secure $207M+ in blended financing and activate the cross-subsidization mechanism.
+
+Major Activities             Timeline   Key Deliverables
+                             Q1 2026    World Bank (IDA) and EIH equity secured.
+Financial Close & Loan
+Signing                      Q3 2026    EBPE procurement unit operational.
+Centralized Procurement
+Office
+
+15
+Bridge Financing Facility      2028 -   Safeguard ShieldVax launch against market
+                               2029     volatility
+Cross-Subsidy Policy           Q1 2029
+Activation                              Allocation of portion of quick-win profits to
+Cost optimization Program      Ongoing  ShieldVax.
+
+                                        Continuous improvement initiatives improve
+                                        margins
+
+SO5: Regulatory and Quality Systems
+
+Implement WHO-GMP compliant Quality Management Systems (QMS) across all campus
+units.
+
+Major Activities               Timeline      Key Deliverables
+QMS Desing and                               Quality Manual and foundational
+Documentation                  Q2 2026 - Q4  SOPs.
+QC Lab Design & Equipping      2026          Operational analytical and
+                                             microbiology laboratories.
+External certification of the  Q1 2027 - Q4  ISO 13485 Certification
+diagnostics unit               2027
+Host First External GMP                      Regulatory approval for domestic
+Inspection                     Q3 2028 - Q4  sales.
+                               2028
+                               2029
+
+9. Financing & Investment Strategy
+
+EBPE requires a total capital target of $200M+ to fund the construction and commissioning
+of the integrated campus. The Enterprise will develop a resource mobilization strategy to
+support its operations in a sustainable manner.
+
+9.1. Blended Finance Mechanism
+
+The strategy employs a mix of funding sources to balance risk:
+
+· Government/EIH Equity: Direct capital injection from the sovereign wealth fund.
+· DFI Loans and Grants: Mobilize financing from the World Bank Group (e.g., HEPRR
+
+    program) and the African Development Bank, and the Development Bank of Ethiopia.
+· JV Equity Partnerships: Collaboration with international pharmaceutical firms for
+
+    technology transfer and investment.
+· Cross-Subsidization: reinvestment of quick-win profits until the vaccine unit reaches
+
+    breakeven.
+
+9.2. Financial Discipline and FX Hedging
+
+EBPE will prioritize financial sustainability through several policies:
+
+16
+· Bridge Financing Facility: Secured for Phase 2 (2028-2029) to safeguard the ShieldVax
+    launch against market volatility.
+
+· FX Hedging: Use of export revenue from regional markets to hedge against ETB
+    devaluation and facilitate raw material imports.
+
+· Phased CAPEX: Capital expenditure is tiered to match project milestones, reducing the
+    burden of debt servicing during early phases.
+
+10. Digitalization and AI Strategy
+
+EBPE will embed Industry 4.0 technologies into its manufacturing facilities from the
+groundbreaking stage to prevent technological obsolescence.
+
+10.1. Smart Manufacturing
+
+The enterprise will implement a fully integrated ERP system to manage procurement and
+inventory. Operations will utilize digital batch records and IoT-enabled monitoring for
+environmental parameters in cleanrooms, ensuring real-time quality deviation tracking and
+predictive maintenance of equipment.
+
+10.2. Artificial Intelligence Applications
+
+AI will be deployed for demand forecasting and supply chain optimization to mitigate
+logistical delays. On the production side, AI-driven models will optimize yields and monitor
+processes for early detection of deviations and quality assurance.
+
+10.3. Data Governance
+
+EBPE will establish a central data warehouse protected by a robust cybersecurity framework
+and secure cloud infrastructure. This ensures data integrity which is critical for EFDA and
+WHO-PQ audits, and protects the enterprise's intellectual property.
+
+11. Governance and Organizational Structure
+
+EBPE operates under a tiered governance structure designed to ensure commercial
+discipline, national strategic alignment, and operational efficiency.
+
+11.1. Ethiopian Investment Holdings
+
+As Ethiopia's sovereign wealth fund and EBPE's parent organization, EIH provides high-level
+strategic oversight. EIH functions as an active owner, enforcing modern corporate
+governance standards and evaluating enterprise performance against both commercial and
+national benchmarks. In this capacity, EIH manages state-owned assets to maximize
+
+17
+commercial value, oversees major capital decisions including investments and
+restructuring, and ensures compliance with the Federal Government Owned Enterprises
+Proclamation no. 1314/2024, including the requirement for the appointment of qualified
+independent board members.
+
+11.2. The Board of Directors
+
+The Board serves as the primary governing body of EBPE, reporting directly to EIH and guided
+by technical expertise and sector-specific relevance. It provides strategic guidance on the
+enterprise's roadmap, strategic plan and commercial trajectory while ensuring
+accountability through adherence to national and international quality standards (e.g.,
+WHO-GMP, ISO), sound financial management, and institutional transparency.
+
+11.3. Etho-Bio Pharma Enterprise
+
+The Enterprise Office functions as the corporate holding entity, delivering centralized
+leadership and shared services across the integrated campus. It sets the overall strategic
+direction and financial policy for the group, manages cross-unit resource allocation
+including the cross-subsidization model, and leads external relations such as regulatory
+coordination and government engagement with key stakeholders including MoH and EFDA.
+The office also oversees international technology transfer partnerships, JV negotiations, and
+capital mobilization.
+
+11.4. Business Unit Structure
+
+Each business unit operates with operational autonomy to manage its daily production and
+sales while remaining strategically aligned with the corporate office. The portfolio includes:
+
+1. ShieldVax Unit: The flagship unit for human vaccine production (Fill-Finish and future
+    Drug Substance).
+
+2. Medicines and Input Production Unit: Focused on manufacturing high-demand
+    tablets, capsules, oral liquid and injectables from the EML. It also includes future
+    production of APIs and excipients
+
+3. Diagnostic, PPE and Medical Supplies Unit: Production of RDTs and molecular
+    diagnostics for communicable and non-communicable diseases, PPE, medical
+    consumables, and surgical kits.
+
+4. Training & Capacity Building Unit: A dedicated unit within EBPE focused on workforce
+    development, GMP certification, leadership succession and talent retention.
+
+18
+12. Risk management
+
+EBPE employs a proactive risk management framework to safeguard project
+implementation and financial sustainability.
+
+Risk          Description                 Mitigation Strategy
+Category
+Construction  Contractor                  Employ experienced international EPCM
+              underperformance,           firm. implement strong project
+Supply Chain  construction delays, and    management and supervision; use
+Disruption    design coordination issues  milestone-based contracts and
+              affecting schedule and      performance guarantees.
+Financial     GMP compliance.
+              Delayed delivery of         Identify and qualify multiple suppliers
+Financial     specialized equipment       during design phase. Procure long-lead
+Technology    from overseas               equipment early; include delivery
+Transfer                                  guarantees and penalty clauses in supply
+              Loans/grants delayed or     contracts
+Regulatory    government equity not       Maintain a diversified funding pipeline.
+Human         released on schedule        Develop a detailed 36-month cash flow
+Capital       Insuffiency in the          forecast. Secure bridge financing options.
+Market        mobilized budget to start   Phase project milestones to match funding
+              the parallel commisioning   disbursements
+              of the business units
+              Forex shortage, ETB         Conduct extensive due diligence on
+              devaluation and high        partners. Structure agreement with
+              inflation                   milestone-based payments and clear
+              Partner fails to deliver    IP/Know-How deliverables. Assign
+              complete knowledge or       dedicated TT team to "shadow" partner
+              critical documentation      Early engagement with EFDA; Embed GMP
+                                          experts from day 1, Implement
+              Delay in WHO-PQ or EFDA     Compliance by Design
+              approval.                   Develop a competitive compensation &
+                                          benefits package tied to public mission;
+              Skill shortage and "brain   initiate diaspora engagement program and
+              drain" of trained staff.    launch EBPE training program
+                                          Utilize domestic preference and 25% price
+              EPSS spot tenders lack      preference;
+              price variation,            Secure long-term offtake (framework)
+              Competition from low-       agreement
+              cost imported generics.
+
+19
+13. Sustainability and Environmental, Social and Governance Impact
+
+EBPE's strategy is designed to create lasting value across economic, social, and
+environmental dimensions.
+
+· Economic Sustainability: Generation of significant FX savings through import
+    substitution and high-value technical job creation.
+
+· Social Impact: Achievement of health equity by ensuring the availability of affordable,
+    life-saving medicines and vaccines. This directly addresses access to essential
+    medicines and strengthens national pandemic preparedness.
+
+· Environmental Impact: Commitment to "Green Manufacturing" through energy-
+    efficient facility design and advanced pharmaceutical waste management. The
+    enterprise will implement modern, eco-friendly incineration to safely handle hazardous
+    waste.
+
+14. Financial Analysis and Funding Strategy
+
+This financial analysis and budget assessment forms the economic foundation of EBPE 5-
+Year Strategic Plan. Developed from a comprehensive business cases for vaccine
+manufacturing and initial feasibility studies for seeting up pharmaceuticals and diagnostics
+manufcturing facilities, the figures presented represent projections that inform EBPE's
+capital allocation and resource mobilization efforts.
+
+The figures presented represent high-level projections that require further refinement to
+account for current market developments, price fluctuations, exchange rate movements,
+and other evolving factors. The analysis will inform capital allocation decisions and serve as
+a foundation for detailed financial planning as the enterprise progresses through its
+implementation phases.
+
+To realize its vision of an integrated biopharmaceutical campus, EBPE requires a total capital
+target exceeding USD 207 million. This investment leverages a Quick-Win cross-
+subsidization strategy where early operationalization and profitability of the Medicines and
+Diagnostics units will provide the internal liquidity required to sustain the capital-intensive,
+long-term development of the ShieldVax vaccine facility.
+
+14.1. Financials and Budget Required for the Vaccine Manufacturing Unit
+       (ShieldVax)
+
+The ShieldVax vaccine manufacturing facility requires a total investment of USD 250 million
+over the period 2026-2033, structured to support phased development from fill-finish
+operations to full formulation and validation. Investment is concentrated in the early years,
+
+20
+with USD 150 million budgeted for the duration of the staretgic plan (2026 - 2030). The full
+investment is expected to be deployed by 2033.
+
+Revenue and Volume Projection
+
+Commercial production is projected to begin in 2029, with output increasing from 8.2 million
+doses generating USD 18.3 million in revenue to approximately 86.5 million doses and USD
+273.8 million in annual revenue at peak capacity. Contribution margins are projected to
+remain stable at approximately 23-26%, reflecting operational efficiency as production
+scales.
+
+Over the 30-year project horizon (2026-2057), cumulative revenues are projected to exceed
+USD 6.5 billion, with an IRR of 11.8%, a 25-year net present value (NPV) of USD 89.3 million,
+and a benefit-cost ratio of 1.07. The project is expected to reach break-even around 2040,
+with a payback period of approximately 15 years.
+
+14.2. Financials and Cash Flow for Quick-Win Business Units
+
+To mitigate the financing challenges typical of biopharmaceutical projects, EBPE's financial
+model relies on the rapid commissioning of its Quick-Win units. By generating early revenues
+and achieving operational profitability, these units are designed to cross-subsidize the
+capital-intensive development of the broader enterprise. The enterprise will devise a
+mechanism to reinvest quick-win profits into the vaccine unit's capital and operational
+expenses.
+
+A. Medicines and Input Material Unit
+
+The establishment of the oral dosage and injectable manufacturing facility serves as a
+primary cash-flow engine for EBPE. Production will focus on high-demand essential
+medicines (tablets, capsules, oral liquids, and injectables) agents that are currently heavily
+dominated by imports, directly advancing Ethiopia's import substitution goals.
+
+Establishing the facility requires a significant initial CAPEX of USD 47.93 million in Year 0.
+Fixed costs begin at USD 1.87 million during the pre-operational phase and scale up as
+production volumes increase.
+
+Returns & Reveue Trajectory
+
+Driven by strong domestic demand, projected to exceed 1.25 billion units in total volume by
+Year 10, revenues commence in Year 2 of the unit operation at USD 8.61 million and grow
+rapidly to reach USD 283.76 million by Year 10.
+
+The project's earnings demonstrate robust scalability:
+
+21
+· EBITDA: Turns positive in Year 3 at USD 11.93 million (a 25.7% margin) and expands to
+    USD 102.04 million by Year 10.
+
+· Free Cash Flow (FCF): The project overcomes its initial capital outlay to generate a
+    positive FCF of USD 0.61 million in Year 3, scaling significantly to USD 129.13 million by
+    Year 10, ensuring high liquidity generation for the broader enterprise.
+
+The following table details the operational cash flows and earnings for the first five years of
+the Small Molecules unit, highlighting its transition from pre-operational setup to a highly
+profitable cash engine.
+
+Table 3: Medicines Unit Financial Snapshot (Year 1 - 5)
+
+Financial Metric (USD)  Year 1      Year 2       Year 3      Year 4      Year 5
+Total Revenue                  0      8,616,199  46,312,036  89,817,960  125,495,311
+Variable Costs                 0      3,690,756  19,456,717  39,148,811  54,858,754
+Fixed Costs                           7,825,843  15,298,671  23,059,973  29,526,155
+EBITDA                   6,207,675   -2,828,032  11,938,152  28,376,800  42,186,064
+EBIT                    -6,207,675   -6,023,338   8,742,846  25,181,494  38,990,758
+Free Cash Flow          -9,402,981  -10,376,012   4,185,925  24,012,139  26,986,166
+                        -6,220,589
+
+B. Diagnostics, PPE & Medical Supplies Unit
+
+This unit is targeted to produce RDTs (HIV, Hepatitis, Syphilis, and Typhoid) as well as Auto-
+Disable (AD) and Reuse Prevention (RUP) syringes during its initial phases. This directly
+addresses critical diagnostic and supply gaps in the national healthcare system.
+
+The combined initial capital investment for these segments is USD 7.24 million (USD 2.08
+million for RDTs and USD 5.16 million for Syringes).
+
+Returns & Economic Impact
+
+The RDT diagnostic segment alone demonstrates highly attractive financial viability,
+boasting NPV of USD 9.89 million, an IRR of 39.26%, and a rapid payback period of 4.33
+years.
+
+Combined revenues for Diagnostics and Syringes kick off early, generating USD 5.60 million
+in Year 1 of operation and growing steadily to USD 20.46 million by Year 10. The Syringes line
+achieves positive EBITDA by Year 2 (USD 0.12 million), while the RDT line becomes highly
+profitable by Year 3 (USD 3.29 million)..
+
+The following table details the consolidated operational cash flows and earnings for the first
+five years of the Diagnostics, PPE & Medical Supplies unit, demonstrating their path to
+sustained positive cash balances.
+
+22
+Table 4: Combined RDT & Syringes Financial Snapshot (Years 1-5)
+
+Financial Metric (USD)   Year 1      Year 2      Year 3        Year 4      Year 5
+Combined Total Revenue   5,603,564   7,370,394   14,678,238    16,854,299  19,262,056
+Combined Variable Costs  5,479,927   7,048,436   9,290,487     10,716,302  12,247,202
+Combined Fixed Costs      680,968     735,261
+Combined EBITDA           -557,331    -413,303    832,587        864,168    901,769
+Combined EBIT            -1,040,260   -896,232   4,555,163     5,273,828   6,113,083
+Combined Income Taxes                            4,072,234     4,790,899   5,630,154
+Combined Free Cash Flow        0           0      945,937      1,125,342   1,689,046
+                         -1,199,662  -1,144,087  3,391,620     3,907,709   4,326,819
+
+14.3. Consolidated Budget Summary and Gap Assessment
+
+To realize the vision of a fully integrated biopharmaceutical campus, EBPE requires a total
+capital target exceeding USD 300 million by 2035. Achieving this strategic milestone requires
+a transparent assessment of initial financial commitments and the remaining funding gaps
+that will drive the enterprise's resource mobilization strategy over the next five years.
+
+To date, budget has been secured only for ShieldVax, the flagship human vaccine
+manufacturing facility. Specifically, EBPE has secured USD 7.0 million in equity from EIH,
+with an potential to mobilize an additional USD 74.0 million from the World Bank's HEPRR
+program with the support of MoH. This brings the total anticipated secured funding for the
+enterprise to USD 81.0 million. However, it is critical to note that this funding is allocated
+exclusively to the vaccine facility and subject to change.
+
+Consequently, securing the necessary capital for the Medicines and Diagnostics business
+unit represents an urgent strategic priority for the 2026-2030 period. At the outset of this
+strategic plan, no secured budget has been allocated to these units, creating a funding gap
+that must be addressed through targeted investment partnerships. The enterprise's cross-
+subsidization model dictates that the rapid operationalization and subsequent profitability
+of the Medicines and Diagnostics units are essential to generate the internal liquidity needed
+to sustain the highly capital-intensive ShieldVax facility in the long term.
+
+Table 5: Conslidated budget summary in USD (2036-30)
+
+Business Unit       Total Budget Required        Budget Secured /  Funding Gap
+                                                 High Potential
+                                                                   69.0 million
+ShieldVax           150.0 million                81.0 million      7.24 million
+                    7.24 million                 -
+Diagnostics, PPE &                                                 49.8 million
+Medical Supplies                                                   126.04 million
+
+Medicines           49.8 million                 -
+Total               207.04 million               81.0 million
+
+23
+14.4. Funding Strategy & Capital Mobilization
+
+To bridge the consolidated funding gap of USD 126.04 million and fully capitalize the
+integrated biopharmaceutical campus, EBPE will implement a proactive, multi-tiered
+resource mobilization strategy. This strategy relies on a blended finance approach, aligning
+equity, grants, and concessional loans, with the unique risk-return profiles of each business
+unit.
+
+1. Capitalizing the Quick-Win Units (Medicine and RDTs & Syringes)
+
+To rapidly activate these revenue-generating units, EBPE will pursue a structured debt-to-
+equity financing model optimized for high-yield, near-term returns. For the Diagnostics, PPE
+and Medical Supplies unit, EBPE seeks to raise 40% of the required capital (USD 2.9 million)
+through equity. For the Medicines unit, the target is 30% equity (USD 14.94 million). EBPE will
+primarily engage with EIH, impact investors attracted by the units' strong IRR, and
+international pharmaceutical firms seeking strategic stakes in the Ethiopian and East African
+market.
+
+The remaining 60% for Diagnostics (USD 4.34 million) and 70% for Pharma (USD 34.86
+million) will be mobilized through debt facilities. EBPE will prioritize high-likelihood near-
+term opportunities with the Development Bank of Ethiopia (DBE), the African Development
+Bank (AfDB), the International Finance Corporation (IFC), and other financing institutions.
+The units' rapid break-even timelines will make it highly attractive for these credit facilities.
+
+2. Sustaining the Vaccine Facility (ShieldVax)
+
+EBPE will address the remaining funding gap of USD 69 million for ShieldVax by tapping into
+the global health security financing ecosystem. Leveraging sovereign backing, EBPE will
+work to secure large-scale concessional loans, targeting AfDB, IFC and other DFIs. To offset
+the capital intensity of the vaccine facility, EBPE will pursue development assistnace from
+global health partners, including GAVI, CEPI and others. Strategic JV with leading global
+vaccine manufacturing firms will also be negotiated, aiming to secure additional resource in
+exchange for market access and technology transfer agreements.
+
+3. Financial Discipline & Risk Hedging
+
+Securing capital is only the first step; protecting it from macroeconomic volatility is critical
+to the Strategic Plan's success. Once the Quick-Win units reach operational profitability by
+a mandatory policy will be in place to reinvest their profits directly into ShieldVax operations.
+Dedicated bridge financing will safeguard the ShieldVax launch against global market
+volatility and potential delays in disbursements during the Phase 2 period. To mitigate
+Ethiopia's structural foreign exchange constraints, EBPE will use hard-currency export
+
+24
+revenues from regional and international markets to hedge against ETB devaluation,
+ensuring uninterrupted procurement of improted API and other input materials.
+
+15. Monitoring, Evaluation & Learning Plan
+
+To ensure the successful execution of the 2026-2030 Strategic Plan, EBPE will utilize a
+Monitoring, Evaluation, and Learning (MEL) framework. This robust system is designed to
+measure operational maturity, financial sustainability, and regulatory compliance,
+transitioning the Enterprise from basic milestone tracking to continuous performance
+management.
+
+15.1. The EBPE Logic Model Framework
+
+The MEL strategy is anchored in a Logic Model that maps how invested resources translate
+into long-term strategic results. This guarantees that all daily processes remain aligned with
+EBPE's ultimate mission of national health security.
+
+Table 6: Input-Process-Output-Outcome-Impact Framework
+
+Logic      Definition               EBPE Specific Indicators & Targets
+
+Stage
+
+Inputs     The resources, capital,  Capital: Secure minimum USD 207M in blended
+           and assets invested.     financing.
+
+                                    Infrastructure: Land and dedicated utilities at
+                                    Kilinto Industrial Park.
+
+                                    Knowledge: Signed Technology Transfer
+                                    agreements.
+
+Processes  Operational tasks        Construction: Execution of civil works and
+           executed using the       EPCM contracts.
+           inputs.
+                                    Capacity Building: Execution of the EBPE
+                                    workforce development roadmap.
+
+                                    Quality Assurance: Implementation of WHO-
+                                    GMP compliant Quality Management Systems
+                                    (QMS) and early EFDA engagement.
+
+Outputs    Direct, tangible         Infrastructure Delivery: Full commissioning of
+           deliverables from the    Diagnostics, Generic Medicines, and PPE units
+           processes.               within 18-24 months.
+
+                                    Production Capability: ShieldVax capacity to
+                                    produce 16 million vaccine doses annually by
+                                    2030.
+
+25
+Outcomes       Short-to-medium-term     Human Capital: 400+ direct technical and
+Impact         financial or market      managerial staff recruited.
+               changes.
+                                        Financial Viability: >USD 10M in combined
+               The ultimate, long-term  annual revenue from Quick-Win units.
+               strategic changes
+               realized.                Market Penetration: Capture 10% local market
+                                        share in targeted generic medicines.
+
+                                        Cross-Subsidization: Quick-Win profits
+                                        successfully reinvested into ShieldVax.
+
+                                        Health Security: National self-reliance in
+                                        vaccine manufacturing and pandemic
+                                        preparedness.
+
+                                        Economic Resilience: Significant FX savings via
+                                        import substitution and an IRR of 11.8% over the
+                                        30-year project horizon.
+
+15.2. Key Performance Indicators (KPIs) Matrix (2026-2030)
+
+To rigorously measure the Outputs and Outcomes defined in the logic model, EBPE will track
+the following time-bound, quantifiable KPIs.
+
+Table 7: Year-by-Year Measurable  KPI Targets
+                                    Year 2 (2027)
+Strategic      Year 1 (2026)                        Year 3 (2028)  Year 4        Year 5
+Category                            100% of                        (2029)        (2030)
+                                    building        100% IQ/OQ     >1
+Infrastructure 100% of facility     shells and      validation     commercial    16 million
+                                    roofing         completed      vaccine       vaccine
+& Production and utility            completed       for Quick-     batch         doses/year
+                                    for all units.  Win units.     produced      operational
+               designs              Bridge                         (ShieldVax).  throughput
+               approved.            financing       >USD 2M in     Positive      achieved.
+                                    facility for    early revenue  EBITDA
+Financial      USD 81M in           Phase 2         generated      achieved for  >USD 10M in
+Health         initial Phase 1      legally         from Quick-    Medicines     combined
+               financing            secured.        Win units.     unit.         annual
+               secured.             100% of                                      revenue
+                                    analytical      ISO 13485      1 successful  from Quick-
+Regulatory &   Comprehensive        and             Certification  external      Win units.
+Quality (QMS)  Quality Manual       microbiology    achieved; 5    GMP
+               drafted and          QC labs         generic        inspection    100%
+               approved.            functional.     products       hosted for    compliance
+                                                    registered     domestic      with WHO-
+                                                    with EFDA.     sales.        GMP
+                                                                                 standards
+                                                                                 across
+                                                                                 active lines.
+
+26
+Human         Integrated        >200 core       100% of      100% of      >400 direct
+Capital &     workforce         staff and       ShieldVax    aseptic      jobs fully
+Talent        development       technicians     core team    processing   established
+              roadmap           recruited and   completes    validations  and
+Market &      launched.         onboarded.      Phase 1      passed by    operational.
+Supply Chain                                    partner-led  technical
+              Centralized       Long-lead       Tech         staff.       10% local
+              Procurement       equipment       Transfer                  market
+              Office fully      (e.g., vial     training.    30%          share
+              operationalized.  filling lines)               capacity     captured in
+                                successfully    1st EPSS     utilization  targeted
+                                delivered.      long-term    reached in   essential
+                                                framework    Quick-Win    generics.
+                                                agreement    units.
+                                                secured.
+
+15.3. MEL Governance
+
+The MEL framework will be integrated directly into EBPE's corporate governance to ensure
+proactive risk management:
+
+· Performance against these KPIs will be digitized through the ERP and other systems,
+    allowing real-time tracking of capacity utilization, yield rates, and quality deviations.
+
+· The Enterprise will conduct monthly and quarterly operational reviews, while the Board
+    of Directors and EIH will evaluate comprehensive quarterly performance reports.
+
+27
+16. References
+
+1. Ministry of Health Ethiopia. Health Sector Medium Term Development and Investment
+
+    Plan (HSDIP) 2016-2018 EFY (2023/24-2025/26). Addis Ababa: Ministry of Health; 2023.
+2. Ethiopian Investment Commission. Pharmaceuticals Sector Investment Profile. Addis
+
+    Ababa: EIC; 2024. Available from:        https://investethiopia.gov.et/key-
+    sectors/manufacturing/pharmaceuticals/.
+
+3. Ministry of Health & AHRI. Local Pharmaceutical Manufacturing in Ethiopia: Landscape
+
+    Assessment Report. Addis Ababa: MoH; May 2024.
+4. Ministry of Health. Assessment of the Local Pharmaceutical Manufacturing Market Share
+
+    in Ethiopia. Addis Ababa: MoH; May 2025.
+5. Ethiopian Pharmaceuticals Supply Service. Annual Bulletin for Key Performance
+
+    Indicators Trend Analysis (2012-2017 EFY). Addis Ababa: EPSS; September 2025.
+
+6. Ministry of Health & UK Aid. Localization of Ethiopia Pharmaceutical Manufacturing.
+    Addis Ababa: MoH; 2024.
+
+7. United Nations Conference on Trade and Development. Improving the investment
+    landscape for local production of essential antibiotics in Ethiopia: An advisory report.
+
+    Geneva: United Nations; 2023.
+
+8. AUDA-NEPAD. 24 Priority Medical Products and Roadmap for Regional Manufacturing in
+    Africa.
+
+28
+

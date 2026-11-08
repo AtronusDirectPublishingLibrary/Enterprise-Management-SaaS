@@ -7,9 +7,13 @@ const router = Router();
 
 const slideSchema = z.object({
   title: z.string().min(1),
+  titleAm: z.string().nullable().optional(),
   subtitle: z.string().nullable().optional(),
+  subtitleAm: z.string().nullable().optional(),
   tagline: z.string().nullable().optional(),
+  taglineAm: z.string().nullable().optional(),
   ctaLabel: z.string().nullable().optional(),
+  ctaLabelAm: z.string().nullable().optional(),
   ctaUrl: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   sortOrder: z.number().optional(),

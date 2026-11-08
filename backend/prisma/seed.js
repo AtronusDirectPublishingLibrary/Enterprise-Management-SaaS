@@ -1,5 +1,6 @@
 ﻿const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const publicAboutKeys = require('./public-about-keys');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -59,7 +60,8 @@ async function main() {
       { key: "newsAnnouncements", en: "News & Announcements", am: "\u12dc\u1293\u12ce\u127d \u12a5\u1293 \u121b\u1235\u1270\u12c8\u1242\u12eb\u12ce\u127d" },
       { key: "headOffice", en: "Head Office", am: "\u12a0\u1235\u1270\u12f3\u12f0\u122d \u124d\u120d\u134d" },
       { key: "headOfficeAddress1", en: "Kazanchis, Bete Berhan Building, 5th floor", am: "\u12ab\u12dc\u1295\u127a\u1235\u1363 \u1264\u1274 \u1265\u122d\u1203\u1295 \u120d\u1245\u1363 5\u1c5a \u12d5\u12f5\u122d" },
-      { key: "headOfficeAddress2", en: "Addis Ababa, Ethiopia", am: "\u12a0\u12f2\u1235 \u12a0\u1260\u1263\u1363 \u12a2\u1275\u12ee\u1335\u12eb" }
+      { key: "headOfficeAddress2", en: "Addis Ababa, Ethiopia", am: "\u12a0\u12f2\u1235 \u12a0\u1260\u1263\u1363 \u12a2\u1275\u12ee\u1335\u12eb" },
+      ...publicAboutKeys
     ]});
   }
   console.log("✅ DB seeded!");

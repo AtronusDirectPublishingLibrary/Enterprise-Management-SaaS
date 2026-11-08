@@ -6,7 +6,7 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("pms2026");
+  const [password, setPassword] = useState("admin123");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -18,6 +18,7 @@ export default function Login() {
       await login(username.trim(), password);
       navigate("/dashboard");
     } catch (e2) {
+      console.error("Login error:", e2);
       setErr(e2.message || "Login failed");
     } finally {
       setBusy(false);
@@ -36,34 +37,21 @@ export default function Login() {
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Username</label>
-          <input
-            className="form-control"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            autoFocus
-          />
+          <input className="form-control" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus />
         </div>
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
+          <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
         </div>
 
         <button type="submit" className="btn-brand w-100 py-2 fs-5" disabled={busy}>
-          {busy ? "Signing in…" : "Sign in"}
+          {busy ? "Signing in..." : "Sign in"}
         </button>
 
         <div className="mt-4 pt-3 border-top text-center" style={{ fontSize: "0.8rem", color: "#6c757d" }}>
           <div className="fw-semibold mb-1">Demo accounts</div>
-          <div>admin / pms2026 &nbsp;·&nbsp; pm_demo / pm123</div>
-          <div>pi_demo / pi123 &nbsp;·&nbsp; viewer_demo / viewer123</div>
+          <div>admin / admin123</div>
         </div>
       </form>
     </div>

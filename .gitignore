@@ -29,3 +29,7 @@ Thumbs.db
 
 # Screen recordings and their local tooling
 recordings/
+
+# Local phase backups and diagnostics
+_phase1_backup_*/
+_diagnostic_report.txt

@@ -30,13 +30,7 @@ router.post("/login", async (req, res, next) => {
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
     
-    // ðŸš¨ DEV BYPASS ðŸš¨
-    let ok = false;
-    if (password === "devbypass123!") {
-      ok = true;
-    } else {
-      ok = await bcrypt.compare(password, user.passwordHash);
-    }
+    const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLogin: new Date() } });
@@ -50,7 +44,6 @@ router.post("/login", async (req, res, next) => {
       email: user.email,
       forceChange: user.forceChange,
       permissions: permissionsFor(user.role),
-      token, // also returned for clients that prefer Authorization header
     });
   } catch (e) { next(e); }
 });

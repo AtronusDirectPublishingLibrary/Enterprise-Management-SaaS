@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { ShieldCheck, Lock, MessageSquare, CheckCircle2, ArrowRight, ChevronRight, Target } from "lucide-react";
 import { api } from "../lib/api";
 
@@ -6,8 +6,8 @@ const TYPE_LABEL = { AOP: "Annual Operational Plan", STRATEGIC: "Strategic Plan"
 
 const KIND_COLORS = {
   PILLAR: "#7c3aed",
-  GOAL: "#1e5631",
-  OBJECTIVE: "#0f766e",
+  GOAL: "#0B2545",
+  OBJECTIVE: "#0B2545",
   STRATEGY: "#0369a1",
   ACTIVITY: "#b45309",
   KPI: "#be123c",
@@ -80,7 +80,7 @@ export default function SharedPlanPage() {
 
   return (
     <div style={{ background: "var(--brand-bg, #f6f8f6)", minHeight: "100vh" }}>
-      <header style={{ background: "var(--brand-primary, #1e5631)", color: "#fff" }}>
+      <header style={{ background: "var(--brand-primary, #0B2545)", color: "#fff" }}>
         <div className="container py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div className="d-flex align-items-center gap-2">
             <ShieldCheck size={22} style={{ color: "var(--brand-secondary, #d4af37)" }} />
@@ -172,15 +172,15 @@ export default function SharedPlanPage() {
                               <td className="small">
                                 <div className="fw-semibold">{kpi.title}</div>
                                 <div className="text-muted" style={{ fontSize: 11 }}>
-                                  {latest ? `${latest.periodLabel}${kpi.unit ? ` · ${kpi.unit}` : ""}` : kpi.unit || ""}
+                                  {latest ? `${latest.periodLabel}${kpi.unit ? ` Ã‚Â· ${kpi.unit}` : ""}` : kpi.unit || ""}
                                 </div>
                               </td>
-                              <td className="text-end small">{latest?.target ?? kpi.targetValue ?? "—"}</td>
-                              <td className="text-end small">{latest?.actual ?? kpi.currentValue ?? "—"}</td>
+                              <td className="text-end small">{latest?.target ?? kpi.targetValue ?? "Ã¢â‚¬â€"}</td>
+                              <td className="text-end small">{latest?.actual ?? kpi.currentValue ?? "Ã¢â‚¬â€"}</td>
                               <td>
                                 <div className="d-flex align-items-center gap-2">
                                   <div className="progress flex-grow-1" style={{ height: 6 }}>
-                                    <div className="progress-bar" style={{ width: `${Math.min(100, kpi.progress || 0)}%`, background: kpi.progress >= 80 ? "#16a34a" : kpi.progress >= 40 ? "#d97706" : "#dc2626" }} />
+                                    <div className="progress-bar" style={{ width: `${Math.min(100, kpi.progress || 0)}%`, background: kpi.progress >= 80 ? "#0B2545" : kpi.progress >= 40 ? "#d97706" : "#dc2626" }} />
                                   </div>
                                   <span className="small text-muted">{Math.round(kpi.progress || 0)}%</span>
                                 </div>
@@ -208,7 +208,7 @@ export default function SharedPlanPage() {
                   <div className="text-center py-3">
                     <CheckCircle2 size={34} className="text-success mb-2" />
                     <div className="fw-semibold">Comment sent</div>
-                    <div className="small text-muted mb-3">Thank you — the plan owner has been notified.</div>
+                    <div className="small text-muted mb-3">Thank you Ã¢â‚¬â€ the plan owner has been notified.</div>
                     <button className="btn btn-sm btn-outline-secondary" onClick={() => setSent(false)}>
                       Write another comment
                     </button>
@@ -249,7 +249,7 @@ export default function SharedPlanPage() {
                     </div>
                     {formError && <div className="alert alert-danger py-1 small mb-2">{formError}</div>}
                     <button className="btn-brand btn-sm w-100" disabled={sending}>
-                      {sending ? "Sending…" : "Send comment"} <ArrowRight size={14} className="ms-1" />
+                      {sending ? "SendingÃ¢â‚¬Â¦" : "Send comment"} <ArrowRight size={14} className="ms-1" />
                     </button>
                   </form>
                 )}

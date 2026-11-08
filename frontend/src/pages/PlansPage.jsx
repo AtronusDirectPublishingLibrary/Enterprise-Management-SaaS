@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Plus,
   CalendarRange,
@@ -42,7 +42,7 @@ const TYPE_META = {
     subtitle: "Fiscal-year operating plan. Generated from the standard template and linked to a strategic plan.",
     icon: ClipboardList,
     parentType: "STRATEGIC",
-    accent: "#0f766e",
+    accent: "#0B2545",
   },
 };
 
@@ -282,7 +282,7 @@ export default function PlansPage({ type }) {
                   <h5 className="fw-bold mb-1" style={{ color: "var(--brand-primary)" }}>{plan.title}</h5>
                   <div className="text-muted small mb-3">
                     {new Date(plan.startDate).toLocaleDateString()} &ndash; {new Date(plan.endDate).toLocaleDateString()}
-                    {plan.owner ? ` · ${plan.owner}` : ""}
+                    {plan.owner ? ` Â· ${plan.owner}` : ""}
                   </div>
 
                   <div className="mb-3">
@@ -315,7 +315,7 @@ export default function PlansPage({ type }) {
                     <div className="mb-3 small">
                       {plan.childPlans.map((child) => (
                         <div className="d-flex justify-content-between border-bottom py-1" key={child.id}>
-                          <span className="text-truncate me-2">{child.periodLabel} · {child.title}</span>
+                          <span className="text-truncate me-2">{child.periodLabel} Â· {child.title}</span>
                           <span className="fw-semibold">{Math.round(child.completion)}%</span>
                         </div>
                       ))}
@@ -337,6 +337,15 @@ export default function PlansPage({ type }) {
                         <Link2 size={13} className="me-1" />Link
                       </button>
                     )}
+                    {plan.period && !plan.period.successorId && (
+                      <Link
+                        className="btn btn-sm btn-outline-primary"
+                        to={`/planning-calendar?plan=${plan.id}`}
+                        title="Review and prepare the next period"
+                      >
+                        <CalendarRange size={13} className="me-1" />Next period
+                      </Link>
+                    )}
                     <button className="btn btn-sm btn-outline-danger ms-auto" onClick={() => removePlan(plan)}>
                       <Trash2 size={13} />
                     </button>
@@ -351,7 +360,7 @@ export default function PlansPage({ type }) {
                       >
                         <option value="">Not linked</option>
                         {parentOptions.map((parent) => (
-                          <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
+                          <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
                         ))}
                       </select>
                       <button className="btn btn-sm btn-brand" onClick={() => linkParent(plan)}>Save</button>
@@ -484,7 +493,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                     <label className="form-label small fw-semibold">Fiscal year starts</label>
                     <select className="form-select form-select-sm" value={fyYear} onChange={(e) => setFyYear(Number(e.target.value))}>
                       {[currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map((year) => (
-                        <option key={year} value={year}>July {year} – June {year + 1}</option>
+                        <option key={year} value={year}>July {year} â€“ June {year + 1}</option>
                       ))}
                     </select>
                     <div className="form-text">
@@ -503,7 +512,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                     <select className="form-select form-select-sm" value={form.parentPlanId} onChange={(e) => setForm({ ...form, parentPlanId: e.target.value })}>
                       <option value="">Not linked</option>
                       {parentOptions.map((parent) => (
-                        <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
+                        <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
                       ))}
                     </select>
                   </div>
@@ -511,7 +520,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                   <div className="col-12">
                     <div className="border rounded p-3 bg-light">
                       {templateError && <div className="text-danger small">{templateError}</div>}
-                      {!template && !templateError && <div className="small text-muted">Building template preview…</div>}
+                      {!template && !templateError && <div className="small text-muted">Building template previewâ€¦</div>}
                       {template && (
                         <>
                           <div className="d-flex flex-wrap gap-3 small mb-2">
@@ -520,7 +529,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                             <span>{template.activities} quarterly activities</span>
                             <span>{template.kpis} KPIs with quarterly targets</span>
                             <span className="text-muted">
-                              {new Date(template.startDate).toLocaleDateString()} – {new Date(template.endDate).toLocaleDateString()}
+                              {new Date(template.startDate).toLocaleDateString()} â€“ {new Date(template.endDate).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="small" style={{ maxHeight: 180, overflowY: "auto" }}>
@@ -528,7 +537,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                               <div className="mb-1" key={pillar.code}>
                                 <span className="badge bg-secondary me-1">{pillar.code}</span>
                                 <strong>{pillar.title}</strong>
-                                <div className="text-muted ps-4">{pillar.objectives.join(" · ")}</div>
+                                <div className="text-muted ps-4">{pillar.objectives.join(" Â· ")}</div>
                               </div>
                             ))}
                           </div>
@@ -573,7 +582,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                       <select className="form-select form-select-sm" value={form.parentPlanId} onChange={(e) => setForm({ ...form, parentPlanId: e.target.value })}>
                         <option value="">Not linked</option>
                         {parentOptions.map((parent) => (
-                          <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
+                          <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
                         ))}
                       </select>
                     </div>
@@ -595,7 +604,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
               {mode === "template" && (
                 <div className="mt-2 small text-muted">
                   <AlertTriangle size={13} className="me-1" />
-                  Template items and KPI targets are editable after creation — nothing here is hard-coded.
+                  Template items and KPI targets are editable after creation â€” nothing here is hard-coded.
                 </div>
               )}
               {error && <div className="alert alert-danger py-2 small mt-3 mb-0">{error}</div>}
@@ -603,7 +612,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
             <div className="modal-footer">
               <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>Cancel</button>
               <button type="submit" className="btn-brand btn-sm" disabled={saving}>
-                {saving ? "Creating…" : mode === "template" ? "Create from template" : "Create plan"}
+                {saving ? "Creatingâ€¦" : mode === "template" ? "Create from template" : "Create plan"}
               </button>
             </div>
           </form>

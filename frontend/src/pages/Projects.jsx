@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+﻿import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, buildQuery } from "../lib/api";
 import { FileText, MessageSquare, List, LayoutDashboard, Calendar as CalIcon, Copy, Plus, Edit2, ArrowLeft, Calendar, Filter, Flag, ChevronRight, ChevronDown } from "lucide-react";
@@ -234,7 +234,7 @@ function ProjectDetail({ project, onBack }) {
       if (!newTitle) return;
       
       const res = await api.post(`/templates/clone/${project.projectId}`, { title: newTitle });
-      alert(`ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Project cloned successfully! New ID: ${res.newProjectId}`);
+      alert(`ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Project cloned successfully! New ID: ${res.newProjectId}`);
       onBack(); // Go back to the list to see the new project
       loadProjects();
     } catch (e) {
@@ -546,7 +546,7 @@ function AdvancedGantt({ project, activities, milestones }) {
 
                 const isComplete = item.status === "Complete";
                 const progressPct = item.progress || (isComplete ? 100 : 0);
-                const colorBg = isMs ? "#D4AF37" : (item.status === "Complete" ? "#2ecc71" : item.status === "In Progress" ? "#f39c12" : "#1E5631");
+                const colorBg = isMs ? "#D4AF37" : (item.status === "Complete" ? "#2ecc71" : item.status === "In Progress" ? "#f39c12" : "#0B2545");
                 const colorFaded = isMs ? "#F1F5F9" : (item.status === "Complete" ? "rgba(46, 204, 113, 0.2)" : item.status === "In Progress" ? "rgba(243, 156, 18, 0.2)" : "rgba(30, 86, 49, 0.2)");
 
                 return (

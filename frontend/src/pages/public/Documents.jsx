@@ -21,7 +21,7 @@ export default function Documents() {
         <table className="table mb-0">
           <thead><tr><th>Title</th><th>Type</th><th>Date</th><th className="text-end">Action</th></tr></thead>
           <tbody>
-            {items.length === 0 ? <tr><td colSpan={4} className="text-center py-4 text-muted">No documents available yet.</td></tr> : 
+            {items.length === 0 ? <tr><td colSpan={4} className="text-center py-4 text-muted">{t("documentsNoData")}</td></tr> : 
               items.map(item => (
                 <tr key={item.id}>
                   <td>{item.title}</td>

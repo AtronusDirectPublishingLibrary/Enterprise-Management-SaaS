@@ -16,7 +16,18 @@ import {
   X,
 } from "lucide-react";
 
-const EMPTY_SLIDE = { title: "", tagline: "", subtitle: "", ctaLabel: "", ctaUrl: "", imageUrl: "" };
+const EMPTY_SLIDE = {
+  title: "",
+  titleAm: "",
+  tagline: "",
+  taglineAm: "",
+  subtitle: "",
+  subtitleAm: "",
+  ctaLabel: "",
+  ctaLabelAm: "",
+  ctaUrl: "",
+  imageUrl: "",
+};
 
 export default function HeroSettingsAdmin() {
   const [images, setImages] = useState([]);
@@ -81,9 +92,13 @@ export default function HeroSettingsAdmin() {
     try {
       await api.post("/hero-texts", {
         ...newSlide,
+        titleAm: newSlide.titleAm || null,
         tagline: newSlide.tagline || null,
+        taglineAm: newSlide.taglineAm || null,
         subtitle: newSlide.subtitle || null,
+        subtitleAm: newSlide.subtitleAm || null,
         ctaLabel: newSlide.ctaLabel || null,
+        ctaLabelAm: newSlide.ctaLabelAm || null,
         ctaUrl: newSlide.ctaUrl || null,
         imageUrl: newSlide.imageUrl || null,
       });
@@ -245,12 +260,28 @@ export default function HeroSettingsAdmin() {
                     required
                   />
                 </div>
+                <div className="col-12">
+                  <input
+                    className="form-control form-control-sm"
+                    placeholder="Title in Amharic (optional)"
+                    value={newSlide.titleAm}
+                    onChange={(e) => setNewSlide({ ...newSlide, titleAm: e.target.value })}
+                  />
+                </div>
                 <div className="col-md-6">
                   <input
                     className="form-control form-control-sm"
                     placeholder="Tagline / eyebrow (optional)"
                     value={newSlide.tagline}
                     onChange={(e) => setNewSlide({ ...newSlide, tagline: e.target.value })}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <input
+                    className="form-control form-control-sm"
+                    placeholder="Tagline in Amharic (optional)"
+                    value={newSlide.taglineAm}
+                    onChange={(e) => setNewSlide({ ...newSlide, taglineAm: e.target.value })}
                   />
                 </div>
                 <div className="col-md-6">
@@ -265,6 +296,14 @@ export default function HeroSettingsAdmin() {
                     ))}
                   </select>
                 </div>
+                <div className="col-md-6">
+                  <input
+                    className="form-control form-control-sm"
+                    placeholder="Or paste a custom image URL"
+                    value={newSlide.imageUrl?.startsWith("http") ? newSlide.imageUrl : ""}
+                    onChange={(e) => setNewSlide({ ...newSlide, imageUrl: e.target.value })}
+                  />
+                </div>
                 <div className="col-12">
                   <textarea
                     className="form-control form-control-sm"
@@ -272,6 +311,15 @@ export default function HeroSettingsAdmin() {
                     placeholder="Subtitle / supporting sentence"
                     value={newSlide.subtitle}
                     onChange={(e) => setNewSlide({ ...newSlide, subtitle: e.target.value })}
+                  />
+                </div>
+                <div className="col-12">
+                  <textarea
+                    className="form-control form-control-sm"
+                    rows={2}
+                    placeholder="Subtitle in Amharic (optional)"
+                    value={newSlide.subtitleAm}
+                    onChange={(e) => setNewSlide({ ...newSlide, subtitleAm: e.target.value })}
                   />
                 </div>
                 <div className="col-md-5">
@@ -293,9 +341,9 @@ export default function HeroSettingsAdmin() {
                 <div className="col-12">
                   <input
                     className="form-control form-control-sm"
-                    placeholder="Or paste a custom image URL"
-                    value={newSlide.imageUrl?.startsWith("http") ? newSlide.imageUrl : ""}
-                    onChange={(e) => setNewSlide({ ...newSlide, imageUrl: e.target.value })}
+                    placeholder="Button label in Amharic (optional)"
+                    value={newSlide.ctaLabelAm}
+                    onChange={(e) => setNewSlide({ ...newSlide, ctaLabelAm: e.target.value })}
                   />
                 </div>
               </div>
@@ -423,9 +471,13 @@ export default function HeroSettingsAdmin() {
 function SlideEditor({ slide, images, onCancel, onSave }) {
   const [form, setForm] = useState({
     title: slide.title || "",
+    titleAm: slide.titleAm || "",
     tagline: slide.tagline || "",
+    taglineAm: slide.taglineAm || "",
     subtitle: slide.subtitle || "",
+    subtitleAm: slide.subtitleAm || "",
     ctaLabel: slide.ctaLabel || "",
+    ctaLabelAm: slide.ctaLabelAm || "",
     ctaUrl: slide.ctaUrl || "",
     imageUrl: slide.imageUrl || "",
   });
@@ -436,8 +488,14 @@ function SlideEditor({ slide, images, onCancel, onSave }) {
         <div className="col-12">
           <input className="form-control form-control-sm" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" />
         </div>
+        <div className="col-12">
+          <input className="form-control form-control-sm" value={form.titleAm} onChange={(e) => setForm({ ...form, titleAm: e.target.value })} placeholder="Title in Amharic" />
+        </div>
         <div className="col-md-6">
           <input className="form-control form-control-sm" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} placeholder="Tagline" />
+        </div>
+        <div className="col-md-6">
+          <input className="form-control form-control-sm" value={form.taglineAm} onChange={(e) => setForm({ ...form, taglineAm: e.target.value })} placeholder="Tagline in Amharic" />
         </div>
         <div className="col-md-6">
           <select className="form-select form-select-sm" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}>
@@ -447,8 +505,14 @@ function SlideEditor({ slide, images, onCancel, onSave }) {
             ))}
           </select>
         </div>
+        <div className="col-md-6">
+          <input className="form-control form-control-sm" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Custom image URL" />
+        </div>
         <div className="col-12">
           <textarea className="form-control form-control-sm" rows={2} value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} placeholder="Subtitle" />
+        </div>
+        <div className="col-12">
+          <textarea className="form-control form-control-sm" rows={2} value={form.subtitleAm} onChange={(e) => setForm({ ...form, subtitleAm: e.target.value })} placeholder="Subtitle in Amharic" />
         </div>
         <div className="col-md-5">
           <input className="form-control form-control-sm" value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} placeholder="Button label" />
@@ -457,7 +521,7 @@ function SlideEditor({ slide, images, onCancel, onSave }) {
           <input className="form-control form-control-sm" value={form.ctaUrl} onChange={(e) => setForm({ ...form, ctaUrl: e.target.value })} placeholder="/about or https://..." />
         </div>
         <div className="col-12">
-          <input className="form-control form-control-sm" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="Custom image URL" />
+          <input className="form-control form-control-sm" value={form.ctaLabelAm} onChange={(e) => setForm({ ...form, ctaLabelAm: e.target.value })} placeholder="Button label in Amharic" />
         </div>
       </div>
       <div className="d-flex gap-2 mt-2">
@@ -466,9 +530,13 @@ function SlideEditor({ slide, images, onCancel, onSave }) {
           onClick={() =>
             onSave({
               ...form,
+              titleAm: form.titleAm || null,
               tagline: form.tagline || null,
+              taglineAm: form.taglineAm || null,
               subtitle: form.subtitle || null,
+              subtitleAm: form.subtitleAm || null,
               ctaLabel: form.ctaLabel || null,
+              ctaLabelAm: form.ctaLabelAm || null,
               ctaUrl: form.ctaUrl || null,
               imageUrl: form.imageUrl || null,
             })

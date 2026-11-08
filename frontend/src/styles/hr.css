@@ -1,0 +1,649 @@
+/* ==========================================================================
+   People experience
+   Branded surfaces for the staff portal, recruitment pipeline and public
+   careers site, plus form rules that keep every field visible and reachable.
+   ========================================================================== */
+
+:root {
+  --hrx-navy: #07233d;
+  --hrx-navy-soft: #0d3357;
+  --hrx-gold: #c9a227;
+  --hrx-mint: #2f8f6b;
+  --hrx-surface: #ffffff;
+  --hrx-line: rgba(7, 35, 61, 0.1);
+  --hrx-shadow: 0 18px 38px -22px rgba(7, 35, 61, 0.45);
+}
+
+/* ------------------------------------------------ shared card & type rules */
+
+.hrx-card {
+  background: var(--hrx-surface);
+  border: 1px solid var(--hrx-line);
+  border-radius: 18px;
+  box-shadow: var(--hrx-shadow);
+}
+
+.hrx-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 1.05rem 1.35rem;
+  border-bottom: 1px solid var(--hrx-line);
+}
+
+.hrx-card-head .btn,
+.hrx-card-head .hrx-chip {
+  white-space: nowrap;
+}
+
+.hrx-card-head h2,
+.hrx-card-head h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--hrx-navy);
+}
+
+.hrx-card-body {
+  padding: 1.25rem 1.35rem;
+}
+
+.hrx-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hrx-gold);
+}
+
+/* ------------------------------------------------------------- portal hero */
+
+.hrx-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 1.9rem 2rem;
+  color: #fff;
+  background:
+    radial-gradient(120% 160% at 100% 0%, rgba(201, 162, 39, 0.4) 0%, rgba(201, 162, 39, 0) 45%),
+    linear-gradient(120deg, #07233d 0%, #0b3154 55%, #14406b 100%);
+  box-shadow: 0 26px 50px -30px rgba(7, 35, 61, 0.8);
+}
+
+.hrx-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -60px -120px auto;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 40px rgba(255, 255, 255, 0.04), 0 0 0 90px rgba(255, 255, 255, 0.03);
+}
+
+.hrx-hero h1 {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0.35rem 0 0.35rem;
+}
+
+.hrx-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hrx-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.hrx-hero .btn {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.hrx-hero .btn-gold {
+  background: var(--hrx-gold);
+  border-color: var(--hrx-gold);
+  color: #11202f;
+}
+
+.hrx-hero .btn-gold:hover {
+  background: #d8b23a;
+  border-color: #d8b23a;
+  color: #11202f;
+}
+
+.hrx-hero .btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+
+.hrx-hero .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------- stat tiles */
+
+.hrx-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.9rem;
+}
+
+.hrx-stat {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--hrx-line);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 12px 26px -22px rgba(7, 35, 61, 0.55);
+  overflow: hidden;
+}
+
+.hrx-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--hrx-accent, var(--hrx-gold));
+}
+
+.hrx-stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5b7186;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hrx-stat-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--hrx-navy);
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.hrx-stat-value small {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #74899c;
+}
+
+/* ---------------------------------------------------------------- timeline */
+
+.hrx-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.hrx-timeline-item {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 0.85rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px dashed var(--hrx-line);
+  align-items: start;
+}
+
+.hrx-timeline-item:last-child {
+  border-bottom: 0;
+}
+
+.hrx-timeline-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: var(--hrx-navy);
+}
+
+.hrx-timeline-item.is-overdue .hrx-timeline-icon {
+  background: rgba(220, 53, 69, 0.12);
+  color: #b32a37;
+}
+
+.hrx-timeline-item.is-soon .hrx-timeline-icon {
+  background: rgba(201, 162, 39, 0.18);
+  color: #8a6c0d;
+}
+
+.hrx-timeline-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--hrx-navy);
+}
+
+.hrx-timeline-sub {
+  font-size: 0.8rem;
+  color: #6a7f92;
+}
+
+.hrx-timeline-side {
+  text-align: right;
+  font-size: 0.78rem;
+  color: #5b7186;
+  white-space: nowrap;
+}
+
+.hrx-chip {
+  display: inline-flex;
+  max-width: 100%;
+  text-align: left;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hrx-chip--danger { background: rgba(220, 53, 69, 0.12); color: #b32a37; }
+.hrx-chip--warn { background: rgba(201, 162, 39, 0.2); color: #7d6208; }
+.hrx-chip--info { background: rgba(13, 51, 87, 0.1); color: var(--hrx-navy); }
+.hrx-chip--muted { background: #eef3f7; color: #58707f; }
+.hrx-chip--good { background: rgba(47, 143, 107, 0.14); color: #1d6b4f; }
+
+/* ------------------------------------------------------------- progress ring */
+
+.hrx-ring {
+  --value: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--hrx-gold) calc(var(--value) * 1%), #e8eef4 0);
+  flex: none;
+}
+
+.hrx-ring > span {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--hrx-navy);
+  font-size: 1.05rem;
+}
+
+/* --------------------------------------------------------------- task list */
+
+.hrx-task {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.7rem 0;
+  border-bottom: 1px dashed var(--hrx-line);
+}
+
+.hrx-task:last-child { border-bottom: 0; }
+
+.hrx-task input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: var(--hrx-mint);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+/* ----------------------------------------------------------------- forms */
+
+.hrx-form .form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #40566b;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.3rem;
+}
+
+.hrx-form .form-control,
+.hrx-form .form-select,
+.hrx-form textarea {
+  border-radius: 10px;
+  border: 1px solid rgba(7, 35, 61, 0.16);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  background: #fbfdff;
+  width: 100%;
+  max-width: 100%;
+}
+
+.hrx-form .form-control:focus,
+.hrx-form .form-select:focus,
+.hrx-form textarea:focus {
+  border-color: rgba(201, 162, 39, 0.7);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+  background: #fff;
+}
+
+.hrx-form .form-text {
+  font-size: 0.75rem;
+  color: #6a7f92;
+}
+
+/* Platform-wide form visibility: nothing may clip a field or its label. */
+.card form,
+.modal form,
+.hrx-form {
+  overflow-wrap: anywhere;
+}
+
+.card form .row > [class*="col"],
+.modal form .row > [class*="col"] {
+  min-width: 0;
+}
+
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="number"] {
+  min-width: 0;
+}
+
+.form-label {
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------ public careers */
+
+.careers-page {
+  background: #f7f5ef;
+  min-height: 60vh;
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.careers-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(110% 150% at 100% 0%, rgba(201, 162, 39, 0.35) 0%, rgba(201, 162, 39, 0) 42%),
+    linear-gradient(118deg, #07233d 0%, #0b3154 60%, #17456f 100%);
+  color: #fff;
+  padding: clamp(3rem, 7vw, 5rem) 0 clamp(2.5rem, 5vw, 4rem);
+}
+
+.careers-hero h1 {
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0.6rem 0 0.8rem;
+}
+
+.careers-hero p {
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 62ch;
+}
+
+.careers-hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1.8rem;
+}
+
+.careers-hero-stats strong {
+  display: block;
+  font-size: 1.5rem;
+  color: var(--hrx-gold);
+  line-height: 1.1;
+}
+
+.careers-hero-stats span {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.job-card {
+  background: #fff;
+  border: 1px solid var(--hrx-line);
+  border-radius: 18px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 16px 32px -26px rgba(7, 35, 61, 0.6);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  height: 100%;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 22px 40px -26px rgba(7, 35, 61, 0.55);
+}
+
+.job-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--hrx-navy);
+  margin: 0;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  color: #607689;
+}
+
+.job-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.job-summary {
+  font-size: 0.88rem;
+  color: #4a6176;
+  margin: 0;
+}
+
+.job-detail {
+  background: #fff;
+  border: 1px solid var(--hrx-line);
+  border-radius: 20px;
+  padding: clamp(1.4rem, 3vw, 2.2rem);
+  box-shadow: var(--hrx-shadow);
+}
+
+.job-detail h1 {
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  color: var(--hrx-navy);
+  font-weight: 700;
+}
+
+.job-detail h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--hrx-gold);
+  margin: 1.6rem 0 0.6rem;
+}
+
+.job-detail p {
+  color: #3f5568;
+  line-height: 1.7;
+}
+
+.apply-panel {
+  background: #fff;
+  border: 1px solid var(--hrx-line);
+  border-radius: 20px;
+  padding: 1.4rem;
+  box-shadow: var(--hrx-shadow);
+  position: sticky;
+  top: calc(var(--header-h, 76px) + 1rem);
+}
+
+/* ------------------------------------------------------- recruitment board */
+
+.pipeline-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.pipeline-col {
+  background: #f3f6f9;
+  border: 1px solid var(--hrx-line);
+  border-radius: 14px;
+  padding: 0.7rem;
+  min-height: 180px;
+}
+
+.pipeline-col h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #56707f;
+  display: flex;
+  justify-content: space-between;
+  margin: 0.15rem 0.25rem 0.7rem;
+}
+
+.pipeline-card {
+  background: #fff;
+  border: 1px solid var(--hrx-line);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.pipeline-card:hover {
+  border-color: rgba(201, 162, 39, 0.6);
+  transform: translateY(-1px);
+}
+
+.pipeline-card.is-selected {
+  border-color: var(--hrx-gold);
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.2);
+}
+
+.pipeline-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--hrx-navy);
+}
+
+.pipeline-sub {
+  font-size: 0.74rem;
+  color: #6a7f92;
+}
+
+@media (max-width: 767px) {
+  .hrx-hero {
+    padding: 1.4rem 1.25rem;
+  }
+
+  .hrx-timeline-item {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .hrx-timeline-side {
+    grid-column: 2;
+    text-align: left;
+    margin-top: 0.2rem;
+  }
+
+  .apply-panel {
+    position: static;
+  }
+}
+
+/* --------------------------------------------------- application shell nav */
+
+.app-brand {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.app-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--brand-primary) 0%, var(--brand-dark) 100%);
+  color: #fff;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 991.98px) {
+  .app-brand {
+    width: auto;
+    min-width: 0;
+  }
+
+  .app-brand h5 {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  header {
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
+    gap: 0.25rem;
+  }
+
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1055;
+    width: min(78vw, 290px);
+    padding-top: 1.25rem;
+    transform: translateX(-102%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 20px 50px rgba(4, 18, 32, 0.5);
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .app-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(4, 18, 32, 0.55);
+  }
+
+  main {
+    padding: 1rem !important;
+  }
+
+  /* theme.css forces 600px tables; on phones let them use the full width
+     instead of hiding half of each row behind a horizontal scrollbar. */
+  .table {
+    min-width: 0 !important;
+  }
+}

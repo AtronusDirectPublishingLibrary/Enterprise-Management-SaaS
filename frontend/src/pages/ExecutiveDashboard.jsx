@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ShieldAlert, Activity, Users } from "lucide-react";
 
-const COLORS = ["#1E5631", "#D4AF37", "#f39c12", "#e74c3c", "#3498db"];
+const COLORS = ["#0B2545", "#D4AF37", "#f39c12", "#e74c3c", "#3498db"];
 
 export default function ExecutiveDashboard() {
   const [data, setData] = useState(null);
@@ -59,7 +59,7 @@ export default function ExecutiveDashboard() {
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="inProgress" name="In Progress" stackId="a" fill="#f39c12" />
-                  <Bar dataKey="completed" name="Completed" stackId="a" fill="#1E5631" />
+                  <Bar dataKey="completed" name="Completed" stackId="a" fill="#0B2545" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

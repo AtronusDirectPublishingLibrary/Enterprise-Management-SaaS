@@ -1,12 +1,14 @@
 import { Helmet } from "react-helmet-async";
+import { useLanguage } from "../../lib/language";
 export default function Contact() {
+  const { t } = useLanguage();
   return (
     <div className="container py-5">
       <Helmet>
         <title>Contact Us | EBPE</title>
         <meta name="description" content="Get in touch with EBPE for general, partnership, or media inquiries." />
       </Helmet>
-      <h1 className="fw-bold mb-4" style={{ color: "var(--brand-primary)" }}>Contact & Inquiries</h1>
+      <h1 className="fw-bold mb-4" style={{ color: "var(--brand-primary)" }}>{t("contactPageTitle")}</h1>
       <p className="lead text-muted mb-5">Get in touch with EBPE for general, partnership, or media inquiries.</p>
       
       <div className="row g-4">
@@ -21,14 +23,14 @@ export default function Contact() {
         </div>
         <div className="col-md-7">
           <div className="card border-0 shadow-sm p-4 h-100">
-            <h5 className="fw-bold mb-3">Send us a message</h5>
+            <h5 className="fw-bold mb-3">{t("contactPageSubtitle")}</h5>
             <form onSubmit={(e) => { e.preventDefault(); trackEvent("submit", "Contact Form", "Public Inquiry"); alert("Message sent."); }}>
               <div className="row g-3 mb-3">
-                <div className="col-6"><label className="form-label small fw-semibold">Full Name</label><input type="text" className="form-control" required /></div>
-                <div className="col-6"><label className="form-label small fw-semibold">Email Address</label><input type="email" className="form-control" required /></div>
+                <div className="col-6"><label className="form-label small fw-semibold">{t("fullName")}</label><input type="text" className="form-control" required /></div>
+                <div className="col-6"><label className="form-label small fw-semibold">{t("emailAddress")}</label><input type="email" className="form-control" required /></div>
               </div>
-              <div className="mb-3"><label className="form-label small fw-semibold">Message</label><textarea className="form-control" rows={4} required></textarea></div>
-              <button type="submit" className="btn-brand">Submit Inquiry</button>
+              <div className="mb-3"><label className="form-label small fw-semibold">{t("message")}</label><textarea className="form-control" rows={4} required></textarea></div>
+              <button type="submit" className="btn-brand">{t("submitInquiry")}</button>
             </form>
           </div>
         </div>

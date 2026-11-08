@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import {
   Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale,
@@ -8,7 +8,7 @@ import { Doughnut, Bar, Line } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend, Filler);
 
-const PALETTE = ["#1E5631", "#C9A227", "#6B2D2D", "#3498db", "#2ecc71", "#f39c12", "#e74c3c"];
+const PALETTE = ["#0B2545", "#C9A227", "#6B2D2D", "#3498db", "#2ecc71", "#f39c12", "#e74c3c"];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -32,7 +32,7 @@ export default function Dashboard() {
   const dirData      = directorateProgress.map((d) => d.avgProgress);
   const divLabels    = divisionProgress.map((d) => d.division);
   const divData      = divisionProgress.map((d) => d.avgProgress);
-  const paLabels     = planActualData.map((d) => d.title.length > 20 ? d.title.slice(0, 20) + "…" : d.title);
+  const paLabels     = planActualData.map((d) => d.title.length > 20 ? d.title.slice(0, 20) + "â€¦" : d.title);
   const paPlan       = planActualData.map((d) => d.plan);
   const paActual     = planActualData.map((d) => d.actual);
   const srcLabels    = Object.keys(sourceOfFundsDistribution);

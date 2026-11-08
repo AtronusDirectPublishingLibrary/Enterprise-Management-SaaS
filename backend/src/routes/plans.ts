@@ -13,6 +13,16 @@ import { mailConfigHint, mailConfigured, sendMail } from "../lib/mailer";
 import { runPlanAlerts } from "../lib/planAlerts";
 import { computePlanProgress } from "../lib/planProgress";
 import { fiscalYear, insertAopTemplate, summarizeAopTemplate } from "../lib/aopTemplate";
+import {
+  PERIOD_CADENCE,
+  ensurePlanPeriod,
+  resolveCurrentPlan,
+  syncPeriodFromPlan,
+  type PeriodType,
+} from "../lib/planPeriods";
+import { commitRollover, prepareRollover } from "../lib/periodRollover";
+import { runPeriodLifecycle } from "../lib/periodLifecycle";
+import { generatePlanReports } from "../lib/planReports";
 
 const router = Router();
 
@@ -44,23 +54,6 @@ function parsePeriodYear(label: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
-/** The plan whose period contains today, else the newest Active plan, else the newest one. */
-function pickCurrent<T extends { status: string; startDate: Date; endDate: Date }>(plans: T[]): T | null {
-  if (!plans.length) return null;
-  const now = Date.now();
-  const inPeriod = plans.find(
-    (plan) =>
-      plan.status === "Active" &&
-      new Date(plan.startDate).getTime() <= now &&
-      new Date(plan.endDate).getTime() >= now
-  );
-  if (inPeriod) return inPeriod;
-  const active = plans.find((plan) => plan.status === "Active");
-  if (active) return active;
-  return [...plans].sort(
-    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-  )[0];
-}
 
 // ─── Public: current plans, headline targets and KPIs for the home page ───────
 
@@ -81,8 +74,9 @@ router.get("/public", async (_req, res, next) => {
 
     const results: unknown[] = [];
     for (const type of ["STRATEGIC", "AOP", "ROADMAP"] as const) {
-      const current = pickCurrent(byType.get(type) ?? []);
-      if (!current) continue;
+      const resolved = resolveCurrentPlan(byType.get(type) ?? []);
+      if (!resolved) continue;
+      const current = resolved.plan;
       const progress = await computePlanProgress(current.id);
 
       const roots = current.items
@@ -123,6 +117,7 @@ router.get("/public", async (_req, res, next) => {
         startDate: current.startDate,
         endDate: current.endDate,
         summary: current.summary,
+        periodEnded: resolved.periodEnded,
         completion: progress?.completion ?? 0,
         priorities: (roots.some((item) => item.kind === "OBJECTIVE")
           ? roots.filter((item) => item.kind === "OBJECTIVE")
@@ -640,6 +635,77 @@ router.get("/periods", async (req, res, next) => {
   }
 });
 
+/** Every planning period with its state, plan, successor and preparation status. */
+router.get("/periods/calendar", async (_req, res, next) => {
+  try {
+    const periods = await prisma.planPeriod.findMany({
+      include: {
+        plan: {
+          select: { id: true, title: true, status: true, isPublished: true, owner: true },
+        },
+        successor: { select: { id: true, label: true, state: true } },
+        predecessor: { select: { id: true, label: true, state: true } },
+      },
+      orderBy: [{ type: "asc" }, { startDate: "asc" }],
+    });
+
+    const now = new Date();
+    res.json(
+      periods.map((period) => {
+        const daysRemaining = Math.ceil(
+          (new Date(period.endDate).getTime() - now.getTime()) / 86_400_000
+        );
+        const leadDays =
+          PERIOD_CADENCE[(period.type as PeriodType) in PERIOD_CADENCE ? (period.type as PeriodType) : "AOP"]
+            .leadDays;
+        return {
+          id: period.id,
+          type: period.type,
+          sequence: period.sequence,
+          label: period.label,
+          labelAlt: period.labelAlt,
+          startDate: period.startDate,
+          endDate: period.endDate,
+          state: period.state,
+          preparedAt: period.preparedAt,
+          activatedAt: period.activatedAt,
+          closedAt: period.closedAt,
+          plan: period.plan,
+          successor: period.successor,
+          predecessor: period.predecessor,
+          daysRemaining,
+          leadDays,
+          isCurrent:
+            new Date(period.startDate).getTime() <= now.getTime() &&
+            new Date(period.endDate).getTime() >= now.getTime(),
+          needsPreparation:
+            ["Active", "Closing"].includes(period.state) &&
+            !period.successorId &&
+            daysRemaining <= leadDays,
+        };
+      })
+    );
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Run the period lifecycle now (normally the daily background job does this). */
+router.post("/periods/lifecycle/run", requireRole("admin"), async (req, res, next) => {
+  try {
+    const { dryRun } = z
+      .object({ dryRun: z.boolean().optional() })
+      .parse(req.body ?? {});
+    const summary = await runPeriodLifecycle({
+      dryRun: dryRun ?? false,
+      actor: req.user!.username,
+    });
+    res.json(summary);
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get("/", async (req, res, next) => {
   try {
     const query = z
@@ -672,6 +738,7 @@ router.get("/", async (req, res, next) => {
         _count: { select: { items: true, alerts: true, reports: true, children: true } },
         parent: { select: { id: true, title: true, type: true, periodLabel: true } },
         children: { select: { id: true, title: true, type: true, periodLabel: true, status: true } },
+        period: { select: { id: true, labelAlt: true, state: true, successorId: true } },
       },
       orderBy: [{ startDate: "desc" }, { createdAt: "desc" }],
     });
@@ -756,6 +823,8 @@ router.post("/", canWrite, async (req, res, next) => {
       },
     });
 
+    await ensurePlanPeriod(plan.id, req.user!.username);
+
     if (body.status === "Active") {
       await prisma.plan.updateMany({
         where: { type: body.type, status: "Active", id: { not: plan.id } },
@@ -820,6 +889,7 @@ router.post("/from-template", canWrite, async (req, res, next) => {
     });
 
     const created = await insertAopTemplate(plan.id, body.fyStartYear);
+    await ensurePlanPeriod(plan.id, req.user!.username);
 
     if (body.status === "Active") {
       await prisma.plan.updateMany({
@@ -936,6 +1006,8 @@ router.put("/:planId", canWrite, async (req, res, next) => {
         data: { status: "Closed" },
       });
     }
+
+    await syncPeriodFromPlan(plan.id);
 
     res.json(updated);
   } catch (e) {
@@ -1116,7 +1188,57 @@ router.post("/:planId/duplicate", canWrite, async (req, res, next) => {
     };
     await cloneLevel(null, null);
 
+    await ensurePlanPeriod(plan.id, req.user!.username);
     res.status(201).json({ plan, items: copied });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * Prepare the next period of this plan's type: carry structure, unfinished
+ * activities, budgets and KPI definitions, re-base each KPI on its last actual
+ * and re-date every reading into the new period.
+ *
+ * Body { dryRun: true } (the default) returns the diff without writing.
+ */
+router.post("/:planId/rollover", canWrite, async (req, res, next) => {
+  try {
+    const body = z
+      .object({
+        dryRun: z.boolean().default(true),
+        label: z.string().min(2).optional(),
+        labelAlt: z.string().nullable().optional(),
+        title: z.string().min(3).optional(),
+        startDate: z.coerce.date().optional(),
+        endDate: z.coerce.date().optional(),
+        includeCompleted: z.boolean().optional(),
+        keepProgress: z.boolean().optional(),
+        copyActuals: z.boolean().optional(),
+        parentPlanId: z.string().nullable().optional(),
+        generateReports: z.boolean().optional(),
+        prepareParentPeriod: z.boolean().optional(),
+      })
+      .parse(req.body ?? {});
+
+    if (body.startDate && body.endDate && body.endDate <= body.startDate) {
+      throw badRequest("The new period must end after it starts");
+    }
+
+    const { dryRun, ...options } = body;
+    const createdBy = req.user!.username;
+
+    if (dryRun) {
+      const prepared = await prepareRollover(req.params.planId, { ...options, createdBy });
+      return res.json({
+        dryRun: true,
+        preview: prepared.plan,
+        periodId: prepared.successorPeriodId,
+      });
+    }
+
+    const result = await commitRollover(req.params.planId, { ...options, createdBy });
+    res.status(201).json({ dryRun: false, ...result });
   } catch (e) {
     next(e);
   }
@@ -1193,6 +1315,8 @@ router.post("/:planId/transition", canWrite, async (req, res, next) => {
         data: { status: "Closed" },
       });
     }
+
+    await syncPeriodFromPlan(plan.id);
 
     let revision: number | null = null;
     if (body.action === "approve" || body.action === "publish") {
@@ -1532,52 +1656,6 @@ router.put("/items/:itemId/targets", canWrite, async (req, res, next) => {
 
 // ─── Reporting obligations ────────────────────────────────────────────────────
 
-function reportWindows(frequency: string, start: Date, end: Date) {
-  const windows: { periodLabel: string; start: Date; end: Date }[] = [];
-  const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
-
-  const push = (label: string, windowStart: Date, windowEnd: Date) => {
-    if (windowEnd < start || windowStart > end) return;
-    if (windows.some((window) => window.periodLabel === label)) return;
-    windows.push({ periodLabel: label, start: windowStart, end: windowEnd });
-  };
-
-  while (cursor <= end) {
-    const year = cursor.getUTCFullYear();
-    const month = cursor.getUTCMonth();
-
-    if (frequency === "MONTHLY") {
-      push(
-        cursor.toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }),
-        new Date(Date.UTC(year, month, 1)),
-        new Date(Date.UTC(year, month + 1, 0))
-      );
-      cursor.setUTCMonth(month + 1);
-    } else if (frequency === "QUARTERLY") {
-      const quarter = Math.floor(month / 3) + 1;
-      push(
-        `Q${quarter} ${year}`,
-        new Date(Date.UTC(year, (quarter - 1) * 3, 1)),
-        new Date(Date.UTC(year, quarter * 3, 0))
-      );
-      cursor.setUTCMonth((quarter - 1) * 3 + 3);
-    } else if (frequency === "SEMI_ANNUAL") {
-      const half = month < 6 ? 1 : 2;
-      push(
-        `H${half} ${year}`,
-        new Date(Date.UTC(year, (half - 1) * 6, 1)),
-        new Date(Date.UTC(year, half * 6, 0))
-      );
-      cursor.setUTCMonth((half - 1) * 6 + 6);
-    } else {
-      push(`FY ${year}`, new Date(Date.UTC(year, 0, 1)), new Date(Date.UTC(year, 11, 31)));
-      cursor.setUTCFullYear(year + 1, 0, 1);
-    }
-  }
-
-  return windows;
-}
-
 router.post("/:planId/reports", canWrite, async (req, res, next) => {
   try {
     const body = z
@@ -1612,33 +1690,14 @@ router.post("/:planId/reports/generate", canWrite, async (req, res, next) => {
       })
       .parse(req.body);
 
-    const plan = await prisma.plan.findUnique({ where: { id: req.params.planId } });
-    if (!plan) throw notFound("Plan not found");
-
-    const start = body.startDate ?? plan.startDate;
-    const end = body.endDate ?? plan.endDate;
-    const windows = reportWindows(body.frequency, new Date(start), new Date(end));
-    const existing = await prisma.planReport.findMany({
-      where: { planId: plan.id, type: body.frequency },
-      select: { periodLabel: true },
+    const result = await generatePlanReports(req.params.planId, {
+      frequency: body.frequency,
+      startDate: body.startDate ?? undefined,
+      endDate: body.endDate ?? undefined,
+      dueDaysAfterPeriod: body.dueDaysAfterPeriod,
+      owner: body.owner,
     });
-    const existingLabels = new Set(existing.map((report) => report.periodLabel));
-
-    const created = [];
-    for (const window of windows) {
-      if (existingLabels.has(window.periodLabel)) continue;
-      created.push({
-        planId: plan.id,
-        title: `${window.periodLabel} performance report`,
-        type: body.frequency,
-        periodLabel: window.periodLabel,
-        dueDate: new Date(window.end.getTime() + body.dueDaysAfterPeriod * 86_400_000),
-        owner: body.owner ?? plan.owner ?? null,
-      });
-    }
-
-    if (created.length) await prisma.planReport.createMany({ data: created });
-    res.json({ created: created.length, skipped: windows.length - created.length, windows: windows.length });
+    res.json(result);
   } catch (e) {
     next(e);
   }

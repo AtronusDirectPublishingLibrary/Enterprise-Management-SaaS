@@ -19,7 +19,7 @@ export default function Products() {
         {items.map((item, i) => (
           <div className="col-md-6" key={i}>
             <div className="card h-100 border-0 shadow-sm p-4 d-flex flex-row align-items-center gap-4">
-              <div className="text-success">{item.icon}</div>
+              <div className="" style={{ color: "#0B2545" }}>{item.icon}</div>
               <div>
                 <h5 className="fw-bold mb-1">{item.title}</h5>
                 <p className="text-muted small mb-0">{item.desc}</p>

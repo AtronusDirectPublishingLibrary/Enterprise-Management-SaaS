@@ -1,0 +1,359 @@
+                          Ethio-BioPharma Enterprise
+                        Strategic Roadmap (2026-2035)
+
+        "Building an Integrated, Digitally Enabled Biopharmaceutical Campus for Ethiopia"
+
+Prepared by:
+Ethio-BioPharma Enterprise (EBPE)
+
+Date:
+February 2026
+
+Summary:
+This roadmap charts Ethio-Bio Pharma Entrprises's transformation into Ethiopia's leading
+biopharmaceutical manufacturing campus. It details a phased, talent-centered, and digitally enabled
+plan to achieve vaccine and pahrmaceuticals self-reliance, regional export competitiveness, and
+vertical integration by 2035. The strategy leverages quick-win business units for early cash flow, cross-
+subsidization, and robust financial discipline, while embedding digitalization and AI in its operations.
+Human capital development, regulatory alignment, and risk mitigation are central pillars, ensuring
+EBPE's alignment with national health, industrial, and economic ambitions.
+
+Key Features:
+
+     · Phased implementation: Pre-launch, quick-win build-out, ShieldVax commissioning,
+          integrated operations, and innovation-driven expansion
+
+     · Talent-first culture: EBPE training program, diaspora engagement, and structured workforce
+          development
+
+     · Digitalization & AI: Smart manufacturing, predictive analytics, and secure data governance
+     · Financial discipline: Hybrid cross-subsidization, export revenue hedging, and phased CAPEX
+     · Risk mitigation: Blended financing, regulatory fast-track, supply chain diversification
+     · Alignment with Ethiopia's national health, industrial, and economic reform agendas
+Table of Contents
+
+1. INTRODUCTION..................................................................................................................1
+2. STRATEGIC PHASES & MASTER TIMELINE (2025 - 2035).......................................................1
+
+   PHASE 0: Pre-Launch & Foundation (Q4 2025 - Q2 2026).................................................................1
+   PHASE 1: Groundbreaking & Quick-Win Build-Out (Q3 2026 - Q4 2028) ...........................................1
+   PHASE 2: ShieldVax Commissioning & Quick-Win Scale-Up (2028 - 2030) .........................................2
+   PHASE 3: Integrated Operations & Vertical Expansion (2030 - 2032) ................................................2
+   PHASE 4: R&D, Innovation & Global Competitiveness (2032-2035) ..................................................3
+3. HUMAN CAPITAL STRATEGY (CENTER OF THE ROADMAP)....................................................4
+   3.1 Workforce Development...........................................................................................................4
+   3.2 Talent Retention & Culture........................................................................................................4
+4. DIGITALIZATION & AI STRATEGY..........................................................................................4
+   4.2 AI Applications .........................................................................................................................4
+   4.3 Data Governance......................................................................................................................5
+5. FINANCIAL ROADMAP & CROSS-SUBSIDIZATION MODEL .....................................................5
+8. KEY PERFORMANCE INDICATORS (KPIs) & MILESTONES .......................................................6
+9. ALIGNMENT WITH NATIONAL AMBITIONS ..........................................................................6
+
+                                                                                                                     i
+1. INTRODUCTION
+
+Ethio-BioPharma Enterprise (EBPE) stands at a pivotal moment, with a visionary mandate to
+establish a fully integrated, end-to-end pharmaceutical and vaccine manufacturing campus in
+Ethiopia. This strategic roadmap (2026 - 2035) charts the course for transforming that vision into
+a self-sustaining commercial and public health reality. It outlines a phased, financially disciplined,
+talent-centered, and digitally enabled transformation plan.
+
+To implement this complex mission, EBPE will adopt an integrated yet staggered approach in all
+its Business Units which will begin in Q3 2026. The "quick-win" units (Diagnostics, PPE and medical
+supplies, and Medicines and Input Material) are designed for rapid market entry (18-month
+completion targets) to generate early cash flow, which will support the longer-term, capital-
+intensive vaccine and API manufacturing unit. This integrated start allows for shared
+infrastructure, centralized procurement, and a unified corporate launch.
+
+A Hybrid Cross-Subsidization Financial Model will be followed. Early revenues from Diagnostics,
+Medical Supplies and PPE, and Medicines (Generics) will contribute to the ShieldVax unit's CAPEX.
+Crucially, a Bridge Financing Facility will be secured for Phase 2 (2028-2029) to safeguard the
+ShieldVax launch against early market volatility. By 2035, EBPE aims to achieve vaccine self-
+reliance, regional export competitiveness, and vertical integration in pharmaceutical inputs.
+
+2. STRATEGIC PHASES & MASTER TIMELINE (2025 - 2035)
+
+PHASE 0: Pre-Launch & Foundation (Q4 2025 - Q2 2026)
+
+Objective: Secure funding, finalize designs and establish the legal/regulatory framework for all
+units, recruiting corporate office personnel and workforce capacity development plan
+
+Timeline                   Activity
+Q4 2025 - Q1 2026          Financing & Partnerships
+Q1 - Q2 2026               Core leadership and technical recruitment
+                           People centered talent management plan
+
+PHASE 1: Groundbreaking & Quick-Win Build-Out (Q3 2026 - Q4 2028)
+
+Objective: manufacturing campus groundbreaking; construct all units in parallel; Commission
+the revenue-generating quick-win units within 18 -24 months.
+
+Business Unit              Construction  Commissioning /  Commercial Launch
+                           Complete      Validation       Q4 2028
+Diagnostics, PPE, and      Q1 2028       Q1 - Q3 2028     Q4 2028
+Medical Supplies Unit
+Medicines and Input        Q1 2028       Q2 - Q3 2028
+material Unit (Generics)*
+
+                                                                                                  1
+ShieldVax (civil work)  Q4 2027  Installation of             Commissioning in
+
+                                 equipment                   Phase 2
+
+*Input materials can be manufactured by other entities and EBPE can source this or work in a
+
+joint venture with other local government/private entities.
+
+Workforce Target by 2028: 200-250 staff recruited and trained in alignment with Phase 1
+commissioning requirements. Recruitment will be conducted in a phased manner corresponding
+to the construction and validation schedule of each business unit, ensuring that human
+resources are fully prepared in parallel with facility readiness.
+
+PHASE 2: ShieldVax Commissioning & Quick-Win Scale-Up (2028 - 2030)
+
+Objective: Commission the vaccine fill-finish facility; scale quickwins to profitability and
+regional export readiness.
+
+Timeline       ShieldVax Milestones               QuickWin Milestones
+Q1-Q3 2028     Installation and qualification of
+Q4 2028        equipment (IQ/OQ);                 Achieve 20% production capacity
+2029           GMP training                       for Medicines and Input Material,
+               Commissioning & Validation         and Diagnostics, PPE and Supplies
+2030           First commercial batches           Unit
+                                                  Achieve 30% production capacity
+               16 million doses per year          by mid-2029 for generic
+               operational throughput*            medicines, diagnostics, PPE and
+                                                  supplies
+                                                  Initiate API and excipients
+                                                  feasibility study
+                                                  Achieve 40% production capacity
+                                                  by end of 2030 for generic
+                                                  medicines, diagnostics, PPE and
+                                                  supplies and reaching operational
+                                                  profit.
+
+*The target was set based on the initial plan to localize 100% of government-funded vaccines, including Td
+(Tetanus-Diphtheria Toxoid) and BCG. The target is contingent on identifying a technology transfer partner.
+
+Workforce target by 2030: 400+ staff recruited
+
+PHASE 3: Integrated Operations & Vertical Expansion (2030 - 2032)
+
+Objective: All units are operational, creating a fully integrated biopharmaceutical campus,
+partial upstream planning for antigen/API and excipients, and regional market expansion.
+
+Business Unit           2030 - 2032 Goals
+ShieldVax               30 million doses per year operational throughput*
+                        Begin upstream antigen production planning
+
+                                                                                                             2
+Medicines and Input           Add injectables and liquid oral dosage lines.
+material Unit                 10% market share in targeted essential generic medicines
+                              Explore contract manufacturing services
+                              Supply/localize up to 10% of internal input material and other local
+                              manufacturers**
+
+Diagnostics, PPE &            Expand Diagnostics platforms technologies including medical
+Supplies Unit                 devices
+
+Regulatory                    WHO PQ applications (selected Vaccine, Medicines, Diagnostics,
+                              PPE)
+
+Market reach                  Explore regional market (5%)
+
+*During this phase, the target was set to include IPV, HPV and HepB in the list of localized vaccines, in addition to
+
+those localized in Phase 1. The target is contingent on WHO PQ certification, GAVI graduation and identifying a
+
+technology transfer partner.
+
+**Localization of internal input materials for EBPE and other local manufacturers can be pursued through
+partnership modalities, subject to the outcome of feasibility studies.
+
+Workforce Target by 2032: 600+ staff recruited.
+
+PHASE 4: R&D, Innovation & Global Competitiveness (2032-2035)
+Objective: Transition from manufacturer to innovation-driven biopharma enterprise.
+
+Business Unit                 Strategic goals by 20235
+ShieldVax                     55 million doses per year operational throughput*
+Medicines and Input           Upstream antigen manufacturing operational
+Material &                    30% of market share in targeted essential generic medicines
+Diagnostics, PPE &            Launch biologics and biosimilars
+Supplies Unit                 Manufacture 3 API products
+R&D                           Supply/localize up to 20% of internal input material and other
+                              local manufacturers**
+Market diversification        Establish fully operational Biopharma R&D and Innovation Center
+                              Develop locally relevant formulations and vaccine improvements
+                              Initiate biosimilar and complex generic product development
+                              Strengthen partnerships with universities and international
+                              research institutions
+                              10% of total revenue generated from exports
+
+Regulatory                    Achieve WHO-prequalification for 2-3 selected products (vaccine,
+
+                              medicines, diagnostics and PPE)
+
+*During this phase, the target was set to include Penta and Measles in the list of localized vaccines, in addition to
+
+those localized in Phase 1&2. The target is contingent on WHO PQ certification, GAVI graduation and identifying a
+
+technology transfer partner.
+
+**Localization of internal input materials for EBPE and other local manufacturers can be pursued through
+partnership modalities, subject to the outcome of feasibility studies.
+
+Workforce Target by 2035: 1000+ staff recruited
+
+                                                                                                                       3
+3. HUMAN CAPITAL STRATEGY (CENTER OF THE ROADMAP)
+
+Human resources will be the central pillar of EBPE's growth and long-term sustainability. The
+Enterprise will place talent at the core of its strategic agenda by systematically attracting,
+developing, and retaining high-caliber professionals across technical, managerial, and leadership
+functions. Through structured training programs, succession planning, performance-based
+incentives, and institutional culture building, EBPE will ensure continuity, operational excellence,
+and sustained competitiveness.
+
+3.1 Workforce Development
+
+· Establish EBPE workforce development program (GMP, QA/QC, validation, regulatory
+    science)
+
+· Leadership and succession planning framework
+· Diaspora talent engagement initiative
+· Postgraduate scholarships in pharmaceutical sciences
+· Continuous GMP and digital skills training
+
+3.2 Talent Retention & Culture
+
+· Performance-based incentives
+· Clear career progression pathways
+· Gender inclusion and youth employment strategy
+· International exposure and technical partnerships
+
+4. DIGITALIZATION & AI STRATEGY
+
+EBPE will adopt cutting-edge technologies and design facilities with future expansion in mind,
+leveraging digitalization and embedding AI into its strategy. This approach will modernize its
+operations, keep pace with global advancements, and prevent technological obsolescence.
+
+4.1 Smart Manufacturing (Industry 4.0)
+
+· Enterprise Resource Planning (ERP) integration
+· Digital batch records
+· IoT-enabled environmental monitoring
+· Automated quality deviation tracking
+· Predictive maintenance systems
+
+4.2 AI Applications
+
+· Demand forecasting
+· Supply chain optimization
+
+                                                                                                                    4
+· Yield optimization models
+· Process monitoring & early deviation detection
+· Digital twin simulation for vaccine processes
+
+4.3 Data Governance
+
+· Central data warehouse
+· Cybersecurity framework
+· Secure cloud infrastructure
+
+5. FINANCIAL ROADMAP & CROSS-SUBSIDIZATION MODEL
+
+Phase          Primary Funding Source             Use of Funds
+Phase 0-1      Government, Loans/Grants           Land acquisition, construction,
+               (WB/IFC), Equity (JV)              machinery
+Phase 2        Working capital Bridge Facility +  ShieldVax commissioning;
+               operating profits from quick wins  quickwin scale up
+Phase 3-4      Operating profits including        R&D, expansion and vertical
+               exports, strategic partnerships    integration
+               (e.g., Gavi, CEPI)
+
+Financial Discipline Policy:
+· Quick-win profits will be reinvested until ShieldVax unit reaches breakeven
+· Export revenue used as forex hedge
+· Phased CAPEX approach for expansion to reduce financing risk
+
+6. RISK & MITIGATION FRAMEWORK
+
+Risk Category               Risk                          Mitigation Strategy
+Financial      Funding shortfall         Blended financing & phased implementation
+Regulatory     Approval delays           Early EFDA engagement & WHO PQ roadmap
+Talent         Skills shortage           EBPE Academy & diaspora recruitment
+Market         Import competition        Government procurement preference and
+                                         incetives
+FX Risk        Currency volatility       Export diversification
+Supply Chain   Raw material shortages    Diversified suppliers & local input production
+Technology     Underutilized assets      Strategic partnerships & phased scale-up
+Policy         Industrial policy shifts  Strong MoH & government alignment
+
+7. CRITICAL SUCCESS FACTORS FOR SIMULTANEOUS START
+
+1. Master Project Management: Establish a single project Implementation team within EBPE to
+oversee all parallel construction and commissioning streams.
+
+                                                                                         5
+2. Unified Supply Chain: Centralize procurement for raw materials (vials, chemicals, etc.,) to
+gain bulk purchasing power.
+
+3. Talent First Institution Culture: Launch the Talent program in partnership with local
+Universities, Research Institutes and external partners to train technicians and chemists in GMP,
+ensuring a ready workforce for 2027-2028.
+
+4. Regulatory Fast-Track: Work with EFDA to create a "priority path" for multi-product facility
+approvals based on international standards.
+
+    · Step 1 (2028): Secure EFDA approval for domestic sales.
+    · Step 2 (2030): Target WHO PQ for medicines, diagnostics, PPE and medical supplies
+
+         after 2 years of stable GMP operations.
+
+5. Strong government and industrial policy alignment: Maintain close coordination with relevant
+ministries and national strategies to secure policy support, procurement alignment, and
+implementation facilitation.
+
+6. Digital transformation embedded from inception: Embed integrated digital systems and AI-
+enabled tools across construction, manufacturing, quality, and supply chain functions to enhance
+efficiency, compliance, and scalability.
+
+8. KEY PERFORMANCE INDICATORS (KPIs) & MILESTONES          Target Date
+                                                           Q3 2026
+ Milestone                                                 Q3 - Q4 2028
+ Groundbreaking on all units                               Q3 2028
+ Diagnostics, PPE, and Medical Supplies revenue start      Q4 2028
+ Medicine and Input Material (Generics) launch             2029
+ ShieldVax validation and commissioning                    2030
+ First vaccine batches                                     2030
+ Operational Profitability for Quick-Win units             2030
+ 16 million doses per year operational throughput          2032
+ 400+ direct jobs created                                  2035
+ 10% market share in targeted essential generic medicines  2035
+ WHO PQ certifications for 2-3 selected products           2035
+ 20% market share in targeted essential generic medicines  2035
+ 55 million doses per year operational throughput          2035
+ 10% export revenue share
+ 1000+ direct jobs created
+
+9. ALIGNMENT WITH NATIONAL AMBITIONS
+
+This roadmap directly supports Ethiopia's:
+
+                                                                         6
+    · National health policy
+    · Health security and vaccine sovereignty
+    · Manufacturing Industry Policy and Import substitution strategy
+    · Home grown economic reform
+    · Job creation and youth employment
+    · Science and technology capacity development
+    · Africa Union's Lusaka Agenda and local manufacturing initiatives
+    · Regional trade integration under AfCFTA
+By 2035, EBPE will serve as a strategic national industrial anchor and a cornerstone of Ethiopia's
+pharmaceutical self-reliance.
+
+                                                                                                                    7
+

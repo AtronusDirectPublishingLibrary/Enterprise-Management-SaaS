@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Printer, ArrowLeft } from "lucide-react";
 import { api } from "../lib/api";
@@ -89,7 +89,7 @@ export default function PlanPrintPage() {
         .board-pack td { padding: 5px 6px; border-bottom: 1px solid #eceff1; vertical-align: top; }
         .board-pack .num { text-align: right; }
         .board-pack .muted { color: #6c757d; }
-        .board-pack .cover { border-left: 6px solid #1f6f43; padding-left: 16px; }
+        .board-pack .cover { border-left: 6px solid #0B2545; padding-left: 16px; }
         .board-pack .meta { font-size: 12px; color: #495057; }
         .board-pack .pill { display: inline-block; border: 1px solid #cfd8d1; border-radius: 999px; padding: 2px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
         .board-pack .toolbar { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 18px; }
@@ -115,12 +115,12 @@ export default function PlanPrintPage() {
       <div className="cover mb-3">
         <div className="d-flex justify-content-between align-items-start">
           <div>
-            <div className="text-uppercase" style={{ fontSize: 11, letterSpacing: ".12em", color: "#1f6f43", fontWeight: 700 }}>
-              Ethio-Biopharma · {TYPE_LABELS[plan.type] || plan.type}
+            <div className="text-uppercase" style={{ fontSize: 11, letterSpacing: ".12em", color: "#0B2545", fontWeight: 700 }}>
+              Ethio-Biopharma Â· {TYPE_LABELS[plan.type] || plan.type}
             </div>
             <h1>{plan.title}</h1>
             <div className="meta mt-1">
-              {plan.periodLabel} · {new Date(plan.startDate).toLocaleDateString()} – {new Date(plan.endDate).toLocaleDateString()}
+              {plan.periodLabel} Â· {new Date(plan.startDate).toLocaleDateString()} â€“ {new Date(plan.endDate).toLocaleDateString()}
             </div>
           </div>
           <div className="text-end">
@@ -129,8 +129,8 @@ export default function PlanPrintPage() {
           </div>
         </div>
         <div className="meta mt-2">
-          Owner: <strong>{plan.owner || "—"}</strong> · Overall completion: <strong>{Math.round(plan.completion || 0)}%</strong>
-          {plan.parent ? <> · Aligned to: <strong>{plan.parent.title}</strong></> : null}
+          Owner: <strong>{plan.owner || "â€”"}</strong> Â· Overall completion: <strong>{Math.round(plan.completion || 0)}%</strong>
+          {plan.parent ? <> Â· Aligned to: <strong>{plan.parent.title}</strong></> : null}
         </div>
       </div>
 
@@ -185,13 +185,13 @@ export default function PlanPrintPage() {
               const pct = target && actual != null ? Math.round((actual / target) * 100) : null;
               return (
                 <tr key={kpi.id}>
-                  <td className="muted">{kpi.code || "—"}</td>
+                  <td className="muted">{kpi.code || "â€”"}</td>
                   <td className="fw-semibold">{kpi.title}</td>
-                  <td className="muted">{kpi.unit || "—"}</td>
-                  <td className="num">{target ?? "—"}</td>
-                  <td className="num">{actual ?? "—"}</td>
-                  <td className="muted">{reading?.periodLabel || "—"}</td>
-                  <td className="num">{pct == null ? "—" : `${pct}%`}</td>
+                  <td className="muted">{kpi.unit || "â€”"}</td>
+                  <td className="num">{target ?? "â€”"}</td>
+                  <td className="num">{actual ?? "â€”"}</td>
+                  <td className="muted">{reading?.periodLabel || "â€”"}</td>
+                  <td className="num">{pct == null ? "â€”" : `${pct}%`}</td>
                 </tr>
               );
             })}
@@ -217,7 +217,7 @@ export default function PlanPrintPage() {
                   <td className="fw-semibold">{child.title}</td>
                   <td className="muted">{TYPE_LABELS[child.type] || child.type}</td>
                   <td className="muted">{child.periodLabel}</td>
-                  <td className="muted">{child.status}{child.isPublished ? " · published" : ""}</td>
+                  <td className="muted">{child.status}{child.isPublished ? " Â· published" : ""}</td>
                 </tr>
               ))}
             </tbody>
@@ -249,9 +249,9 @@ export default function PlanPrintPage() {
               {deadlineRows.map((report) => (
                 <tr key={report.id}>
                   <td className="fw-semibold">{report.title}</td>
-                  <td className="muted">{report.cadence || "—"}</td>
+                  <td className="muted">{report.cadence || "â€”"}</td>
                   <td className="muted">{new Date(report.dueDate).toLocaleDateString()}</td>
-                  <td className="muted">{report.owner || "—"}</td>
+                  <td className="muted">{report.owner || "â€”"}</td>
                   <td className="muted">{report.status}</td>
                 </tr>
               ))}
@@ -261,8 +261,8 @@ export default function PlanPrintPage() {
       )}
 
       <div className="mt-4 pt-2 border-top muted" style={{ fontSize: 10 }}>
-        Generated {new Date().toLocaleString()} · Ethio-Biopharma planning system · Revision r{plan.revision}
-        {plan.approvedBy ? ` · Approved by ${plan.approvedBy} on ${new Date(plan.approvedAt).toLocaleDateString()}` : ""}
+        Generated {new Date().toLocaleString()} Â· Ethio-Biopharma planning system Â· Revision r{plan.revision}
+        {plan.approvedBy ? ` Â· Approved by ${plan.approvedBy} on ${new Date(plan.approvedAt).toLocaleDateString()}` : ""}
       </div>
     </div>
   );
