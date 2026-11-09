@@ -2,6 +2,7 @@
 import { api } from "../lib/api";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ShieldAlert, Activity, Users } from "lucide-react";
+import PmsTabs from "../components/PmsTabs";
 
 const COLORS = ["#0B2545", "#D4AF37", "#f39c12", "#e74c3c", "#3498db"];
 
@@ -23,6 +24,7 @@ export default function ExecutiveDashboard() {
 
   return (
     <div className="p-4" style={{ background: "var(--brand-bg)", minHeight: "100vh" }}>
+      <PmsTabs />
       <div className="d-flex align-items-center gap-2 mb-4">
         <ShieldAlert size={28} style={{ color: "var(--brand-primary)" }} />
         <h2 className="fw-bold mb-0" style={{ color: "var(--brand-primary)" }}>Executive Dashboard</h2>

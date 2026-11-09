@@ -351,9 +351,9 @@ export default function MyHRPortal() {
     { label: "Annual leave left", value: counters.leaveDaysLeft ?? "—", icon: CalendarDays, accent: "#2f8f6b", suffix: "days" },
   ];
   return (
-    <div className="container-fluid py-4" style={{ maxWidth: 1240 }}>
+    <div className="container-fluid py-4 hr-portal-page" style={{ maxWidth: "1240px" }}>
       <Helmet>
-        <title>My workspace | EBPE</title>
+        <title>My Portal | EBPE</title>
       </Helmet>
 
       <div className="hrx-hero mb-4">

@@ -22,7 +22,11 @@
     "periods:backfill": "ts-node prisma/backfill-periods.ts",
     "alerts:run": "ts-node prisma/run-plan-alerts.ts",
     "seed:hr-demo": "ts-node prisma/seed-hr-demo.ts",
-    "seed:holidays": "ts-node prisma/seed-holidays.ts"
+    "seed:hr-suite": "ts-node prisma/seed-hr-suite.ts",
+    "seed:pms-demo": "ts-node prisma/seed-pms-demo.ts",
+    "seed:holidays": "ts-node prisma/seed-holidays.ts",
+    "backup": "ts-node scripts/backup-db.ts",
+    "audit:prune": "ts-node scripts/prune-audit.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

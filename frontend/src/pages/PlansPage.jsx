@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Plus,
@@ -15,8 +15,12 @@ import {
   Sparkles,
   AlertTriangle,
   X,
+  Download,
+  Upload,
+  FileSpreadsheet,
 } from "lucide-react";
-import { api, buildQuery } from "../lib/api";
+import { api, buildQuery, API_BASE } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import PlanEditor from "../components/PlanEditor";
 
 const TYPE_META = {
@@ -56,6 +60,8 @@ const STATUS_STYLES = {
 
 export default function PlansPage({ type }) {
   const meta = TYPE_META[type];
+  const { user } = useAuth();
+  const canWrite = ["admin", "project_manager"].includes(user?.role);
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get("plan");
 
@@ -68,6 +74,14 @@ export default function PlansPage({ type }) {
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
   const [linkFor, setLinkFor] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPlanId, setImportPlanId] = useState("");
+  const [importFile, setImportFile] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const [importPreview, setImportPreview] = useState(null);
+  const [importHistory, setImportHistory] = useState([]);
+  const [importBusy, setImportBusy] = useState(false);
+  const importInput = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -157,6 +171,87 @@ export default function PlansPage({ type }) {
     [periods]
   );
 
+  const loadImportHistory = async (planId) => {
+    if (!planId) return setImportHistory([]);
+    try {
+      const data = await api.get(`/plans/${planId}/imports`);
+      setImportHistory(Array.isArray(data) ? data : []);
+    } catch { setImportHistory([]); }
+  };
+
+  const openImport = () => {
+    const firstPlan = plans[0]?.id || "";
+    setImportPlanId(firstPlan);
+    setImportFile(null);
+    setImportResult(null);
+    setImportPreview(null);
+    setImportOpen(true);
+    loadImportHistory(firstPlan);
+  };
+
+  const sendPlanCsv = async (suffix) => {
+    const body = new FormData();
+    body.append("file", importFile);
+    const response = await fetch(`${API_BASE}/plans/${importPlanId}/${suffix}`, {
+      method: "POST",
+      body,
+      credentials: "include",
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+    return data;
+  };
+
+  const previewPlanItems = async (event) => {
+    event.preventDefault();
+    if (!importPlanId) return setError("Choose the plan that should receive the CSV rows.");
+    if (!importFile) return setError("Choose a CSV file first.");
+    setImportBusy(true);
+    setError("");
+    setImportResult(null);
+    setImportPreview(null);
+    try {
+      setImportPreview(await sendPlanCsv("import/preview"));
+    } catch (e) {
+      setError(e.message || "Could not preview the plan CSV.");
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
+  const uploadPlanItems = async () => {
+    if (!importPlanId) return setError("Choose the plan that should receive the CSV rows.");
+    if (!importFile) return setError("Choose a CSV file first.");
+    setImportBusy(true);
+    setError("");
+    try {
+      const data = await sendPlanCsv("import");
+      setImportResult(data);
+      setImportPreview(null);
+      setImportFile(null);
+      if (importInput.current) importInput.current.value = "";
+      await Promise.all([load(), loadImportHistory(importPlanId)]);
+    } catch (e) {
+      setError(e.message || "Could not import the plan CSV.");
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
+  const rollbackImport = async (batchId) => {
+    if (!window.confirm("Undo this import? Items it created are removed and items it updated are restored to their previous values.")) return;
+    setImportBusy(true);
+    setError("");
+    try {
+      await api.post(`/plans/imports/${batchId}/rollback`, {});
+      await Promise.all([load(), loadImportHistory(importPlanId)]);
+    } catch (e) {
+      setError(e.message || "Could not roll back this import.");
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
   if (selectedId) {
     return <PlanEditor planId={selectedId} onBack={closePlan} />;
   }
@@ -174,10 +269,17 @@ export default function PlansPage({ type }) {
             {meta.subtitle}
           </p>
         </div>
-        <button className="btn-brand btn-sm d-flex align-items-center" onClick={() => setCreating(true)}>
-          <Plus size={14} className="me-1" />
-          {type === "AOP" ? "New annual plan" : `New ${meta.label.toLowerCase()}`}
-        </button>
+        <div className="d-flex flex-wrap gap-2">
+          {canWrite && (
+            <button className="btn btn-outline-secondary btn-sm d-flex align-items-center" onClick={openImport}>
+              <Upload size={14} className="me-1" /> CSV import
+            </button>
+          )}
+          <button className="btn-brand btn-sm d-flex align-items-center" onClick={() => setCreating(true)}>
+            <Plus size={14} className="me-1" />
+            {type === "AOP" ? "New annual plan" : `New ${meta.label.toLowerCase()}`}
+          </button>
+        </div>
       </div>
 
       {/* Period + status filters */}
@@ -386,6 +488,174 @@ export default function PlansPage({ type }) {
             if (id) openPlan(id);
           }}
         />
+      )}
+
+      {importOpen && (
+        <div className="modal d-block" style={{ background: "rgba(15,23,42,0.5)", zIndex: 1050 }} onClick={() => setImportOpen(false)}>
+          <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header">
+                <div>
+                  <h5 className="modal-title fw-bold mb-0">Import {meta.label.toLowerCase()} items</h5>
+                  <div className="small text-muted">Upload a CSV into one of the plans listed below.</div>
+                </div>
+                <button className="btn-close" onClick={() => setImportOpen(false)} aria-label="Close" />
+              </div>
+              <form onSubmit={previewPlanItems}>
+                <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                  {plans.length === 0 ? (
+                    <div className="alert alert-warning small mb-3">Create a plan first, then import its items.</div>
+                  ) : (
+                    <div className="mb-3">
+                      <label className="form-label small fw-bold">Destination plan</label>
+                      <select
+                        className="form-select"
+                        value={importPlanId}
+                        onChange={(e) => {
+                          setImportPlanId(e.target.value);
+                          setImportPreview(null);
+                          setImportResult(null);
+                          loadImportHistory(e.target.value);
+                        }}
+                        required
+                      >
+                        <option value="">Select a plan…</option>
+                        {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.periodLabel} · {plan.title}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 p-2 rounded bg-light">
+                    <div className="d-flex align-items-center gap-2 small">
+                      <FileSpreadsheet size={17} className="text-success" />
+                      <span>Use the template so codes, parent codes and target periods stay aligned.</span>
+                    </div>
+                    <a className="btn btn-outline-secondary btn-sm" href={`${API_BASE}/plans/template/items`}>
+                      <Download size={14} /> Download template
+                    </a>
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label small fw-bold">CSV file</label>
+                    <input
+                      ref={importInput}
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="form-control"
+                      onChange={(e) => {
+                        setImportFile(e.target.files?.[0] || null);
+                        setImportPreview(null);
+                        setImportResult(null);
+                      }}
+                      required
+                    />
+                  </div>
+                  <div className="form-text">
+                    Rows are matched by <code>code</code> (preferred) or title. Re-uploading a corrected sheet updates existing items.
+                    Parent rows are resolved by <code>parentCode</code>; optional target columns create KPI readings.
+                    Nothing is saved until you confirm the preview.
+                  </div>
+                  {importPreview && !importResult && (
+                    <div className={`alert ${importPreview.skipped || importPreview.errors?.length ? "alert-warning" : "alert-info"} border-0 small mt-3 mb-0`}>
+                      <div className="fw-semibold mb-1">
+                        Preview for {importPreview.planTitle}: {importPreview.created} to add, {importPreview.updated} to update, {importPreview.skipped} to skip.
+                      </div>
+                      {importPreview.errors?.length > 0 && (
+                        <ul className="mb-1 ps-3">
+                          {importPreview.errors.slice(0, 10).map((line) => <li key={line}>{line}</li>)}
+                        </ul>
+                      )}
+                      <div className="table-responsive mt-2" style={{ maxHeight: 180 }}>
+                        <table className="table table-sm mb-0" style={{ fontSize: "0.78rem" }}>
+                          <thead><tr><th>Row</th><th>Action</th><th>Kind</th><th>Title</th></tr></thead>
+                          <tbody>
+                            {importPreview.rows?.map((row) => (
+                              <tr key={row.line}>
+                                <td>{row.line}</td>
+                                <td>
+                                  <span className={`badge ${row.action === "create" ? "bg-success" : row.action === "update" ? "bg-primary" : "bg-secondary"}`}>
+                                    {row.action}
+                                  </span>
+                                </td>
+                                <td>{row.kind}</td>
+                                <td>{row.title}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  {importResult && (
+                    <div className={`alert ${importResult.skipped || importResult.errors?.length ? "alert-warning" : "alert-success"} border-0 small mt-3 mb-0`}>
+                      <div className="fw-semibold">
+                        {importResult.planTitle}: {importResult.created} added, {importResult.updated} updated, {importResult.skipped} skipped, {importResult.targets} target row(s).
+                      </div>
+                      {importResult.errors?.length > 0 && (
+                        <ul className="mb-0 mt-1 ps-3">
+                          {importResult.errors.slice(0, 10).map((line) => <li key={line}>{line}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <div className="fw-bold small text-uppercase text-muted">Import history for this plan</div>
+                      <button type="button" className="btn btn-link btn-sm p-0" onClick={() => loadImportHistory(importPlanId)}>Refresh</button>
+                    </div>
+                    {importHistory.length === 0 ? (
+                      <div className="small text-muted">No imports have been recorded for this plan yet.</div>
+                    ) : (
+                      <div className="table-responsive">
+                        <table className="table table-sm align-middle mb-0" style={{ fontSize: "0.8rem" }}>
+                          <thead><tr><th>When</th><th>File</th><th>By</th><th>Result</th><th /></tr></thead>
+                          <tbody>
+                            {importHistory.map((batch) => (
+                              <tr key={batch.id}>
+                                <td>{new Date(batch.createdAt).toLocaleString("en-GB")}</td>
+                                <td>{batch.fileName || "—"}</td>
+                                <td>{batch.userName || "—"}</td>
+                                <td>
+                                  {batch.rolledBackAt ? (
+                                    <span className="badge bg-secondary">rolled back</span>
+                                  ) : (
+                                    <span>
+                                      {batch.summary?.created ?? 0} added, {batch.summary?.updated ?? 0} updated, {batch.summary?.skipped ?? 0} skipped
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="text-end">
+                                  {!batch.rolledBackAt && (
+                                    <button type="button" className="btn btn-outline-danger btn-sm" disabled={importBusy} onClick={() => rollbackImport(batch.id)}>
+                                      Undo
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-light" onClick={() => setImportOpen(false)}>Close</button>
+                  <button type="submit" className="btn btn-outline-primary" disabled={importBusy || !importPlanId || !importFile}>
+                    <Upload size={15} /> {importBusy ? "Checking…" : "Preview changes"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-brand"
+                    disabled={importBusy || !importPlanId || !importFile || !importPreview || Boolean(importResult)}
+                    onClick={uploadPlanItems}
+                  >
+                    <Upload size={15} /> {importBusy ? "Importing…" : `Import ${importPreview ? importPreview.created + importPreview.updated : ""} row(s)`}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

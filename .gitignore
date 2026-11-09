@@ -13,6 +13,9 @@ build/
 # Runtime uploads (created by backend/src/middleware/upload.ts)
 backend/uploads/
 
+# Database backups created by `npm run backup`
+backend/backups/
+
 # Logs and caches
 *.log
 npm-debug.log*

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BellRing, Mail, Save, Send, CalendarClock, Play, CircleAlert, AlertTriangle, Info, CheckCircle2 } from "lucide-react";
 import { api } from "../lib/api";
+import PageHeader from "../components/PageHeader";
 
 const SEVERITY = {
   CRITICAL: { bg: "#fee2e2", icon: CircleAlert, color: "#b91c1c" },
@@ -85,20 +86,18 @@ export default function PlanAlertSettings() {
   }
 
   return (
-    <div className="p-4">
-      <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-        <div>
-          <h2 className="page-title mb-1 d-flex align-items-center gap-2">
-            <BellRing size={26} style={{ color: "var(--brand-primary)" }} /> Plan Alerts &amp; Reporting
-          </h2>
-          <p className="text-muted small mb-0" style={{ maxWidth: 700 }}>
-            Configure how the system watches plan targets and reporting deadlines. Everything here changes runtime behaviour — no code changes needed.
-          </p>
-        </div>
-        <button className="btn-brand btn-sm d-flex align-items-center" onClick={runNow}>
-          <Play size={13} className="me-1" /> Run check now
-        </button>
-      </div>
+    <div className="plan-alerts-page">
+      <PageHeader
+        icon={<BellRing size={20} />}
+        kicker="Planning · assurance"
+        title="Plan Alerts & Reporting"
+        subtitle="Configure how the system watches plan targets and reporting deadlines. Everything here changes runtime behaviour — no code changes needed."
+        actions={
+          <button className="btn-brand btn-sm d-flex align-items-center" onClick={runNow}>
+            <Play size={13} className="me-1" /> Run check now
+          </button>
+        }
+      />
 
       {status && <div className="alert alert-info py-2 small">{status}</div>}
 
@@ -229,12 +228,12 @@ export default function PlanAlertSettings() {
                     const AlertIcon = style.icon;
                     return (
                       <div key={alert.id} className="border-bottom py-2">
-                        <div className="d-flex align-items-start gap-2">
+                        <div className="d-flex align-items-start gap-2 plan-alert-item">
                           <span className="badge flex-shrink-0" style={{ background: style.bg, color: style.color }}>
                             <AlertIcon size={12} className="me-1" />{alert.severity}
                           </span>
                           <div className="flex-grow-1 min-w-0">
-                            <div className="small fw-semibold">{alert.title}</div>
+                            <div className="small fw-semibold alert-title">{alert.title}</div>
                             <div className="text-muted" style={{ fontSize: 12 }}>{alert.message}</div>
                             <div className="small mt-1">
                               <Link to={`${PLAN_PATH[alert.plan?.type] || "/database/strategic-plan"}?plan=${alert.planId}`} className="text-decoration-none">

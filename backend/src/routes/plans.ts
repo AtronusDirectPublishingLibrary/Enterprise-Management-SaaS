@@ -1,5 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
@@ -23,6 +25,7 @@ import {
 import { commitRollover, prepareRollover } from "../lib/periodRollover";
 import { runPeriodLifecycle } from "../lib/periodLifecycle";
 import { generatePlanReports } from "../lib/planReports";
+import { listImports, recordImport, rollbackImport } from "../lib/importBatches";
 
 const router = Router();
 
@@ -35,7 +38,118 @@ const REPORT_STATUSES = ["Pending", "Submitted", "Approved", "Waived"] as const;
 const planTypeSchema = z.enum(PLAN_TYPES);
 const itemKindSchema = z.enum(ITEM_KINDS);
 
-const canWrite = requireRole("admin", "project_manager");
+const canWriteRole = requireRole("admin", "project_manager");
+const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
+/**
+ * Row-level plan permission: administrators may edit any plan, while project
+ * managers may only change plans they created or own. Routes that address a
+ * child record (item, report, import batch) are resolved back to their plan.
+ */
+async function planIdForRequest(req: any): Promise<string | null> {
+  if (req.params.planId) return String(req.params.planId);
+  if (req.params.itemId) {
+    const item = await prisma.planItem.findUnique({
+      where: { id: req.params.itemId },
+      select: { planId: true },
+    });
+    return item?.planId || null;
+  }
+  if (req.params.reportId) {
+    const report = await prisma.planReport.findUnique({
+      where: { id: req.params.reportId },
+      select: { planId: true },
+    });
+    return report?.planId || null;
+  }
+  if (req.params.batchId) {
+    const batch = await prisma.importBatch.findUnique({
+      where: { id: req.params.batchId },
+      select: { planId: true },
+    });
+    return batch?.planId || null;
+  }
+  return null;
+}
+
+async function assertPlanWrite(req: any, res: any, next: any) {
+  try {
+    if (req.user!.role === "admin") return next();
+    const planId = await planIdForRequest(req);
+    if (!planId) return next();
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+      select: { createdBy: true, owner: true },
+    });
+    if (!plan) return res.status(404).json({ message: "Plan not found" });
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { firstName: true, lastName: true, position: true },
+    });
+    const names = new Set(
+      [
+        user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : null,
+        user?.position,
+      ]
+        .filter(Boolean)
+        .map((name) => String(name).trim().toLowerCase())
+    );
+    // The planning custodian keeps cross-plan editorial control; every other
+    // project manager is limited to plans they own or created.
+    const isPlanCustodian = user?.position === "Strategy and Planning Officer";
+    const owns =
+      isPlanCustodian ||
+      plan.createdBy === req.user!.username ||
+      (plan.owner ? names.has(plan.owner.trim().toLowerCase()) : false);
+    if (!owns) {
+      return res.status(403).json({
+        message: "Only the plan owner, the plan creator or an administrator can change this plan.",
+      });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+const canWrite = (req: any, res: any, next: any) =>
+  canWriteRole(req, res, () => assertPlanWrite(req, res, next));
+
+const PLAN_ITEM_CSV_HEADERS = [
+  "code", "parentCode", "kind", "title", "description", "owner", "startDate", "endDate",
+  "status", "progress", "budget", "unit", "baseline", "targetValue", "currentValue",
+  "direction", "frequency", "dataSource", "isFeatured", "targetPeriod", "target", "actual",
+  "targetLabel", "note",
+];
+
+function normaliseCsvRow(row: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [
+      key.toLowerCase().replace(/[^a-z0-9]/g, ""),
+      typeof value === "string" ? value.trim() : value,
+    ])
+  );
+}
+
+function csvText(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+function csvNumber(value: unknown) {
+  const text = String(value ?? "").replace(/,/g, "").replace(/[^0-9.-]/g, "");
+  return text === "" ? null : Number(text);
+}
+
+function csvDate(value: unknown) {
+  const text = csvText(value);
+  if (!text) return null;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function csvBoolean(value: unknown) {
+  return ["1", "true", "yes", "y"].includes(csvText(value).toLowerCase());
+}
 
 function badRequest(message: string) {
   const error = new Error(message) as Error & { status?: number };
@@ -597,6 +711,18 @@ router.get("/template/aop", canWrite, async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+});
+
+router.get("/template/items", canWrite, (_req, res) => {
+  const csv = [
+    PLAN_ITEM_CSV_HEADERS.join(","),
+    'SO1,,OBJECTIVE,Expand access to essential medicines,,Operations Manager,2026-01-01,2026-12-31,In Progress,40,,,,,,,,,false,2026,100,40,,"Annual objective"',
+    'SO1-A1,SO1,ACTIVITY,Complete regional distribution assessment,,Operations Manager,2026-01-15,2026-06-30,In Progress,55,1200000,,,,,,,,,false,,,,,"Field assessment underway"',
+    'SO1-K1,SO1,KPI,Share of districts reached,,Strategy and Planning Officer,2026-01-01,2026-12-31,In Progress,50,,%,,60,30,increase,Quarterly,Distribution reports,false,2026,60,30,,"Verified district coverage"',
+  ].join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="plan-items-template.csv"');
+  res.send(`\uFEFF${csv}\n`);
 });
 
 router.get("/periods", async (req, res, next) => {
@@ -1473,6 +1599,315 @@ router.get("/:planId/export.csv", async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+});
+
+/**
+ * Import plan items into a selected annual, strategic or roadmap plan.
+ * Rows are matched by code (preferred) or exact title, so re-uploading a
+ * corrected sheet updates items instead of creating duplicates. Parent codes
+ * are resolved in a second pass so a child may appear before its parent.
+ */
+router.post("/:planId/import", canWrite, csvUpload.single("file"), async (req, res, next) => {
+  try {
+    if (!req.file?.buffer?.length) {
+      return res.status(400).json({ message: "Choose a CSV file to upload." });
+    }
+    const plan = await prisma.plan.findUnique({ where: { id: req.params.planId } });
+    if (!plan) throw notFound("Plan not found");
+
+    let rows: Record<string, unknown>[];
+    try {
+      rows = parse(req.file.buffer, { columns: true, skip_empty_lines: true, trim: true, bom: true, relax_column_count: true });
+    } catch {
+      return res.status(400).json({ message: "The file is not a valid CSV. Download the template and try again." });
+    }
+    if (!rows.length) return res.status(400).json({ message: "The CSV has no plan-item rows." });
+
+    const existingItems = await prisma.planItem.findMany({ where: { planId: plan.id } });
+    const existingById = new Map(existingItems.map((item) => [item.id, item]));
+    const byCode = new Map<string, string>();
+    const byTitle = new Map<string, string>();
+    for (const item of existingItems) {
+      if (item.code) byCode.set(item.code.trim().toLowerCase(), item.id);
+      byTitle.set(item.title.trim().toLowerCase(), item.id);
+    }
+    const snapshot: { created: string[]; updated: { id: string; before: unknown }[]; targetsCreated: string[]; targetsUpdated: { id: string; before: unknown }[] } = {
+      created: [], updated: [], targetsCreated: [], targetsUpdated: [],
+    };
+    let nextSort = existingItems.reduce((max, item) => Math.max(max, item.sortOrder), -1) + 1;
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+    const imported: { itemId: string; parentCode: string; targetPeriod: string; row: Record<string, unknown>; line: number }[] = [];
+
+    for (const [index, raw] of rows.entries()) {
+      const row = normaliseCsvRow(raw);
+      const line = index + 2;
+      const title = csvText(row.title);
+      const kind = (csvText(row.kind) || "ACTIVITY").toUpperCase();
+      if (!title) {
+        skipped++;
+        errors.push(`Row ${line}: title is required.`);
+        continue;
+      }
+      if (!ITEM_KINDS.includes(kind as (typeof ITEM_KINDS)[number])) {
+        skipped++;
+        errors.push(`Row ${line}: kind must be one of ${ITEM_KINDS.join(", ")}.`);
+        continue;
+      }
+
+      const code = csvText(row.code) || null;
+      const existingId = (code ? byCode.get(code.toLowerCase()) : undefined) || byTitle.get(title.toLowerCase());
+      const startDate = csvText(row.startdate) ? csvDate(row.startdate) : null;
+      const endDate = csvText(row.enddate) ? csvDate(row.enddate) : null;
+      if (csvText(row.startdate) && !startDate) {
+        skipped++;
+        errors.push(`Row ${line}: startDate is not a valid date.`);
+        continue;
+      }
+      if (csvText(row.enddate) && !endDate) {
+        skipped++;
+        errors.push(`Row ${line}: endDate is not a valid date.`);
+        continue;
+      }
+
+      const optional: Record<string, unknown> = {};
+      const setText = (column: string, field: string) => {
+        if (csvText(row[column])) optional[field] = csvText(row[column]);
+      };
+      const setNumber = (column: string, field: string) => {
+        if (!csvText(row[column])) return;
+        const value = csvNumber(row[column]);
+        if (value != null && !Number.isNaN(value)) optional[field] = value;
+      };
+      setText("description", "description");
+      setText("owner", "owner");
+      setText("status", "status");
+      setText("unit", "unit");
+      setText("direction", "direction");
+      setText("frequency", "frequency");
+      setText("datasource", "dataSource");
+      setNumber("progress", "progress");
+      setNumber("budget", "budget");
+      setNumber("baseline", "baseline");
+      setNumber("targetvalue", "targetValue");
+      setNumber("currentvalue", "currentValue");
+      if (csvText(row.isfeatured)) optional.isFeatured = csvBoolean(row.isfeatured);
+      if (startDate) optional.startDate = startDate;
+      if (endDate) optional.endDate = endDate;
+      if (optional.progress != null) optional.progress = Math.max(0, Math.min(100, Math.round(Number(optional.progress))));
+
+      let itemId: string;
+      if (existingId) {
+        await prisma.planItem.update({
+          where: { id: existingId },
+          data: { title, kind, ...(code ? { code } : {}), ...optional },
+        });
+        itemId = existingId;
+        snapshot.updated.push({ id: existingId, before: existingById.get(existingId) });
+        updated++;
+      } else {
+        const item = await prisma.planItem.create({
+          data: {
+            planId: plan.id,
+            code,
+            title,
+            kind,
+            sortOrder: nextSort++,
+            ...optional,
+          },
+        });
+        itemId = item.id;
+        snapshot.created.push(item.id);
+        created++;
+      }
+
+      if (code) {
+        byCode.set(code.toLowerCase(), itemId);
+        if (!existingId) byTitle.set(title.toLowerCase(), itemId);
+      } else if (!existingId) {
+        byTitle.set(title.toLowerCase(), itemId);
+      }
+
+      imported.push({
+        itemId,
+        parentCode: csvText(row.parentcode),
+        targetPeriod: csvText(row.targetperiod),
+        row,
+        line,
+      });
+    }
+
+    // Resolve parent codes after every row exists.
+    for (const entry of imported) {
+      if (!entry.parentCode) continue;
+      const parentId = byCode.get(entry.parentCode.toLowerCase());
+      if (!parentId) {
+        errors.push(`Row ${entry.line}: parentCode "${entry.parentCode}" was not found in this plan.`);
+        continue;
+      }
+      if (parentId === entry.itemId) {
+        errors.push(`Row ${entry.line}: an item cannot use its own code as parentCode.`);
+        continue;
+      }
+      await prisma.planItem.update({ where: { id: entry.itemId }, data: { parentId } });
+    }
+
+    // Optional KPI reading on the same row.
+    let targets = 0;
+    for (const entry of imported) {
+      if (!entry.targetPeriod) continue;
+      const target = csvNumber(entry.row.target);
+      const actual = csvNumber(entry.row.actual);
+      const targetLabel = csvText(entry.row.targetlabel) || null;
+      const note = csvText(entry.row.note) || null;
+      if (target == null && actual == null && !targetLabel && !note) continue;
+      const before = await prisma.planKpiTarget.findUnique({
+        where: { itemId_periodLabel: { itemId: entry.itemId, periodLabel: entry.targetPeriod } },
+      });
+      const saved = await prisma.planKpiTarget.upsert({
+        where: { itemId_periodLabel: { itemId: entry.itemId, periodLabel: entry.targetPeriod } },
+        create: { itemId: entry.itemId, periodLabel: entry.targetPeriod, target, actual, targetLabel, note },
+        update: { target, actual, targetLabel, note },
+      });
+      if (before) snapshot.targetsUpdated.push({ id: saved.id, before });
+      else snapshot.targetsCreated.push(saved.id);
+      targets++;
+    }
+
+    const summary = { created, updated, skipped, total: rows.length, targets, errors, planTitle: plan.title, type: plan.type };
+    const batch = await recordImport({
+      module: "PLAN_ITEMS",
+      planId: plan.id,
+      user: req.user!,
+      fileName: req.file.originalname,
+      summary,
+      snapshot,
+    });
+    res.json({
+      planId: plan.id,
+      batchId: batch.id,
+      ...summary,
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+/**
+ * Dry run: validate the same CSV the importer accepts and report what would be
+ * created, updated or rejected, without writing anything to the plan.
+ */
+router.post("/:planId/import/preview", canWrite, csvUpload.single("file"), async (req, res, next) => {
+  try {
+    if (!req.file?.buffer?.length) {
+      return res.status(400).json({ message: "Choose a CSV file to preview." });
+    }
+    const plan = await prisma.plan.findUnique({ where: { id: req.params.planId } });
+    if (!plan) throw notFound("Plan not found");
+
+    let rows: Record<string, unknown>[];
+    try {
+      rows = parse(req.file.buffer, { columns: true, skip_empty_lines: true, trim: true, bom: true, relax_column_count: true });
+    } catch {
+      return res.status(400).json({ message: "The file is not a valid CSV. Download the template and try again." });
+    }
+    if (!rows.length) return res.status(400).json({ message: "The CSV has no plan-item rows." });
+
+    const existingItems = await prisma.planItem.findMany({ where: { planId: plan.id } });
+    const byCode = new Map<string, string>();
+    const byTitle = new Map<string, string>();
+    for (const item of existingItems) {
+      if (item.code) byCode.set(item.code.trim().toLowerCase(), item.id);
+      byTitle.set(item.title.trim().toLowerCase(), item.id);
+    }
+
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+    const preview: { line: number; action: "create" | "update" | "skip"; title: string; kind: string }[] = [];
+
+    for (const [index, raw] of rows.entries()) {
+      const row = normaliseCsvRow(raw);
+      const line = index + 2;
+      const title = csvText(row.title);
+      const kind = (csvText(row.kind) || "ACTIVITY").toUpperCase();
+      if (!title) {
+        skipped++; errors.push(`Row ${line}: title is required.`);
+        preview.push({ line, action: "skip", title: "(no title)", kind });
+        continue;
+      }
+      if (!ITEM_KINDS.includes(kind as (typeof ITEM_KINDS)[number])) {
+        skipped++;
+        errors.push(`Row ${line}: kind must be one of ${ITEM_KINDS.join(", ")}.`);
+        preview.push({ line, action: "skip", title, kind });
+        continue;
+      }
+      if (csvText(row.startdate) && !csvDate(row.startdate)) {
+        skipped++; errors.push(`Row ${line}: startDate is not a valid date.`);
+        preview.push({ line, action: "skip", title, kind });
+        continue;
+      }
+      if (csvText(row.enddate) && !csvDate(row.enddate)) {
+        skipped++; errors.push(`Row ${line}: endDate is not a valid date.`);
+        preview.push({ line, action: "skip", title, kind });
+        continue;
+      }
+      const code = csvText(row.code);
+      const existingId = (code ? byCode.get(code.toLowerCase()) : undefined) || byTitle.get(title.toLowerCase());
+      if (existingId) {
+        updated++;
+        preview.push({ line, action: "update", title, kind });
+      } else {
+        created++;
+        preview.push({ line, action: "create", title, kind });
+      }
+      if (code && !existingId) byCode.set(code.toLowerCase(), `preview-${line}`);
+    }
+
+    // Parent codes may appear on a later row, so check the whole sheet first.
+    const sheetCodes = new Set(
+      rows
+        .map((raw) => csvText(normaliseCsvRow(raw).code).toLowerCase())
+        .filter(Boolean)
+    );
+    const missingParents = [...new Set(
+      rows
+        .map((raw) => csvText(normaliseCsvRow(raw).parentcode))
+        .filter(Boolean)
+        .filter((code) => !byCode.has(code.toLowerCase()) && !sheetCodes.has(code.toLowerCase()))
+    )];
+    for (const code of missingParents) {
+      errors.push(`parentCode "${code}" was not found in this plan.`);
+    }
+
+    res.json({
+      preview: true,
+      planTitle: plan.title,
+      total: rows.length,
+      created,
+      updated,
+      skipped,
+      errors: errors.slice(0, 50),
+      rows: preview.slice(0, 100),
+      missingParents,
+    });
+  } catch (e) { next(e); }
+});
+
+router.get("/:planId/imports", canWrite, async (req, res, next) => {
+  try {
+    res.json(await listImports("PLAN_ITEMS", req.params.planId));
+  } catch (e) { next(e); }
+});
+
+router.post("/imports/:batchId/rollback", canWrite, async (req: any, res, next) => {
+  try {
+    res.json(await rollbackImport(req.params.batchId, req.user!));
+  } catch (e) { next(e); }
 });
 
 // ─── Plan items ───────────────────────────────────────────────────────────────

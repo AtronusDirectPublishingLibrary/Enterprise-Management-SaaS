@@ -34,24 +34,51 @@ const DB_DICT = {
   "Direct jobs created by 2030": "በ2030 የተፈጠሩ ቀጥታ ስራዎች"
 };
 
+const DEFAULT_LANGUAGES = [
+  { code: "en", name: "English", nativeName: "English", sortOrder: 0 },
+  { code: "am", name: "Amharic", nativeName: "አማርኛ", sortOrder: 1 },
+];
+
+/** Compact label for the toggle; the full name stays in the tooltip. */
+export const languageShortLabel = (language) => {
+  if (language.code === "am") return "አማ";
+  if (language.code === "en") return "EN";
+  if (language.code === "om") return "OM";
+  if (language.code === "so") return "SO";
+  if (language.code === "ti") return "ትግ";
+  if (language.code === "aa") return "AA";
+  return language.code.toUpperCase().slice(0, 3);
+};
+
 export function LanguageProvider({ children }) {
   const location = useLocation();
   const [lang, setLangState] = useState(() => localStorage.getItem("app_lang") || "en");
   const [translations, setTranslations] = useState({});
+  const [languages, setLanguages] = useState(DEFAULT_LANGUAGES);
   const [loading, setLoading] = useState(true);
 
   const setLang = (newLang) => {
     setLangState(newLang);
     localStorage.setItem("app_lang", newLang);
+    document.documentElement.lang = newLang;
+    document.documentElement.dir = "ltr";
   };
 
   const reloadTranslations = () => {
     setLoading(true);
-    api.get("/translations")
-      .then((data) => {
+    Promise.all([
+      api.get("/translations"),
+      api.get("/languages/enabled").catch(() => null),
+    ])
+      .then(([data, enabledLanguages]) => {
         const dict = {};
         data.forEach((row) => { dict[row.key] = row; });
         setTranslations(dict);
+        if (Array.isArray(enabledLanguages) && enabledLanguages.length) {
+          setLanguages(enabledLanguages);
+          const codes = enabledLanguages.map((entry) => entry.code);
+          if (!codes.includes(lang)) setLangState(codes.includes("en") ? "en" : codes[0]);
+        }
       })
       .catch((err) => console.error("Failed to load translations", err))
       .finally(() => setLoading(false));
@@ -59,21 +86,22 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     reloadTranslations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const t = (key, fallback) => {
-    // 1. Catch dynamic DB text first
+    // 1. Catch dynamic DB text first (Amharic has a curated dictionary)
     if (lang === "am" && DB_DICT[key]) {
       return DB_DICT[key];
     }
 
     // 2. Standard database key lookups
-    if (!translations[key]) return fallback || key;
-    
-    if (lang === "am") {
-      return translations[key].am || translations[key].en || fallback || key;
-    }
-    return translations[key].en || fallback || key;
+    const row = translations[key];
+    if (!row) return fallback || key;
+
+    if (lang === "am") return row.am || row.en || fallback || key;
+    if (lang === "en") return row.en || fallback || key;
+    return row.values?.[lang] || row.en || fallback || key;
   };
 
   // Reverse index by English text: lets the public pages pick up whatever the
@@ -90,13 +118,14 @@ export function LanguageProvider({ children }) {
     (english, amFallback) => {
       const row = byEnglish.get(normalise(english));
       if (lang === "am") return row?.am || amFallback || english;
-      return row?.en || english;
+      if (lang === "en") return row?.en || english;
+      return row?.values?.[lang] || row?.en || english;
     },
     [byEnglish, lang]
   );
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t, tText, loading, reloadTranslations }}>
+    <LanguageContext.Provider value={{ lang, setLang, t, tText, loading, reloadTranslations, languages }}>
       {children}
     </LanguageContext.Provider>
   );

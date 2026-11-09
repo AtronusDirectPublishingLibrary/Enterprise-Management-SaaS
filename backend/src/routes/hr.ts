@@ -16,6 +16,7 @@ router.get("/staff", async (req, res) => {
       select: {
         id: true, firstName: true, lastName: true, username: true, email: true,
         role: true, department: true, subDepartment: true, immediateSupervisorId: true,
+        position: true, jobTitle: true, employeeNo: true, phone: true, hireDate: true,
         lastLogin: true, createdDate: true,
       },
       orderBy: { createdDate: "desc" },
@@ -26,7 +27,7 @@ router.get("/staff", async (req, res) => {
 
 router.post("/staff", async (req, res) => {
   try {
-    const { firstName, lastName, username, email, role, department, subDepartment, password, immediateSupervisorId } = req.body;
+    const { firstName, lastName, username, email, role, department, subDepartment, password, immediateSupervisorId, position, jobTitle, employeeNo, phone } = req.body;
     if (!username) return res.status(400).json({ error: "Username is required" });
     const existing = await prisma.user.findUnique({ where: { username } });
     if (existing) return res.status(400).json({ error: "Username already exists" });
@@ -38,6 +39,8 @@ router.post("/staff", async (req, res) => {
         passwordHash, role: role || "viewer",
         department: department || null, subDepartment: subDepartment || null,
         immediateSupervisorId: immediateSupervisorId || null,
+        position: position || null, jobTitle: jobTitle || position || null,
+        employeeNo: employeeNo || null, phone: phone || null,
       },
     });
     res.json(user);
@@ -46,13 +49,17 @@ router.post("/staff", async (req, res) => {
 
 router.put("/staff/:id", async (req, res) => {
   try {
-    const { firstName, lastName, username, email, role, department, subDepartment, immediateSupervisorId } = req.body;
+    const { firstName, lastName, username, email, role, department, subDepartment, immediateSupervisorId, position, jobTitle, employeeNo, phone } = req.body;
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: {
         firstName, lastName, username, email: email || null, role,
         department: department || null, subDepartment: subDepartment || null,
         immediateSupervisorId: immediateSupervisorId || null,
+        ...(position !== undefined ? { position: position || null } : {}),
+        ...(jobTitle !== undefined ? { jobTitle: jobTitle || null } : {}),
+        ...(employeeNo !== undefined ? { employeeNo: employeeNo || null } : {}),
+        ...(phone !== undefined ? { phone: phone || null } : {}),
       },
     });
     res.json(user);
@@ -85,6 +92,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           username, email: row.email || null, passwordHash,
           role: row.role || "viewer", department: row.department || null,
           subDepartment: row.subDepartment || null,
+          position: row.position || null, jobTitle: row.position || null,
+          employeeNo: row.employeeNo || null, phone: row.phone || null,
         },
       });
       added++;
@@ -94,7 +103,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 });
 
 router.get("/template", (req, res) => {
-  const csv = "firstName,lastName,username,email,role,department,subDepartment\nAhmed,Kebede,ahmed.k,ahmed@ebpe.gov.et,project_manager,Operations,Manufacturing\nSara,Tesfaye,sara.t,sara@ebpe.gov.et,viewer,QA,Quality Control";
+  const csv = "firstName,lastName,username,email,role,position,department,subDepartment,employeeNo,phone\nAhmed,Kebede,ahmed.k,ahmed@ebpe.gov.et,project_manager,Engineer,Operations,Manufacturing,EBPE-014,+251911000001\nSara,Tesfaye,sara.t,sara@ebpe.gov.et,viewer,QA and regulatory Affairs Officer,QA,Quality Control,EBPE-015,+251911000002";
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename=staff_template.csv');
   res.send(csv);

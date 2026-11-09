@@ -16,13 +16,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(username, password) {
-    const res = await api.post("/auth/login", { username, password });
+  async function login(username, password, token) {
+    const res = await api.post("/auth/login", { username, password, ...(token ? { token } : {}) });
     const userData = {
       username: res.username,
+      firstName: res.firstName,
+      lastName: res.lastName,
+      position: res.position,
       role: res.role,
       email: res.email,
       forceChange: res.forceChange,
+      mfaEnabled: res.mfaEnabled,
       permissions: res.permissions,
     };
     setUser(userData);

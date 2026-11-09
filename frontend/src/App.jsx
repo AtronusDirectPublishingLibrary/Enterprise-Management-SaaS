@@ -5,10 +5,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import AuditLog from "./pages/AuditLog";
 import Payroll from "./pages/Payroll";
-import Recruitment from "./pages/Recruitment";
+import Recruitment from "./pages/Recruitment";
 import HrOperations from "./pages/HrOperations";
 import HRAnalytics from "./pages/HRAnalytics";
 import HRDashboard from "./pages/HRDashboard";
+import HomePage from "./pages/HomePage";
 import FlyInObserver from "./components/FlyInObserver";
 import LandingPage from "./pages/LandingPage";
 import Careers from "./pages/Careers";
@@ -40,6 +41,9 @@ import PublicSiteSettings from "./pages/PublicSiteSettings";
 import Goals from "./pages/Goals";
 import Portfolios from "./pages/Portfolios";
 import Users from "./pages/Users";
+import ProgressUpdates from "./pages/ProgressUpdates";
+import ConsolidatedReports from "./pages/ConsolidatedReports";
+import PayslipPage from "./pages/PayslipPage";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const PlansPage = lazy(() => import("./pages/PlansPage"));
@@ -104,6 +108,9 @@ export default function App() {
       {/* Printable board pack */}
       <Route path="/plans/:planId/print" element={<RequireAuth><PlanPrintPage /></RequireAuth>} />
 
+      {/* Branded payslip, printable / save as PDF */}
+      <Route path="/payslips/:id" element={<RequireAuth><PayslipPage /></RequireAuth>} />
+
       {/* Auth & Intake */}
       <Route path="/print-timesheet/:id" element={<PrintTimesheet />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
@@ -114,7 +121,8 @@ export default function App() {
         
         {/* Main Dashboard and Database Wrapper */}
         <Route element={<DatabasePage />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<HomePage />} />
+          <Route path="/pms-dashboard" element={<Dashboard />} />
         <Route path="/my-hr" element={<MyHRPortal />} />
         <Route path="/my-approvals" element={<MyApprovals />} />
           <Route path="/database/roadmap" element={<PlansPage type="ROADMAP" />} />
@@ -127,8 +135,8 @@ export default function App() {
 
         <Route path="/users" element={<RoleRoute allowedRoles={["admin"]}><Users /></RoleRoute>} />
         <Route path="/audit-log" element={<RoleRoute allowedRoles={["admin"]}><AuditLog /></RoleRoute>} />
-        <Route path="/payroll" element={<RoleRoute allowedRoles={["admin"]}><Payroll /></RoleRoute>} />
-        <Route path="/recruitment" element={<RoleRoute allowedRoles={["admin", "executive"]}><Recruitment /></RoleRoute>} />
+        <Route path="/payroll" element={<Payroll />} />
+        <Route path="/recruitment" element={<RoleRoute allowedRoles={["admin", "executive"]}><Recruitment /></RoleRoute>} />
         <Route path="/hr-operations" element={<RoleRoute allowedRoles={["admin", "executive"]}><HrOperations /></RoleRoute>} />
         <Route path="/hr-analytics" element={<RoleRoute allowedRoles={["admin", "executive"]}><HRAnalytics /></RoleRoute>} />
         <Route path="/hr" element={<RoleRoute allowedRoles={["admin", "executive"]}><HRDashboard /></RoleRoute>} />
@@ -141,6 +149,8 @@ export default function App() {
         <Route path="/manage-media" element={<RoleRoute allowedRoles={["admin"]}><ManageMedia /></RoleRoute>} />
         <Route path="/public-site" element={<RoleRoute allowedRoles={["admin"]}><PublicSiteSettings /></RoleRoute>} />
         <Route path="/goals" element={<Goals />} />
+        <Route path="/progress-updates" element={<ProgressUpdates />} />
+        <Route path="/reports" element={<ConsolidatedReports />} />
         <Route path="/portfolios" element={<RoleRoute allowedRoles={["admin", "executive", "project_manager"]}><Portfolios /></RoleRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

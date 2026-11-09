@@ -10,6 +10,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/theme.css";
 import "./styles/public.css";
 import "./styles/hr.css";
+import "./styles/app.css";
 import App from "./App";
 import { AuthProvider } from "./lib/auth";
 import { NotificationProvider } from "./lib/notifications";

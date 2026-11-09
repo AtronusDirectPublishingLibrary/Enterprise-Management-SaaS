@@ -54,10 +54,20 @@ import formRoutes from "./routes/forms";
 import goalRoutes from "./routes/goals";
 import timeRoutes from "./routes/timeTracking";
 import planRoutes from "./routes/plans";
+import holidayRoutes from "./routes/holidays";
+import languageRoutes from "./routes/languages";
+import progressUpdateRoutes from "./routes/progressUpdates";
+import consolidatedReportRoutes from "./routes/consolidatedReports";
+import payslipRoutes from "./routes/payslips";
+import homeRoutes from "./routes/home";
+import searchRoutes from "./routes/search";
+import reportScheduleRoutes from "./routes/reportSchedules";
+import { runDueReportSchedules } from "./lib/reportSchedules";
+import { pruneAuditLog } from "./lib/auditRetention";
 import { runPlanAlerts } from "./lib/planAlerts";
 import { runPeriodLifecycle } from "./lib/periodLifecycle";
 import { errorHandler } from "./middleware/errorHandler";
-import { requireAuth } from './middleware/auth';
+import { requireAccess, requireAuth } from './middleware/auth';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -90,17 +100,17 @@ app.use("/api/activities",   activityRoutes);
 app.use("/api/workpackages", wpRoutes);
 app.use("/api/dashboard",    dashboardRoutes);
 app.use("/api/users", requireAuth, requireRole(["admin"]), userRoutes);
-app.use("/api/hr", requireAuth, requireRole(["admin", "executive"]), hrRoutes);
+app.use("/api/hr", requireAuth, requireAccess("hr"), hrRoutes);
 app.use("/api/leave-balances", requireAuth, leaveBalanceRoutes);
-app.use("/api/leave-types", requireAuth, requireRole(["admin", "executive"]), leaveTypeRoutes);
+app.use("/api/leave-types", requireAuth, requireAccess("hr"), leaveTypeRoutes);
 app.use("/api/annual-plans", requireAuth, annualPlanRoutes);
 app.use("/api/approvals", requireAuth, approvalRoutes);
-app.use("/api/hr-analytics", requireAuth, requireRole(["admin", "executive"]), analyticsRoutes);
-app.use("/api/hr-reports", requireAuth, requireRole(["admin", "executive"]), reportRoutes);
+app.use("/api/hr-analytics", requireAuth, requireAccess("hrAnalytics"), analyticsRoutes);
+app.use("/api/hr-reports", requireAuth, requireAccess("hr"), reportRoutes);
 app.use("/api/audit", requireAuth, requireRole(["admin", "executive"]), auditRoutes);
 app.use("/api/timesheets", requireAuth, timesheetRoutes);
-app.use("/api/recruitment", requireAuth, requireRole(["admin", "executive"]), recruitmentRoutes);
-app.use("/api/payroll", requireAuth, requireRole(["admin"]), payrollRoutes);
+app.use("/api/recruitment", requireAuth, requireAccess("recruitment"), recruitmentRoutes);
+app.use("/api/payroll", requireAuth, requireAccess("payroll"), payrollRoutes);
 app.use("/api/training-alerts", requireAuth, requireRole(["admin", "executive"]), trainingAlertRoutes);
 app.use("/api/hr-self",       hrSelfRoutes);
 app.use("/api/induction",     requireAuth, inductionRoutes);
@@ -116,6 +126,13 @@ app.use("/api/briefs",       briefRoutes);
 app.use("/api/members",      memberRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/translations", translationRoutes);
+app.use("/api/languages", languageRoutes);
+app.use("/api/progress-updates", progressUpdateRoutes);
+app.use("/api/consolidated-reports", consolidatedReportRoutes);
+app.use("/api/report-schedules", reportScheduleRoutes);
+app.use("/api/payslips", payslipRoutes);
+app.use("/api/home", homeRoutes);
+app.use("/api/search", searchRoutes);
 app.use("/api/timeline", timelineRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/automation", automationRoutes);
@@ -126,6 +143,7 @@ app.use("/api/forms", formRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/time", timeRoutes);
 app.use("/api/plans", planRoutes);
+app.use("/api/holidays", holidayRoutes);
 app.use("/api/public", publicStatsRoutes);
 app.use("/api/site-settings", siteSettingsRoutes);
 app.use("/api/media", mediaVideoRoutes);
@@ -190,4 +208,37 @@ if (process.env.PERIOD_LIFECYCLE_AUTORUN !== "false") {
   };
   setTimeout(tick, 20_000);
   setInterval(tick, intervalHours * 3_600_000).unref();
+}
+
+// Scheduled consolidated-report delivery. Disable with REPORT_SCHEDULES_AUTORUN=false.
+if (process.env.REPORT_SCHEDULES_AUTORUN !== "false") {
+  const tick = () => {
+    runDueReportSchedules()
+      .then((summary) => {
+        if (summary.evaluated) {
+          console.log(
+            `[report-schedules] due=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
+          );
+        }
+      })
+      .catch((error) => console.error("[report-schedules] run failed", error));
+  };
+  setTimeout(tick, 30_000);
+  setInterval(tick, 15 * 60 * 1000).unref();
+}
+
+// Audit retention: prune entries older than AUDIT_RETENTION_DAYS (default 365).
+// Disable with AUDIT_RETENTION_AUTORUN=false.
+if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
+  const tick = () => {
+    pruneAuditLog()
+      .then((summary) => {
+        if (summary.deleted) {
+          console.log(`[audit-retention] pruned ${summary.deleted} entries older than ${summary.retentionDays} days`);
+        }
+      })
+      .catch((error) => console.error("[audit-retention] prune failed", error));
+  };
+  setTimeout(tick, 60_000);
+  setInterval(tick, 24 * 60 * 60 * 1000).unref();
 }

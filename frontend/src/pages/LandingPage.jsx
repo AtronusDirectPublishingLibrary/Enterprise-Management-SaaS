@@ -498,7 +498,7 @@ export default function LandingPage() {
         <div className="hero-scrim" aria-hidden="true" />
         <div className="hero-inner">
           {slide ? (
-            <div className="hero-copy" key={slide.id}>
+            <div className={`hero-copy hero-copy--v${activeSlide % 4}`} key={slide.id}>
               <p className="hero-kicker">{slideTagline || copy.kicker}</p>
               <h1>{slideTitle}</h1>
               {slideSubtitle ? <p className="lede">{slideSubtitle}</p> : null}
@@ -525,7 +525,7 @@ export default function LandingPage() {
               <p className="hero-note">{copy.heroNote}</p>
             </div>
           ) : (
-            <div className="hero-copy">
+            <div className="hero-copy hero-copy--v0">
               <p className="hero-kicker">{copy.kicker}</p>
               <h1>
                 {copy.title} <em>{copy.accent}</em>

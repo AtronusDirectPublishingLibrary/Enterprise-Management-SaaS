@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PositionSelect from "./PositionSelect";
 
 export default function UserForm({ user, onSave, onClose }) {
   const [data, setData] = useState({
@@ -8,7 +9,8 @@ export default function UserForm({ user, onSave, onClose }) {
     password: "",
     role: user?.role || "viewer",
     email: user?.email || "",
-    assignedDirectorate: user?.assignedDirectorate || "",
+    department: user?.department || user?.assignedDirectorate || "",
+    position: user?.position || "",
   });
 
   const handleChange = (e) => setData({ ...data, [e.target.name]: e.target.value });
@@ -21,7 +23,7 @@ export default function UserForm({ user, onSave, onClose }) {
 
   return (
     <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}>
-      <div className="modal-dialog">
+      <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{user ? "Edit User" : "Add User"}</h5>
@@ -50,14 +52,24 @@ export default function UserForm({ user, onSave, onClose }) {
                   <label className="form-label">Role</label>
                   <select className="form-select form-select-sm" name="role" value={data.role} onChange={handleChange}>
                     <option value="admin">Admin</option>
+                    <option value="executive">Executive</option>
                     <option value="project_manager">Project Manager</option>
                     <option value="pi">PI</option>
+                    <option value="staff">Staff</option>
                     <option value="viewer">Viewer</option>
                   </select>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Department</label>
-                  <input className="form-control form-control-sm" name="assignedDirectorate" value={data.assignedDirectorate} onChange={handleChange} />
+                  <input className="form-control form-control-sm" name="department" value={data.department} onChange={handleChange} />
+                </div>
+                <div className="col-md-12">
+                  <PositionSelect
+                    id="user-position"
+                    value={data.position}
+                    onChange={(position) => setData({ ...data, position })}
+                    required
+                  />
                 </div>
                 <div className="col-md-12">
                   <label className="form-label">Email</label>

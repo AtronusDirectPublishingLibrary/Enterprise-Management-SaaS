@@ -37,7 +37,7 @@ export default function DropdownManager() {
     } catch (e) { alert(e.message); }
   };
 
-  const categories = ["Status", "Source of Funds", "Priority", "Project Category"];
+  const categories = ["Status", "Source of Funds", "Priority", "Project Category", "Position"];
 
   return (
     <div className="card p-4 shadow-sm border-0 mb-4">

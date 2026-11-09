@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { invalidateSiteSettings } from "../lib/siteSettings";
 import { SOCIAL_LABELS, SOCIAL_PLATFORMS, SocialIcon } from "../components/SocialLinks";
 import { BarChart3, Megaphone, Save, Share2 } from "lucide-react";
+import PageHeader from "../components/PageHeader";
 
 const EMPTY = {
   banner: {
@@ -86,17 +87,13 @@ export default function PublicSiteSettings() {
   if (loading) return <div className="spinner-border text-success m-4" />;
 
   return (
-    <div className="pb-4">
-      <div className="d-flex align-items-start gap-3 mb-4">
-        <Megaphone size={28} style={{ color: "var(--brand-primary)" }} />
-        <div>
-          <h2 className="page-title mb-0">Public site</h2>
-          <div className="small text-muted">
-            Components shown on the corporate site: the welcome banner above the home page header, the
-            footer social links and the visitor counter.
-          </div>
-        </div>
-      </div>
+    <div className="pb-4 public-site-settings-page">
+      <PageHeader
+        icon={<Megaphone size={20} />}
+        kicker="Communications · public website"
+        title="Public site"
+        subtitle="Components shown on the corporate site: the welcome banner above the home page header, the footer social links and the visitor counter."
+      />
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
@@ -181,7 +178,7 @@ export default function PublicSiteSettings() {
           <div className="mt-3">
             <div className="small text-muted mb-1">Preview</div>
             <div
-              className="d-flex align-items-center gap-3 px-3 py-2"
+              className="d-flex align-items-center gap-3 px-3 py-2 banner-preview"
               style={{ background: "var(--gold)", color: "var(--navy-deep)", borderRadius: 4, fontWeight: 600 }}
             >
               <span style={{ fontSize: "0.8rem" }}>{settings.banner.message}</span>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, API_BASE } from "../lib/api";
+import PageHeader from "../components/PageHeader";
 import {
   ArrowDown,
   ArrowUp,
@@ -150,22 +151,18 @@ export default function ManageMedia() {
   };
 
   return (
-    <div className="pb-4">
-      <div className="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
-        <div className="d-flex align-items-start gap-3">
-          <Film size={28} style={{ color: "var(--brand-primary)" }} />
-          <div>
-            <h2 className="page-title mb-0">Media library</h2>
-            <div className="small text-muted">
-              Videos published in the Media section of the home page. Upload a video file or link to a
-              hosted one, and attach a WebVTT/SRT captions file so every clip is accessible.
-            </div>
-          </div>
-        </div>
-        <button className="btn-brand d-flex align-items-center gap-2" onClick={openNew}>
-          <Plus size={16} /> Add video
-        </button>
-      </div>
+    <div className="pb-4 media-library-page">
+      <PageHeader
+        icon={<Film size={20} />}
+        kicker="Communications · media library"
+        title="Media library"
+        subtitle="Videos published in the Media section of the home page. Upload a video file or link to a hosted one, and attach a WebVTT/SRT captions file so every clip is accessible."
+        actions={
+          <button className="btn-brand d-flex align-items-center gap-2" onClick={openNew}>
+            <Plus size={16} /> Add video
+          </button>
+        }
+      />
 
       {showForm && (
         <div className="card border-0 shadow-sm p-4 mb-4">
@@ -326,7 +323,7 @@ export default function ManageMedia() {
         <div className="d-flex flex-column gap-3">
           {videos.map((video, index) => (
             <div className="card border-0 shadow-sm" key={video.id}>
-              <div className="d-flex align-items-center gap-3 p-3 flex-wrap">
+              <div className="d-flex align-items-center gap-3 p-3 media-row">
                 <div
                   style={{
                     width: 120,
@@ -345,7 +342,7 @@ export default function ManageMedia() {
                   {!video.posterUrl && <Film size={22} />}
                 </div>
 
-                <div className="flex-grow-1" style={{ minWidth: 220 }}>
+                <div className="flex-grow-1 media-copy">
                   <div className="fw-bold" style={{ color: "var(--brand-primary)" }}>
                     {video.title}
                     {video.titleAm ? <span className="text-muted fw-normal"> · {video.titleAm}</span> : null}
@@ -364,7 +361,7 @@ export default function ManageMedia() {
                   </div>
                 </div>
 
-                <div className="d-flex gap-1">
+                <div className="media-actions">
                   <button
                     className="btn btn-sm btn-outline-secondary"
                     title="Move up"

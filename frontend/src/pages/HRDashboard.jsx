@@ -1,7 +1,18 @@
 import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import { Helmet } from "react-helmet-async";
-import { Users, Upload, Save, X, Edit, Trash2, Search, Download, BookOpen, Calendar, Briefcase, Settings , CalendarRange} from "lucide-react";
+import { Users, Upload, Save, X, Edit, Trash2, Search, Download, BookOpen, Calendar, Briefcase, Settings , CalendarRange, ShieldCheck} from "lucide-react";
+import PositionSelect from "../components/PositionSelect";
+import PageHeader from "../components/PageHeader";
+import { POSITION_ACCESS, POSITIONS, TAB_KEYS } from "../lib/access";
+
+const TAB_LABELS = {
+  pms: "PMS", aop: "Annual", strategic: "Strategic", roadmap: "Roadmap", progress: "Progress",
+  reports: "Reports", calendar: "Calendar", archive: "Archive", myhr: "My HR", approvals: "Approvals",
+  hr: "HR Suite", hrAnalytics: "Exec. HR", recruitment: "Recruitment", hrOps: "Induction",
+  payroll: "Payroll", languages: "Languages", alerts: "Alerts", news: "News", documents: "Documents",
+  media: "Media", publicSite: "Public Site", users: "Users", settings: "Settings",
+};
 
 export default function HRDashboard() {
   const [activeTab, setActiveTab] = useState("directory");
@@ -13,7 +24,7 @@ export default function HRDashboard() {
   const [leaveTypes, setLeaveTypes] = useState([]);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ id: null, firstName: "", lastName: "", username: "", email: "", role: "viewer", department: "", subDepartment: "", password: "", immediateSupervisorId: "" });
+  const [formData, setFormData] = useState({ id: null, firstName: "", lastName: "", username: "", email: "", role: "viewer", department: "", subDepartment: "", password: "", immediateSupervisorId: "", position: "" });
 
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -33,7 +44,7 @@ export default function HRDashboard() {
   const [tsDeadline, setTsDeadline] = useState(25);
   const [trainingAlerts, setTrainingAlerts] = useState({ expired: [], expiringSoon: [], total: 0 });
 
-  const emptyForm = { id: null, firstName: "", lastName: "", username: "", email: "", role: "viewer", department: "", subDepartment: "", password: "", immediateSupervisorId: "" };
+  const emptyForm = { id: null, firstName: "", lastName: "", username: "", email: "", role: "viewer", department: "", subDepartment: "", password: "", immediateSupervisorId: "", position: "" };
 
   const loadData = () => {
     api.get("/training-alerts").then(setTrainingAlerts).catch(console.error);
@@ -68,7 +79,8 @@ export default function HRDashboard() {
       id: user.id, firstName: user.firstName || "", lastName: user.lastName || "",
       username: user.username || "", email: user.email || "", role: user.role || "viewer",
       department: user.department || "", subDepartment: user.subDepartment || "",
-      password: "", immediateSupervisorId: user.immediateSupervisorId || ""
+      password: "", immediateSupervisorId: user.immediateSupervisorId || "",
+      position: user.position || ""
     });
     setIsEditing(true);
     window.scrollTo(0, 0);
@@ -122,7 +134,6 @@ export default function HRDashboard() {
     } catch (err) { alert("Failed to submit leave request"); }
   };
 
-  const handleCreateHoliday = async (e) => {
   const handleSaveTsSettings = async () => {
     try {
       await api.put("/timesheets/settings", { submissionDay: tsDeadline });
@@ -130,17 +141,15 @@ export default function HRDashboard() {
     } catch (err) { alert("Failed to update"); }
   };
 
+  const handleCreateHoliday = async (e) => {
     e.preventDefault();
     try {
       await api.post("/holidays", holidayForm);
       setHolidayForm({ name: "", date: "" });
       loadData();
-      if (typeof toast !== "undefined") toast.success("Holiday added");
-      else alert("Holiday added");
+      alert("Holiday added");
     } catch (err) {
-      const msg = err.message || "Failed to add holiday";
-      if (typeof toast !== "undefined") toast.error(msg);
-      else alert(msg);
+      alert(err.message || "Failed to add holiday");
     }
   };
 
@@ -193,12 +202,15 @@ export default function HRDashboard() {
   );
 
   return (
-    <div className="container-fluid py-4" style={{ maxWidth: "100vw", overflowX: "hidden" }}>
+    <div className="container-fluid py-4 hr-dashboard">
       <Helmet><title>HR Suite | EBPE</title></Helmet>
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h3 fw-bold mb-4" style={{ color: "var(--brand-primary)" }}>HR Dashboard</h1>
-      </div>
+      <PageHeader
+        icon={<Users size={20} />}
+        kicker="People · HR operations"
+        title="HR Suite"
+        subtitle="Staff directory, training, leave, balances, leave types and public holidays — one branded workspace for the people function."
+      />
 
       {/* TAB BAR - TWO ROWS */}
       <div className="mb-4">
@@ -215,6 +227,7 @@ export default function HRDashboard() {
           <button className={`btn ${activeTab === 'balances' ? 'btn-primary' : 'btn-light'}`} onClick={() => setActiveTab('balances')}><Briefcase size={16} className="me-2"/> Leave Balances</button>
           <button className={`btn ${activeTab === 'leave-types' ? 'btn-primary' : 'btn-light'}`} onClick={() => setActiveTab('leave-types')}><Settings size={16} className="me-2"/> Leave Types</button>
           <button className={`btn ${activeTab === 'holidays' ? 'btn-primary' : 'btn-light'}`} onClick={() => setActiveTab('holidays')}><CalendarRange size={16} className="me-2"/> Holidays</button>
+          <button className={`btn ${activeTab === 'access' ? 'btn-primary' : 'btn-light'}`} onClick={() => setActiveTab('access')}><ShieldCheck size={16} className="me-2"/> Access Matrix</button>
         </div>
       </div>
 
@@ -235,9 +248,10 @@ export default function HRDashboard() {
                   {!isEditing && <div><label className="form-label small fw-bold">Password</label><input type="text" className="form-control" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="Default: Password123!" /></div>}
                   <div><label className="form-label small fw-bold">Role</label>
                     <select className="form-select" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                      <option value="viewer">Viewer</option><option value="admin">Admin</option><option value="project_manager">Project Manager</option><option value="executive">Executive</option>
+                      <option value="viewer">Viewer</option><option value="admin">Admin</option><option value="project_manager">Project Manager</option><option value="executive">Executive</option><option value="staff">Staff</option>
                     </select>
                   </div>
+                  <PositionSelect value={formData.position} onChange={(position) => setFormData({ ...formData, position })} />
                   <div><label className="form-label small fw-bold">Department</label><input type="text" className="form-control" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} /></div>
                   <div><label className="form-label small fw-bold">Sub-department</label><input type="text" className="form-control" value={formData.subDepartment} onChange={e => setFormData({...formData, subDepartment: e.target.value})} /></div>
                   <div><label className="form-label small fw-bold">Supervisor</label>
@@ -262,12 +276,13 @@ export default function HRDashboard() {
                 </div>
                 <div className="table-responsive">
                   <table className="table table-hover mb-0 align-middle">
-                    <thead className="table-light"><tr><th>Name</th><th>Username</th><th>Role</th><th>Department</th><th className="text-end">Actions</th></tr></thead>
+                    <thead className="table-light"><tr><th>Name</th><th>Username</th><th>Position</th><th>Role</th><th>Department</th><th className="text-end">Actions</th></tr></thead>
                     <tbody>
                       {filteredStaff.map(s => (
                         <tr key={s.id}>
                           <td><div className="fw-bold">{s.firstName} {s.lastName}</div><div className="small text-muted">{s.email || "—"}</div></td>
                           <td><code>{s.username}</code></td>
+                          <td className="small">{s.position || "—"}</td>
                           <td><span className="badge bg-secondary">{s.role}</span></td>
                           <td>{s.department || "—"}</td>
                           <td className="text-end">
@@ -379,38 +394,46 @@ export default function HRDashboard() {
               </div>
             </div>
           )}
-          <div className="card shadow-sm border-0">
-            <div className="card-body p-0 table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light"><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Supervisor</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>
-                  {leaves.length === 0 ? <tr><td colSpan="6" className="text-center py-4 text-muted">No leave requests yet.</td></tr> :
-                    leaves.map(l => (
-                      <tr key={l.id}>
-                        <td>{l.user?.firstName} {l.user?.lastName}</td>
-                        <td><span className="badge bg-info text-dark">{l.type}</span></td>
-                        <td className="small">{new Date(l.startDate).toLocaleDateString()} to {new Date(l.endDate).toLocaleDateString()}</td>
-                        <td className="small">{l.supervisor ? `${l.supervisor.firstName} ${l.supervisor.lastName}` : "—"}</td>
-                        <td>
-                          <span className={`badge bg-${l.status === 'APPROVED' ? 'success' : l.status === 'REJECTED' ? 'danger' : 'warning'}`}>{l.status}</span>
-                          {l.status === 'REJECTED' && l.rejectionReason && <div className="small text-danger mt-1">Reason: {l.rejectionReason}</div>}
-                        </td>
-                        <td>
-                          {l.status === 'PENDING' && (
-                            <div className="d-flex gap-1">
-                              <button className="btn btn-sm btn-success" onClick={() => handleLeaveAction(l.id, 'APPROVED')}>Approve</button>
-                              <button className="btn btn-sm btn-danger" onClick={() => {
-                                const reason = window.prompt("Reason for rejection:");
-                                if (reason) handleLeaveAction(l.id, 'REJECTED', reason);
-                              }}>Reject</button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  }
-                </tbody>
-              </table>
+          <div className="card shadow-sm border-0 leave-requests-card">
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover mb-0 align-middle leave-table">
+                  <thead className="table-light"><tr><th>Staff</th><th>Type</th><th>Dates</th><th>Supervisor</th><th>Status</th><th className="text-end">Actions</th></tr></thead>
+                  <tbody>
+                    {leaves.length === 0 ? <tr><td colSpan="6" className="text-center py-4 text-muted leave-empty">No leave requests yet.</td></tr> :
+                      leaves.map(l => (
+                        <tr key={l.id}>
+                          <td data-label="Staff"><span className="fw-semibold">{l.user?.firstName} {l.user?.lastName}</span></td>
+                          <td data-label="Type"><span className="badge bg-info text-dark">{l.type}</span></td>
+                          <td data-label="Dates" className="small leave-dates">
+                            <span className="leave-date-range">
+                              <span className="text-nowrap">{new Date(l.startDate).toLocaleDateString()}</span>
+                              <span className="text-muted mx-1">to</span>
+                              <span className="text-nowrap">{new Date(l.endDate).toLocaleDateString()}</span>
+                            </span>
+                          </td>
+                          <td data-label="Supervisor" className="small">{l.supervisor ? `${l.supervisor.firstName} ${l.supervisor.lastName}` : "—"}</td>
+                          <td data-label="Status">
+                            <span className={`badge bg-${l.status === 'APPROVED' ? 'success' : l.status === 'REJECTED' ? 'danger' : 'warning'}`}>{l.status}</span>
+                            {l.status === 'REJECTED' && l.rejectionReason && <div className="small text-danger mt-1">Reason: {l.rejectionReason}</div>}
+                          </td>
+                          <td data-label="Actions" className="text-end leave-actions">
+                            {l.status === 'PENDING' && (
+                              <div className="d-flex gap-1 justify-content-end flex-nowrap">
+                                <button className="btn btn-sm btn-success" onClick={() => handleLeaveAction(l.id, 'APPROVED')}>Approve</button>
+                                <button className="btn btn-sm btn-danger" onClick={() => {
+                                  const reason = window.prompt("Reason for rejection:");
+                                  if (reason) handleLeaveAction(l.id, 'REJECTED', reason);
+                                }}>Reject</button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -528,6 +551,52 @@ export default function HRDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POSITION ACCESS PROPOSAL */}
+      {activeTab === "access" && (
+        <div className="card shadow-sm border-0">
+          <div className="card-body">
+            <h5 className="fw-bold mb-1">Position → left-pane access proposal</h5>
+            <p className="text-muted small mb-3">
+              Shows which left-pane tabs each real position receives. Administrators always have full access;
+              payroll, HR records and planning reports are limited to the positions that need them.
+              A dot means the tab is available for that position.
+            </p>
+            <div className="table-responsive" style={{ maxHeight: "65vh" }}>
+              <table className="table table-sm table-bordered align-middle" style={{ minWidth: `${TAB_KEYS.length * 52 + 260}px` }}>
+                <thead className="table-light">
+                  <tr>
+                    <th style={{ minWidth: "250px", position: "sticky", left: 0, background: "#f8f9fa", zIndex: 2 }}>Position</th>
+                    {TAB_KEYS.map((key) => (
+                      <th key={key} className="text-center small" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", height: "120px" }}>
+                        {TAB_LABELS[key] || key}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {POSITIONS.map((position) => {
+                    const allowed = POSITION_ACCESS[position] || [];
+                    return (
+                      <tr key={position}>
+                        <td className="small fw-semibold" style={{ position: "sticky", left: 0, background: "#fff", zIndex: 1 }}>{position}</td>
+                        {TAB_KEYS.map((key) => (
+                          <td key={key} className="text-center" style={{ color: allowed.includes("*") || allowed.includes(key) ? "#1a7f37" : "#d0d5dd" }}>
+                            {allowed.includes("*") || allowed.includes(key) ? "●" : "·"}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="small text-muted mt-2">
+              Hypothetical users for each position are seeded with <code>npm run seed:hr-suite</code> (password <code>Demo12345!</code>).
             </div>
           </div>
         </div>

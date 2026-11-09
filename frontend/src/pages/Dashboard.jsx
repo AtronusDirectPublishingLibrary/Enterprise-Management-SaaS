@@ -5,6 +5,7 @@ import {
   LineElement, PointElement, Tooltip, Legend, Filler,
 } from "chart.js";
 import { Doughnut, Bar, Line } from "react-chartjs-2";
+import PmsTabs from "../components/PmsTabs";
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend, Filler);
 
@@ -40,7 +41,8 @@ export default function Dashboard() {
 
   return (
     <div className="pb-4">
-      <h2 className="page-title">Dashboard</h2>
+      <PmsTabs />
+      <h2 className="page-title">PMS Dashboard</h2>
 
       <div className="row g-2 mb-3">
         <KPI label="Total Projects" value={kpi.totalProjects} tone="gold" />
@@ -65,7 +67,7 @@ export default function Dashboard() {
         </div>
         <div className="col-md-4">
           <div className="chart-card h-100">
-            <h6>Avg Progress by Directorate</h6>
+            <h6>Avg Progress by Department</h6>
             <div style={{ height: 200 }}>
               <Bar data={{ labels: dirLabels, datasets: [{ label: "% Complete", data: dirData, backgroundColor: PALETTE[0], borderRadius: 4 }] }}
                 options={{ indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100, grid:{display:false} }, y:{grid:{display:false}} } }} />

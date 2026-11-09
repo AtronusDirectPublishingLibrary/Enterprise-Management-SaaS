@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Target, Plus } from "lucide-react";
+import PmsTabs from "../components/PmsTabs";
 
 export default function Goals() {
   const [goals, setGoals] = useState([]);
@@ -42,6 +43,7 @@ export default function Goals() {
 
   return (
     <div className="p-4">
+      <PmsTabs />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="page-title mb-0 d-flex align-items-center gap-2"><Target size={28} /> Organizational Goals</h2>
         <button className="btn-brand btn-sm d-flex align-items-center" onClick={() => setShowForm(!showForm)}>

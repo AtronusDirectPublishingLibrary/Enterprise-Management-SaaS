@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, COOKIE_NAME, JwtPayload } from "../lib/jwt";
+import { allows } from "../lib/access";
 
 declare global {
   namespace Express {
@@ -16,6 +17,18 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   } catch {
     res.status(401).json({ message: "Invalid or expired session" });
   }
+}
+
+export function requireAccess(key: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    if (!allows(req.user, key)) {
+      return res.status(403).json({
+        message: `Your position does not have access to this workspace (${key}).`,
+      });
+    }
+    next();
+  };
 }
 
 export function requireRole(...roles: string[]) {

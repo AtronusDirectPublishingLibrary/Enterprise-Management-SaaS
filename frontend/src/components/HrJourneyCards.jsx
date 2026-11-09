@@ -287,7 +287,7 @@ export default function HrJourneyCards({ data, onSaved, onError }) {
                     <div>
                       <div className="hrx-stat-label">Gross</div>
                       <div className="fs-5 fw-semibold" style={{ color: "var(--hrx-navy)" }}>
-                        {money((latestPay.baseSalary || 0) + (latestPay.allowance || 0), latestPay.currency)}
+                        {money((latestPay.baseSalary || 0) + (latestPay.allowance || 0) + (latestPay.otherEarnings || 0), latestPay.currency)}
                       </div>
                     </div>
                   </div>

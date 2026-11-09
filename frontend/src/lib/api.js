@@ -18,6 +18,7 @@ async function request(method, path, body) {
     const msg = data?.message || `HTTP ${res.status} ${res.statusText}`;
     const err = new Error(msg);
     err.status = res.status;
+    err.data = data;
     throw err;
   }
   return data;

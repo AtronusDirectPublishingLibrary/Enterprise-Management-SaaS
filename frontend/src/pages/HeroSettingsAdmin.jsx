@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import PageHeader from "../components/PageHeader";
 import DropdownManager from "../components/DropdownManager";
 import {
   Plus,
@@ -170,17 +171,16 @@ export default function HeroSettingsAdmin() {
 
   if (loading) return <div className="spinner-border text-success m-4" />;
 
-  const categories = ["Status", "Source of Funds", "Priority", "Project Category"];
+  const categories = ["Status", "Source of Funds", "Priority", "Project Category", "Position"];
 
   return (
-    <div className="pb-4">
-      <div className="d-flex align-items-center mb-4">
-        <LayoutTemplate size={28} className="me-3" style={{ color: "var(--brand-primary)" }} />
-        <div>
-          <h2 className="page-title mb-0">Settings</h2>
-          <div className="small text-muted">Hero slides transition their image and copy together on the public home page.</div>
-        </div>
-      </div>
+    <div className="pb-4 settings-page">
+      <PageHeader
+        icon={<LayoutTemplate size={20} />}
+        kicker="Workspace · configuration"
+        title="Settings"
+        subtitle="Hero slides transition their image and copy together on the public home page, and the project entry dropdowns feed every form in the PMS."
+      />
 
       {/* Dropdown manager */}
       <div className="card p-4 shadow-sm border-0 mb-4">
@@ -207,7 +207,7 @@ export default function HeroSettingsAdmin() {
           <div className="col-md-8">
             <div className="bg-light p-3 rounded border h-100">
               <h6 className="mb-3 fw-bold">{activeCategory} Options</h6>
-              <form onSubmit={handleAddOption} className="d-flex gap-2 mb-3">
+              <form onSubmit={handleAddOption} className="d-flex gap-2 mb-3 dropdown-add-form">
                 <input
                   className="form-control form-control-sm"
                   placeholder="New option value..."
@@ -355,7 +355,7 @@ export default function HeroSettingsAdmin() {
             <div className="d-flex flex-column gap-2">
               {slides.map((slide, index) => (
                 <div key={slide.id} className="border rounded bg-light">
-                  <div className="d-flex align-items-center gap-2 p-2">
+                  <div className="d-flex align-items-center gap-2 p-2 slide-row">
                     <span className="badge bg-dark">{index + 1}</span>
                     <div
                       style={{
@@ -375,6 +375,7 @@ export default function HeroSettingsAdmin() {
                         {slide.tagline ? `${slide.tagline} · ` : ""}{slide.subtitle || "No subtitle"}
                       </div>
                     </div>
+                    <div className="slide-row-actions">
                     <button
                       className={`btn btn-sm ${slide.isActive ? "btn-outline-success" : "btn-outline-secondary"}`}
                       title={slide.isActive ? "Visible on the home page" : "Hidden"}
@@ -394,6 +395,7 @@ export default function HeroSettingsAdmin() {
                     <button className="btn btn-sm btn-outline-danger" title="Delete" onClick={() => deleteSlide(slide.id)}>
                       <Trash2 size={13} />
                     </button>
+                    </div>
                   </div>
 
                   {editingId === slide.id && (
@@ -420,7 +422,7 @@ export default function HeroSettingsAdmin() {
             <h4 className="mb-3 d-flex align-items-center">
               <ImageIcon size={20} className="me-2" /> Image library
             </h4>
-            <form onSubmit={handleAddImage} className="d-flex gap-2 mb-4">
+            <form onSubmit={handleAddImage} className="d-flex gap-2 mb-4 flex-wrap">
               <input
                 type="url"
                 className="form-control form-control-sm"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Briefcase, TrendingUp, AlertTriangle } from "lucide-react";
+import PmsTabs from "../components/PmsTabs";
 
 export default function Portfolios() {
   const [data, setData] = useState(null);
@@ -17,6 +18,7 @@ export default function Portfolios() {
 
   return (
     <div className="p-4">
+      <PmsTabs />
       <div className="d-flex align-items-center gap-2 mb-4">
         <Briefcase size={28} style={{ color: "var(--brand-primary)" }} />
         <h2 className="fw-bold mb-0" style={{ color: "var(--brand-primary)" }}>Portfolio Management</h2>

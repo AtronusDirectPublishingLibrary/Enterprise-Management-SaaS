@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { useLanguage } from "../lib/language";
+import { languageShortLabel, useLanguage } from "../lib/language";
 import { localiseCopy } from "../lib/localiseCopy";
 import { useSiteSettings, useVisitorSummary } from "../lib/siteSettings";
 import { initAnalytics, logVisitOnce, trackPageView } from "../lib/analytics";
@@ -70,7 +70,7 @@ const FOOTER = {
 const BANNER_DISMISSED_KEY = "ebpe_banner_dismissed";
 
 export default function PublicLayout() {
-  const { lang, setLang, t, tText } = useLanguage();
+  const { lang, setLang, t, tText, languages } = useLanguage();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = useMemo(
@@ -121,7 +121,7 @@ export default function PublicLayout() {
   }, [location.pathname, location.hash]);
 
   useEffect(() => {
-    document.documentElement.lang = lang === "am" ? "am" : "en";
+    document.documentElement.lang = lang;
   }, [lang]);
 
   useEffect(() => {
@@ -231,12 +231,19 @@ export default function PublicLayout() {
 
           <div className="header-actions">
             <div className="lang-switch" role="group" aria-label="Language">
-              <button type="button" aria-pressed={lang === "en"} onClick={() => setLang("en")}>
-                EN
-              </button>
-              <button type="button" aria-pressed={lang === "am"} onClick={() => setLang("am")}>
-                አማ
-              </button>
+              {(languages?.length ? languages : [{ code: "en", name: "English" }, { code: "am", name: "Amharic", nativeName: "አማርኛ" }]).map(
+                (language) => (
+                  <button
+                    key={language.code}
+                    type="button"
+                    aria-pressed={lang === language.code}
+                    title={language.nativeName || language.name}
+                    onClick={() => setLang(language.code)}
+                  >
+                    {languageShortLabel(language)}
+                  </button>
+                )
+              )}
             </div>
             <Link className="btn-login" to="/login">
               {copy.staff}
@@ -274,9 +281,6 @@ export default function PublicLayout() {
                 <strong>Ethio-Biopharma Enterprise</strong>
               </div>
               <p>{copy.description}</p>
-              <p className="footer-copyright">
-                © {new Date().getFullYear()} Ethio-Biopharma Enterprise. {copy.rights}
-              </p>
             </div>
 
             <div className="footer-col">
@@ -338,6 +342,17 @@ export default function PublicLayout() {
                 </div>
               ) : null}
             </div>
+          </div>
+          <div className="footer-bottom">
+            <p className="footer-copyright">
+              © {new Date().getFullYear()} Ethio-Biopharma Enterprise. {copy.rights}
+            </p>
+            <p className="footer-credit">
+              Designed and developed by{" "}
+              <a href="https://www.linkedin.com/in/dessalew-adane" target="_blank" rel="noreferrer">
+                Dessalew Adane
+              </a>
+            </p>
           </div>
         </div>
       </footer>
