@@ -3,7 +3,7 @@ import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { requireAccess, requireAuth, requireRole } from "../middleware/auth";
+import { requireAccess, requireAuth } from "../middleware/auth";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -157,7 +157,7 @@ async function buildCsv(includeValues: boolean) {
   return { csv: `${lines.join("\r\n")}\r\n`, languages };
 }
 
-router.get("/template.csv", requireAuth, requireRole("admin"), async (_req, res, next) => {
+router.get("/template.csv", requireAuth, requireAccess("languages"), async (_req, res, next) => {
   try {
     const languages = await loadLanguages();
     const extras = languages.filter((language) => !BASE_CODES.includes(language.code));
@@ -175,7 +175,7 @@ router.get("/template.csv", requireAuth, requireRole("admin"), async (_req, res,
   } catch (e) { next(e); }
 });
 
-router.get("/export.csv", requireAuth, requireRole("admin"), async (_req, res, next) => {
+router.get("/export.csv", requireAuth, requireAccess("languages"), async (_req, res, next) => {
   try {
     const { csv } = await buildCsv(true);
     res.setHeader("Content-Type", "text/csv; charset=utf-8");

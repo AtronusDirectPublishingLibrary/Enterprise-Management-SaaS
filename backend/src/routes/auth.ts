@@ -65,6 +65,12 @@ router.post("/login", async (req, res, next) => {
       email: user.email,
       forceChange: user.forceChange,
       mfaEnabled: user.mfaEnabled,
+      signatureUrl: user.signatureUrl,
+      initialsUrl: user.initialsUrl,
+      initialsText: user.initialsText,
+      signatureUpdatedAt: user.signatureUpdatedAt,
+      avatarUrl: user.avatarUrl,
+      avatarUpdatedAt: user.avatarUpdatedAt,
       permissions: permissionsFor(user.role),
     });
   } catch (e) { next(e); }
@@ -88,6 +94,12 @@ router.get("/me", requireAuth, async (req, res, next) => {
       email: user.email,
       forceChange: user.forceChange,
       mfaEnabled: user.mfaEnabled,
+      signatureUrl: user.signatureUrl,
+      initialsUrl: user.initialsUrl,
+      initialsText: user.initialsText,
+      signatureUpdatedAt: user.signatureUpdatedAt,
+      avatarUrl: user.avatarUrl,
+      avatarUpdatedAt: user.avatarUpdatedAt,
       permissions: permissionsFor(user.role),
     });
   } catch (e) { next(e); }

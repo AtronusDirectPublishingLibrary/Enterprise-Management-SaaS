@@ -647,3 +647,159 @@ input[type="number"] {
     min-width: 0 !important;
   }
 }
+
+/* ─── Portrait in the My Portal hero ──────────────────────────────────── */
+.hrx-hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  position: relative;
+  z-index: 1;
+}
+.hrx-hero-copy { min-width: 0; }
+.hrx-hero-identity .avatar { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85), 0 0 0 7px rgba(201, 162, 39, 0.45); }
+@media (max-width: 575px) {
+  .hrx-hero-identity { align-items: flex-start; }
+  .hrx-hero-identity .avatar { width: 68px !important; height: 68px !important; }
+}
+
+/* ─── Exit file on My Portal ──────────────────────────────────────────── */
+.exit-card { border-radius: 18px; }
+.exit-checklist { display: flex; flex-direction: column; gap: 0.4rem; margin: 0; }
+.exit-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 11px;
+  border: 1px solid #e6edf4;
+  background: #fbfdff;
+}
+.exit-checklist__item.is-done { background: #f5faf7; border-color: #d9ecdf; }
+.exit-checklist__item.is-done .fw-semibold { text-decoration: line-through; color: #6b7c8c; }
+.exit-checklist__mark { display: inline-flex; color: #2f8f6b; }
+.exit-checklist__dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid #c3cfda;
+  display: inline-block;
+}
+
+/* ─── HR offboarding workspace ────────────────────────────────────────── */
+.offboarding__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+.offboarding__stat {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e6edf4;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 12px 26px -22px rgba(11, 37, 69, 0.6);
+}
+.offboarding__stat-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  line-height: 1.1;
+}
+.offboarding__stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7c8c;
+  font-weight: 700;
+}
+.offboarding__list { max-height: 640px; overflow-y: auto; }
+.offboarding__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-bottom: 1px solid #eef3f8;
+  background: transparent;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.offboarding__row:hover { background: #f6f9fc; }
+.offboarding__row.is-active {
+  background: linear-gradient(90deg, rgba(201, 162, 39, 0.14), rgba(201, 162, 39, 0.02));
+  box-shadow: inset 3px 0 0 var(--brand-secondary);
+}
+.offboarding__tasks { display: flex; flex-direction: column; gap: 0.35rem; }
+.offboarding__task {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 11px;
+  border: 1px solid #e6edf4;
+  background: #fcfdff;
+}
+.offboarding__task.is-done { background: #f5faf7; border-color: #d9ecdf; }
+.offboarding__task.is-done .fw-semibold { text-decoration: line-through; color: #6b7c8c; }
+.offboarding__tick {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  line-height: 0;
+  margin-top: 1px;
+}
+
+/* ─── Employee-filed resignations ─────────────────────────────────────── */
+.resignation-card { border-left: 4px solid var(--brand-secondary); }
+.resignation-card__notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(176, 106, 31, 0.12);
+  color: #8a5315;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.resignation-modal { width: min(540px, 100%); }
+.resignation-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #f0e2c8;
+  background: #fdf9f0;
+}
+.resignation-summary__label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a6d1f;
+}
+.resignation-summary__value { display: block; font-size: 0.88rem; font-weight: 700; color: #3c2f13; }
+.resignation-callout {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #f0e2c8;
+  background: #fdf9f0;
+}
+.resignation-callout__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 0.75rem;
+}
+.resignation-callout__grid span {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a6d1f;
+}
+.resignation-callout__grid strong { display: block; font-size: 0.88rem; color: #3c2f13; }
+.exit-checklist__item.is-locked { opacity: 0.72; background: #f8fafc; }
+.offboarding__settings { border-left: 4px solid var(--brand-secondary); border-radius: 14px; }
+.offboarding__notice-input { width: 130px; }

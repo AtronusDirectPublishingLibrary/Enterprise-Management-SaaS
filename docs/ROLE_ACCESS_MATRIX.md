@@ -28,7 +28,7 @@ Legend: ✓ = available, — = not shown.
 | Internal Audit Officer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | ✓ | — | — | — | — | — | — |
 | Chief Executive Officer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | — | — |
 | QA and regulatory Affairs Officer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | ✓ | — | — | — | — |
-| Strategy and Planning Officer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | ✓ | ✓ | ✓ | — | — | — | — |
+| Strategy and Planning Officer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Legal Counsel | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | ✓ | — | — | — | — |
 | Operation Manager | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | ✓ | — | — | — | — | — | — |
 | Engineer | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — | — | — | — |
@@ -51,8 +51,9 @@ Legend: ✓ = available, — = not shown.
   administration (users, public site configuration, hero settings) stays with administrators.
 - **QA and regulatory Affairs Officer** — owns quality gates, so activities, milestones, KPIs,
   progress updates, reports and the document archive; plus strategic/roadmap context.
-- **Strategy and Planning Officer** — the planning owner: every plan level, progress, consolidated
-  reports, calendar, alerts, news and documents. No HR or payroll.
+- **Strategy and Planning Officer** — the planning owner with full System Admin rights: every plan
+  level, progress, consolidated reports, HR and payroll, communications and system administration
+  (users, public site, hero settings, languages).
 - **Legal Counsel** — reads plans and reports for legal exposure, adds progress notes, works in the
   document archive, and has no operational or payroll access.
 - **Operation Manager** — runs delivery: PMS, annual plan, roadmap context, progress, reports,

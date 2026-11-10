@@ -20,6 +20,12 @@ import {
 import { api, API_BASE } from "../lib/api";
 import HrProfileCard from "../components/HrProfileCard";
 import HrJourneyCards from "../components/HrJourneyCards";
+import SignatureSettingsCard from "../components/SignatureSettingsCard";
+import MyJobDescriptionsCard from "../components/MyJobDescriptionsCard";
+import SignatureDialog from "../components/SignatureDialog";
+import Avatar from "../components/Avatar";
+import AvatarUploadCard from "../components/AvatarUploadCard";
+import MyOffboardingCard from "../components/MyOffboardingCard";
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -86,6 +92,7 @@ export default function MyHRPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [signAction, setSignAction] = useState(null);
 
   const [taskForm, setTaskForm] = useState(EMPTY_TASK);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -122,7 +129,7 @@ export default function MyHRPortal() {
       sheet.entries.forEach((entry) => {
         const name = entry.projectName || "Regular";
         if (!grouped[name]) grouped[name] = {};
-        grouped[name][new Date(entry.date).getDate()] = entry.hours;
+        grouped[name][new Date(entry.date).getDate()] = entry.leaveCode || entry.hours;
       });
       setProjects(Object.entries(grouped).map(([name, entries]) => ({ name, entries })));
     }
@@ -235,25 +242,12 @@ export default function MyHRPortal() {
     }
   };
 
-  const signDocument = async (document) => {
-    const name = window.prompt(
-      "Type your full name exactly as it appears on the document to sign it electronically.",
-      `${profile.firstName || ""} ${profile.lastName || ""}`.trim()
-    );
-    if (!name || name.trim().length < 3) return;
-    try {
-      await api.post(`/hr-self/documents/${document.id}/sign`, { name: name.trim() });
-      await load();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const requestSignature = (type, payload = {}) => setSignAction({ type, ...payload });
 
-  const submitLeave = async (event) => {
-    event.preventDefault();
+  const submitLeave = async (signedName) => {
     setBusy(true);
     try {
-      await api.post("/hr-self/leave", leaveForm);
+      await api.post("/hr-self/leave", { ...leaveForm, signedName });
       setShowLeaveForm(false);
       setLeaveForm({ type: leaveForm.type, startDate: "", endDate: "", reason: "" });
       await load();
@@ -264,17 +258,25 @@ export default function MyHRPortal() {
     }
   };
 
-  const saveTimesheet = async (submit) => {
+  const saveTimesheet = async (submit, signedName) => {
     setBusy(true);
     try {
       const entries = [];
       projects.forEach((project) => {
         if (!project.name) return;
-        Object.entries(project.entries).forEach(([day, hours]) => {
-          if (Number(hours) > 0) {
+        Object.entries(project.entries).forEach(([day, value]) => {
+          const text = String(value ?? "").trim();
+          if (!text) return;
+          if (/^\d+(\.\d+)?$/.test(text)) {
+            const hours = Number(text);
+            if (hours > 0) {
+              entries.push({ date: new Date(year, month, Number(day)), hours, projectName: project.name });
+            }
+          } else {
             entries.push({
               date: new Date(year, month, Number(day)),
-              hours: Number(hours),
+              hours: 0,
+              leaveCode: text.toUpperCase().slice(0, 4),
               projectName: project.name,
             });
           }
@@ -283,7 +285,7 @@ export default function MyHRPortal() {
       await api.post("/timesheets/save", { month: month + 1, year, entries });
       if (submit) {
         const sheet = await api.get(`/timesheets/my-timesheet?month=${month + 1}&year=${year}`);
-        if (sheet?.id) await api.post(`/timesheets/${sheet.id}/submit`);
+        if (sheet?.id) await api.post(`/timesheets/${sheet.id}/submit`, { signedName });
       }
       await load();
     } catch (err) {
@@ -293,14 +295,36 @@ export default function MyHRPortal() {
     }
   };
 
-  const savePlan = async (submit) => {
+  const savePlan = async (submit, signedName) => {
     setBusy(true);
     try {
       const items = planItems.filter((item) => item.startDate && item.endDate);
       if (!items.length) throw new Error("Add at least one date range to the plan");
       const saved = await api.post("/annual-plans", { year, items });
-      if (submit && saved?.id) await api.post(`/annual-plans/${saved.id}/submit`);
+      if (submit && saved?.id) await api.post(`/annual-plans/${saved.id}/submit`, { signedName });
       await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmSignature = async (signedName) => {
+    if (!signAction) return;
+    try {
+      if (signAction.type === "document") {
+        setBusy(true);
+        await api.post(`/hr-self/documents/${signAction.document.id}/sign`, { name: signedName });
+        await load();
+      } else if (signAction.type === "leave") {
+        await submitLeave(signedName);
+      } else if (signAction.type === "timesheet") {
+        await saveTimesheet(true, signedName);
+      } else if (signAction.type === "plan") {
+        await savePlan(true, signedName);
+      }
+      setSignAction(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -357,12 +381,17 @@ export default function MyHRPortal() {
       </Helmet>
 
       <div className="hrx-hero mb-4">
-        <div className="hrx-eyebrow">Staff self-service · {today}</div>
-        <h1>{greeting}, {firstName}.</h1>
-        <div className="hrx-hero-meta">
-          {profileLine ? <span>{profileLine}</span> : null}
-          {profile.immediateSupervisor ? <span>Supervisor · {supervisorName}</span> : null}
-          {nextDue ? <span>Next up · {nextDue.title}</span> : null}
+        <div className="hrx-hero-identity">
+          <Avatar name={name} src={profile.avatarUrl} size={92} ring />
+          <div className="hrx-hero-copy">
+            <div className="hrx-eyebrow">Staff self-service · {today}</div>
+            <h1>{greeting}, {firstName}.</h1>
+            <div className="hrx-hero-meta">
+              {profileLine ? <span>{profileLine}</span> : null}
+              {profile.immediateSupervisor ? <span>Supervisor · {supervisorName}</span> : null}
+              {nextDue ? <span>Next up · {nextDue.title}</span> : null}
+            </div>
+          </div>
         </div>
         <div className="hrx-hero-actions">
           <button type="button" className="btn btn-sm btn-gold" onClick={() => setShowTaskForm(true)}>
@@ -386,7 +415,13 @@ export default function MyHRPortal() {
         </div>
       ) : null}
 
+      <AvatarUploadCard profile={profile} onSaved={load} onError={setError} />
+
+      <MyOffboardingCard onError={setError} onChanged={load} />
+
       <HrProfileCard data={data} onSaved={load} onError={setError} />
+
+      <SignatureSettingsCard profile={profile} onSaved={load} onError={setError} />
 
       <div className="hrx-stats mb-4">
         {tiles.map((tile) => {
@@ -408,6 +443,8 @@ export default function MyHRPortal() {
       </div>
 
       <HrJourneyCards data={data} onSaved={load} onError={setError} />
+
+      <MyJobDescriptionsCard onError={setError} />
 
       <div className="row g-4 mb-4">
         {/* Agenda */}
@@ -663,7 +700,7 @@ export default function MyHRPortal() {
                               <button
                                 type="button"
                                 className="btn btn-link btn-sm text-muted p-0"
-                                onClick={() => signDocument(document)}
+                                onClick={() => requestSignature("document", { document })}
                                 title={document.signedAt ? "Re-sign" : "Sign electronically"}
                                 aria-label={`Sign ${document.title}`}
                               >
@@ -782,6 +819,21 @@ export default function MyHRPortal() {
                   </button>
                 ) : null}
               </div>
+              <div className="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <span className="small text-muted">Enter hours or an absence code:</span>
+                {data.leaveTypes?.map((type) => (
+                  <span className="badge bg-light text-dark border" key={type.code}>
+                    <strong>{type.shortCode || type.code.slice(0, 2)}</strong> = {type.name}
+                  </span>
+                ))}
+                <span className="badge bg-light text-dark border"><strong>AB</strong> = Absent</span>
+              </div>
+              <datalist id="timesheet-leave-codes">
+                {data.leaveTypes?.map((type) => (
+                  <option key={type.code} value={type.shortCode || type.code.slice(0, 2)}>{type.name}</option>
+                ))}
+                <option value="AB">Absent</option>
+              </datalist>
               <div className="row g-1">
                 {Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, day) => day + 1).map((day) => {
                   const date = new Date(year, month, day);
@@ -791,11 +843,14 @@ export default function MyHRPortal() {
                       <div className={`p-1 border rounded text-center ${weekend ? "bg-light" : ""}`}>
                         <div className="small text-muted" style={{ fontSize: "0.65rem" }}>{day}</div>
                         <input
-                          type="number"
-                          min="0"
-                          max="24"
-                          step="0.5"
+                          type="text"
+                          inputMode="text"
+                          list="timesheet-leave-codes"
+                          maxLength={4}
                           className="form-control form-control-sm text-center p-0"
+                          style={{ fontSize: "0.72rem" }}
+                          placeholder="h"
+                          title="Enter hours (e.g. 8) or a leave code (e.g. AL, SL, AB)"
                           value={project.entries[day] ?? ""}
                           onChange={(event) => {
                             const next = [...projects];
@@ -803,7 +858,7 @@ export default function MyHRPortal() {
                             setProjects(next);
                           }}
                           disabled={weekend || sheetLocked}
-                          aria-label={`Hours on day ${day}`}
+                          aria-label={`Hours or absence code for day ${day}`}
                         />
                       </div>
                     </div>
@@ -821,8 +876,8 @@ export default function MyHRPortal() {
               <button type="button" className="btn btn-sm btn-primary ms-auto" onClick={() => saveTimesheet(false)} disabled={busy}>
                 Save draft
               </button>
-              <button type="button" className="btn btn-sm btn-success" onClick={() => saveTimesheet(true)} disabled={busy}>
-                Submit for approval
+              <button type="button" className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("timesheet")} disabled={busy}>
+                <PenLine size={14} /> Sign & submit
               </button>
             </div>
           ) : (
@@ -939,8 +994,8 @@ export default function MyHRPortal() {
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => savePlan(false)} disabled={busy}>
                   Save draft
                 </button>
-                <button type="button" className="btn btn-sm btn-success" onClick={() => savePlan(true)} disabled={busy}>
-                  Submit to supervisor
+                <button type="button" className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("plan")} disabled={busy}>
+                  <PenLine size={14} /> Sign & submit
                 </button>
               </div>
             </>
@@ -960,7 +1015,7 @@ export default function MyHRPortal() {
         </div>
 
         {showLeaveForm ? (
-          <form className="p-3 border-bottom bg-light" onSubmit={submitLeave}>
+          <form className="p-3 border-bottom bg-light" onSubmit={(event) => { event.preventDefault(); requestSignature("leave"); }}>
             <div className="row g-2 align-items-end">
               <div className="col-md-3">
                 <label className="form-label small fw-semibold">Type</label>
@@ -998,8 +1053,8 @@ export default function MyHRPortal() {
                 />
               </div>
               <div className="col-md-3">
-                <button className="btn btn-sm btn-success w-100" disabled={busy}>
-                  Submit request
+                <button className="btn btn-sm btn-success w-100 d-inline-flex align-items-center justify-content-center gap-1" disabled={busy}>
+                  <PenLine size={14} /> Sign & submit
                 </button>
               </div>
             </div>
@@ -1093,6 +1148,28 @@ export default function MyHRPortal() {
           </table>
         </div>
       </div>
+
+      <SignatureDialog
+        open={Boolean(signAction)}
+        title={
+          signAction?.type === "document"
+            ? "Sign document"
+            : signAction?.type === "leave"
+              ? "Sign leave request"
+              : signAction?.type === "timesheet"
+                ? "Sign timesheet"
+                : "Sign annual leave plan"
+        }
+        subtitle={
+          signAction?.type === "document"
+            ? `Sign “${signAction.document?.title || "this document"}” electronically.`
+            : "Sign to confirm the content and submit it for approval."
+        }
+        confirmLabel="Sign & submit"
+        busy={busy}
+        onCancel={() => setSignAction(null)}
+        onConfirm={confirmSignature}
+      />
     </div>
   );
 }

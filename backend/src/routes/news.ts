@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { upload } from "../middleware/upload";
+import { uploadImage } from "../middleware/upload";
 
 const router = Router();
 
@@ -15,35 +15,42 @@ router.get("/", async (req, res, next) => {
 });
 
 // Admin: Create news
-router.post("/", requireAuth, requireRole("admin", "project_manager"), upload.single("image"), async (req, res, next) => {
+router.post("/", requireAuth, requireRole("admin", "project_manager"), uploadImage.single("image"), async (req, res, next) => {
   try {
     const d = z.object({
       title: z.string().min(2),
       content: z.string().min(10),
       titleAm: z.string().optional(),
       contentAm: z.string().optional(),
+      videoUrl: z.string().optional(),
     }).parse(req.body);
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const created = await prisma.news.create({
-      data: { ...d, imageUrl, author: req.user!.username },
+      data: {
+        ...d,
+        videoUrl: d.videoUrl?.trim() || null,
+        imageUrl,
+        author: req.user!.username,
+      },
     });
     res.json(created);
   } catch (e) { next(e); }
 });
 
 // Admin: Update news
-router.put("/:id", requireAuth, requireRole("admin", "project_manager"), upload.single("image"), async (req, res, next) => {
+router.put("/:id", requireAuth, requireRole("admin", "project_manager"), uploadImage.single("image"), async (req, res, next) => {
   try {
     const d = z.object({
       title: z.string().min(2),
       content: z.string().min(10),
       titleAm: z.string().optional(),
       contentAm: z.string().optional(),
+      videoUrl: z.string().optional(),
     }).parse(req.body);
 
-    const data: any = { ...d };
+    const data: any = { ...d, videoUrl: d.videoUrl?.trim() || null };
     if (req.file) data.imageUrl = `/uploads/${req.file.filename}`;
 
     const updated = await prisma.news.update({

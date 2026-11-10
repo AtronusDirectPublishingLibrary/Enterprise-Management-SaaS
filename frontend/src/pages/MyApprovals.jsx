@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import { Helmet } from "react-helmet-async";
-import { Check, X, Calendar, Clock } from "lucide-react";
+import { Check, X, Calendar, Clock, PenLine } from "lucide-react";
 import { Link } from "react-router-dom";
+import SignatureDialog from "../components/SignatureDialog";
 
 export default function MyApprovals() {
   const [data, setData] = useState({ leaves: [], plans: [] });
   const [timesheets, setTimesheets] = useState([]);
+  const [signing, setSigning] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   const loadData = () => {
     api.get("/approvals").then(setData).catch(console.error);
@@ -14,31 +17,45 @@ export default function MyApprovals() {
   };
   useEffect(() => { loadData(); }, []);
 
-  const handleLeave = async (id, status) => {
+  const requestSignature = (kind, item, status) => {
     let reason = null;
-    if (status === "REJECTED") reason = window.prompt("Rejection reason:");
-    if (status === "REJECTED" && !reason) return;
-    try {
-      await api.put(`/hr/leave/${id}`, { status, rejectionReason: reason });
-      loadData();
-    } catch (err) { alert(err.message); }
+    if (status === "REJECTED") {
+      reason = window.prompt("Reason for rejection:");
+      if (!reason || !reason.trim()) return;
+    }
+    setSigning({ kind, item, status, reason: reason?.trim() || null });
   };
 
-  const handlePlan = async (id, status) => {
+  const confirmSignature = async (signedName) => {
+    if (!signing) return;
+    setBusy(true);
     try {
-      await api.put(`/annual-plans/${id}/action`, { status });
+      if (signing.kind === "leave") {
+        await api.put(`/hr/leave/${signing.item.id}`, {
+          status: signing.status,
+          rejectionReason: signing.reason,
+          signedName,
+        });
+      } else if (signing.kind === "plan") {
+        await api.put(`/annual-plans/${signing.item.id}/action`, {
+          status: signing.status,
+          rejectionReason: signing.reason,
+          signedName,
+        });
+      } else if (signing.kind === "timesheet") {
+        await api.put(`/timesheets/${signing.item.id}/action`, {
+          status: signing.status,
+          rejectionReason: signing.reason,
+          signedName,
+        });
+      }
+      setSigning(null);
       loadData();
-    } catch (err) { alert("Failed"); }
-  };
-
-  const handleTimesheetAction = async (id, status) => {
-    let reason = null;
-    if (status === "REJECTED") reason = window.prompt("Reason for rejection:");
-    if (status === "REJECTED" && !reason) return;
-    try {
-      await api.put(`/timesheets/${id}/action`, { status, rejectionReason: reason });
-      loadData();
-    } catch (err) { alert("Failed"); }
+    } catch (err) {
+      alert(err.message || "Failed to record the signed decision");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -69,8 +86,8 @@ export default function MyApprovals() {
                           </div>
                         </div>
                         <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-success" onClick={() => handleLeave(l.id, "APPROVED")} title="Approve"><Check size={14} /></button>
-                          <button className="btn btn-sm btn-danger" onClick={() => handleLeave(l.id, "REJECTED")} title="Reject"><X size={14} /></button>
+                          <button className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("leave", l, "APPROVED")} title="Approve and sign"><PenLine size={13} /> Approve</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => requestSignature("leave", l, "REJECTED")} title="Reject and sign"><X size={14} /></button>
                         </div>
                       </div>
                     </li>
@@ -97,8 +114,8 @@ export default function MyApprovals() {
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div className="fw-bold">{p.user.firstName} {p.user.lastName}</div>
                         <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-success" onClick={() => handlePlan(p.id, "APPROVED")}>Approve</button>
-                          <button className="btn btn-sm btn-danger" onClick={() => handlePlan(p.id, "REJECTED")}>Reject</button>
+                          <button className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("plan", p, "APPROVED")}><PenLine size={13} /> Approve</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => requestSignature("plan", p, "REJECTED")}>Reject</button>
                         </div>
                       </div>
                       <div className="small text-muted">{p.items.length} planned periods</div>
@@ -127,8 +144,8 @@ export default function MyApprovals() {
                         <div className="fw-bold">{t.user.firstName} {t.user.lastName} ({t.month}/{t.year})</div>
                         <div className="d-flex gap-2">
                           <Link to={`/print-timesheet/${t.id}`} className="btn btn-sm btn-outline-secondary">View</Link>
-                          <button className="btn btn-sm btn-success" onClick={() => handleTimesheetAction(t.id, "APPROVED")}>Approve</button>
-                          <button className="btn btn-sm btn-danger" onClick={() => handleTimesheetAction(t.id, "REJECTED")}>Reject</button>
+                          <button className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("timesheet", t, "APPROVED")}><PenLine size={13} /> Approve</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => requestSignature("timesheet", t, "REJECTED")}>Reject</button>
                         </div>
                       </div>
                       <div className="small text-muted">{(t.entries || []).length} days logged</div>
@@ -141,6 +158,22 @@ export default function MyApprovals() {
         </div>
 
       </div>
+
+      <SignatureDialog
+        open={Boolean(signing)}
+        title={signing?.status === "APPROVED" ? "Sign approval" : "Sign rejection"}
+        subtitle={
+          signing?.kind === "leave"
+            ? `Leave request from ${signing?.item?.user?.firstName || ""} ${signing?.item?.user?.lastName || ""}`
+            : signing?.kind === "plan"
+              ? `Annual leave plan from ${signing?.item?.user?.firstName || ""} ${signing?.item?.user?.lastName || ""}`
+              : `Timesheet ${signing?.item?.month || ""}/${signing?.item?.year || ""} from ${signing?.item?.user?.firstName || ""} ${signing?.item?.user?.lastName || ""}`
+        }
+        confirmLabel={signing?.status === "APPROVED" ? "Sign approval" : "Sign rejection"}
+        busy={busy}
+        onCancel={() => setSigning(null)}
+        onConfirm={confirmSignature}
+      />
     </div>
   );
 }

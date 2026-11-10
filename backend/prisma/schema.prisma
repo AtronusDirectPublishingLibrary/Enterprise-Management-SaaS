@@ -32,6 +32,7 @@ model Project {
   projectManager   String?
 
   workPackages    WorkPackage[]
+  documents       Document[]
   brief           ProjectBrief?
   members         ProjectMember[]
   messages        ProjectMessage[]
@@ -130,35 +131,45 @@ model Activity {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  firstName        String?   @map("first_name")
-  lastName         String?   @map("last_name")
-  username         String    @unique
-  passwordHash     String    @map("password_hash")
-  role             String    @default("viewer")
-  associatedGrants String[]  @default([]) @map("associated_grants")
-  department       String?   @map("department")
-  subDepartment    String?   @map("sub_department")
-  piName           String?   @map("pi_name")
-  coPiName         String?   @map("co_pi_name")
-  email            String?
-  lastLogin        DateTime? @map("last_login")
-  createdDate      DateTime  @default(now()) @map("created_date")
-  forceChange      Boolean   @default(false) @map("force_change")
-  mfaEnabled       Boolean   @default(false) @map("mfa_enabled")
-  mfaSecret        String?   @map("mfa_secret")
+  id                 String    @id @default(cuid())
+  firstName          String?   @map("first_name")
+  lastName           String?   @map("last_name")
+  username           String    @unique
+  passwordHash       String    @map("password_hash")
+  role               String    @default("viewer")
+  associatedGrants   String[]  @default([]) @map("associated_grants")
+  department         String?   @map("department")
+  subDepartment      String?   @map("sub_department")
+  piName             String?   @map("pi_name")
+  coPiName           String?   @map("co_pi_name")
+  email              String?
+  lastLogin          DateTime? @map("last_login")
+  createdDate        DateTime  @default(now()) @map("created_date")
+  forceChange        Boolean   @default(false) @map("force_change")
+  mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret          String?   @map("mfa_secret")
   // Staff self-service profile
-  profession        String?
-  requiresLicence   Boolean   @default(false) @map("requires_licence")
+  profession         String?
+  requiresLicence    Boolean   @default(false) @map("requires_licence")
   profileCompletedAt DateTime? @map("profile_completed_at")
-  employeeNo    String?   @unique @map("employee_no")
-  jobTitle      String?   @map("job_title")
+  // Optional e-signature assets. A typed name is always accepted at signing;
+  // these images are stamped onto signed records when the person has uploaded them.
+  signatureUrl       String?   @map("signature_url")
+  initialsUrl        String?   @map("initials_url")
+  initialsText       String?   @map("initials_text")
+  signatureUpdatedAt DateTime? @map("signature_updated_at")
+  avatarUrl          String?   @map("avatar_url")
+  avatarUpdatedAt    DateTime? @map("avatar_updated_at")
+  employeeNo         String?   @unique @map("employee_no")
+  jobTitle           String?   @map("job_title")
   // Canonical position from the HR position list (or a free-text "Other" value).
-  position      String?   @map("position")
-  phone         String?
-  hireDate      DateTime? @map("hire_date")
-  probationEnd  DateTime? @map("probation_end")
-  contractEnd   DateTime? @map("contract_end")
+  position           String?   @map("position")
+  phone              String?
+  hireDate           DateTime? @map("hire_date")
+  probationEnd       DateTime? @map("probation_end")
+  contractEnd        DateTime? @map("contract_end")
+  // Regular | Contract | Part-time | Other: <specify>
+  employmentType     String?   @map("employment_type")
   // HR Utility relations
 
   immediateSupervisorId String? @map("immediate_supervisor_id")
@@ -186,6 +197,16 @@ model User {
   staffDocuments StaffDocument[] @relation("UserStaffDocuments")
   inductions     Induction[]     @relation("UserInduction")
   appraisals     Appraisal[]     @relation("UserAppraisals")
+
+  signatures              SignatureRecord[]          @relation("UserSignatures")
+  jobDescriptionUploads   JobDescription[]           @relation("JobDescriptionUploader")
+  jobDescriptions         JobDescriptionAssignment[] @relation("UserJobDescriptions")
+  jobDescriptionsAssigned JobDescriptionAssignment[] @relation("JobDescriptionAssigner")
+  recruitmentRequests     RecruitmentRequest[]       @relation("RecruitmentRequester")
+  recruitmentApprovals    RecruitmentRequest[]       @relation("RecruitmentApprover")
+  offboardingCases        OffboardingCase[]          @relation("UserOffboarding")
+  offboardingInitiated    OffboardingCase[]          @relation("OffboardingInitiator")
+  offboardingManaged      OffboardingCase[]          @relation("OffboardingManager")
 
   @@map("users")
 }
@@ -222,7 +243,11 @@ model Document {
   uploadedBy       String?  @map("uploaded_by")
   uploadDate       DateTime @default(now()) @map("upload_date")
   folderPath       String?  @map("folder_path")
+  projectId        String?  @map("project_id")
 
+  project Project? @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
+
+  @@index([projectId, uploadDate])
   @@map("Document")
 }
 
@@ -248,10 +273,10 @@ model HeroText {
   ctaLabelAm String?  @map("cta_label_am")
   ctaUrl     String?  @map("cta_url")
   imageUrl   String?  @map("image_url")
-  sortOrder Int      @default(0) @map("sort_order")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  sortOrder  Int      @default(0) @map("sort_order")
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
   @@map("HeroText")
@@ -420,11 +445,11 @@ model TimeEntry {
 }
 
 model Translation {
-  id        String   @id @default(cuid())
-  key       String   @unique
+  id        String             @id @default(cuid())
+  key       String             @unique
   en        String
   am        String
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
   values    TranslationValue[]
 
   @@map("translation")
@@ -433,13 +458,13 @@ model Translation {
 // A language available in the public toggle. Adding a row (or importing a CSV
 // column) adds it to Language & Translations without a schema migration.
 model Language {
-  code       String   @id // en, am, om, so, ti, aa, ...
+  code       String             @id // en, am, om, so, ti, aa, ...
   name       String
-  nativeName String?  @map("native_name")
-  isEnabled  Boolean  @default(true) @map("is_enabled")
-  sortOrder  Int      @default(0) @map("sort_order")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  nativeName String?            @map("native_name")
+  isEnabled  Boolean            @default(true) @map("is_enabled")
+  sortOrder  Int                @default(0) @map("sort_order")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
   values     TranslationValue[]
 
   @@map("language")
@@ -466,6 +491,7 @@ model News {
   content   String
   titleAm   String?  @map("title_am")
   contentAm String?  @map("content_am")
+  videoUrl  String?  @map("video_url")
   imageUrl  String?
   author    String
   createdAt DateTime @default(now()) @map("created_at")
@@ -501,9 +527,9 @@ model Plan {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  parent    Plan?          @relation("PlanHierarchy", fields: [parentPlanId], references: [id], onDelete: SetNull)
-  children  Plan[]         @relation("PlanHierarchy")
-  period    PlanPeriod?    @relation(fields: [periodId], references: [id], onDelete: SetNull)
+  parent          Plan?            @relation("PlanHierarchy", fields: [parentPlanId], references: [id], onDelete: SetNull)
+  children        Plan[]           @relation("PlanHierarchy")
+  period          PlanPeriod?      @relation(fields: [periodId], references: [id], onDelete: SetNull)
   items           PlanItem[]
   alerts          PlanAlert[]
   reports         PlanReport[]
@@ -538,12 +564,12 @@ model PlanPeriod {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  parent      PlanPeriod?        @relation("PeriodHierarchy", fields: [parentPeriodId], references: [id], onDelete: SetNull)
-  children    PlanPeriod[]       @relation("PeriodHierarchy")
-  successor   PlanPeriod?        @relation("PeriodSuccession", fields: [successorId], references: [id], onDelete: SetNull)
-  predecessor PlanPeriod?        @relation("PeriodSuccession")
-  plan        Plan?
-  transitions PeriodTransition[]
+  parent          PlanPeriod?        @relation("PeriodHierarchy", fields: [parentPeriodId], references: [id], onDelete: SetNull)
+  children        PlanPeriod[]       @relation("PeriodHierarchy")
+  successor       PlanPeriod?        @relation("PeriodSuccession", fields: [successorId], references: [id], onDelete: SetNull)
+  predecessor     PlanPeriod?        @relation("PeriodSuccession")
+  plan            Plan?
+  transitions     PeriodTransition[]
   progressUpdates ProgressUpdate[]
 
   @@unique([type, sequence])
@@ -603,11 +629,11 @@ model PlanItem {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  plan         Plan            @relation(fields: [planId], references: [id], onDelete: Cascade)
-  parent       PlanItem?       @relation("PlanItemTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children     PlanItem[]      @relation("PlanItemTree")
-  linkedItem   PlanItem?       @relation("ItemAlignment", fields: [linkedItemId], references: [id], onDelete: SetNull)
-  alignedItems PlanItem[]      @relation("ItemAlignment")
+  plan            Plan             @relation(fields: [planId], references: [id], onDelete: Cascade)
+  parent          PlanItem?        @relation("PlanItemTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children        PlanItem[]       @relation("PlanItemTree")
+  linkedItem      PlanItem?        @relation("ItemAlignment", fields: [linkedItemId], references: [id], onDelete: SetNull)
+  alignedItems    PlanItem[]       @relation("ItemAlignment")
   targets         PlanKpiTarget[]
   alerts          PlanAlert[]
   progressUpdates ProgressUpdate[]
@@ -811,18 +837,18 @@ model VisitorLog {
 
 // Video items shown in the public "Media" section, managed from the admin panel.
 model MediaVideo {
-  id         String   @id @default(cuid())
-  title      String
-  titleAm    String?  @map("title_am")
-  caption    String?
-  captionAm  String?  @map("caption_am")
-  videoUrl   String   @map("video_url")
-  posterUrl  String?  @map("poster_url")
-  captionsUrl String? @map("captions_url")
-  sortOrder  Int      @default(0) @map("sort_order")
-  isActive   Boolean  @default(true) @map("is_active")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  title       String
+  titleAm     String?  @map("title_am")
+  caption     String?
+  captionAm   String?  @map("caption_am")
+  videoUrl    String   @map("video_url")
+  posterUrl   String?  @map("poster_url")
+  captionsUrl String?  @map("captions_url")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
   @@map("media_video")
@@ -876,6 +902,7 @@ model LeaveType {
   id               String   @id @default(cuid())
   name             String   @unique // e.g., "Annual Leave", "Sick Leave"
   code             String   @unique // e.g., "ANNUAL", "SICK"
+  shortCode        String?  @unique @map("short_code") // two-letter timesheet code, e.g. "AL", "SL", "AB"
   defaultDays      Int      @default(20)
   maxRolloverDays  Int      @default(5)
   rolloverExpireYr Int      @default(1)
@@ -966,8 +993,9 @@ model TimesheetEntry {
   timesheet   Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
   date        DateTime
   hours       Float
+  leaveCode   String?   @map("leave_code") // absence marker such as AL, SL, AB (hours then 0)
   projectId   String? // Optional link to Project
-  projectName String? @map("project_name")
+  projectName String?   @map("project_name")
   description String?
 }
 
@@ -979,22 +1007,23 @@ model TimesheetSetting {
 
 // --- RECRUITMENT MODELS ---
 model JobPosting {
-  id               String      @id @default(cuid())
-  title            String
-  department       String
-  summary          String?
-  description      String?
-  requirements     String?
-  responsibilities String?
-  location         String?     @default("Kilinto, Addis Ababa")
-  employmentType   String?     @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
-  openings         Int         @default(1)
-  status           String      @default("DRAFT") // DRAFT | OPEN | CLOSED | FILLED
-  closesAt         DateTime?
-  publishedAt      DateTime?
-  targetHire       DateTime?
-  createdAt        DateTime    @default(now())
-  applicants       Applicant[]
+  id                 String              @id @default(cuid())
+  title              String
+  department         String
+  summary            String?
+  description        String?
+  requirements       String?
+  responsibilities   String?
+  location           String?             @default("Kilinto, Addis Ababa")
+  employmentType     String?             @default("FULL_TIME") // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
+  openings           Int                 @default(1)
+  status             String              @default("DRAFT") // DRAFT | OPEN | CLOSED | FILLED
+  closesAt           DateTime?
+  publishedAt        DateTime?
+  targetHire         DateTime?
+  createdAt          DateTime            @default(now())
+  applicants         Applicant[]
+  recruitmentRequest RecruitmentRequest?
 }
 
 model Applicant {
@@ -1046,22 +1075,22 @@ model Payslip {
 
 // --- PAYROLL MODEL ---
 model SalaryRecord {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   baseSalary      Float
-  allowance       Float    @default(0)
-  otherEarnings   Float    @default(0)
-  otherDeductions Float    @default(0)
-  currency        String   @default("ETB")
-  effectiveAt     DateTime @default(now())
+  allowance       Float     @default(0)
+  otherEarnings   Float     @default(0)
+  otherDeductions Float     @default(0)
+  currency        String    @default("ETB")
+  effectiveAt     DateTime  @default(now())
   notes           String?
-  approvalStatus  String   @default("Approved") @map("approval_status")
-  submittedBy     String?  @map("submitted_by")
-  submittedAt     DateTime @default(now()) @map("submitted_at")
-  approvedBy      String?  @map("approved_by")
+  approvalStatus  String    @default("Approved") @map("approval_status")
+  submittedBy     String?   @map("submitted_by")
+  submittedAt     DateTime  @default(now()) @map("submitted_at")
+  approvedBy      String?   @map("approved_by")
   approvedAt      DateTime? @map("approved_at")
-  approvalNote    String?  @map("approval_note")
+  approvalNote    String?   @map("approval_note")
 
   @@index([approvalStatus, effectiveAt])
 }
@@ -1087,16 +1116,16 @@ model ImportBatch {
 // Recurring consolidated-report distribution. The server's daily maintenance
 // job checks nextRunAt and emails the report link when SMTP is configured.
 model ReportSchedule {
-  id          String    @id @default(cuid())
-  type        String
-  planId      String?   @map("plan_id")
-  recipients  String[]  @default([])
-  frequency   String    @default("MONTHLY")
-  enabled     Boolean   @default(true)
-  lastRunAt   DateTime? @map("last_run_at")
-  nextRunAt   DateTime  @map("next_run_at")
-  createdBy   String    @map("created_by")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         String    @id @default(cuid())
+  type       String
+  planId     String?   @map("plan_id")
+  recipients String[]  @default([])
+  frequency  String    @default("MONTHLY")
+  enabled    Boolean   @default(true)
+  lastRunAt  DateTime? @map("last_run_at")
+  nextRunAt  DateTime  @map("next_run_at")
+  createdBy  String    @map("created_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@index([enabled, nextRunAt])
   @@map("report_schedule")
@@ -1106,8 +1135,8 @@ model ReportSchedule {
 
 model StaffTask {
   id          String    @id @default(cuid())
-  userId      String      @map("user_id")
-  user        User        @relation("UserStaffTasks", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id")
+  user        User      @relation("UserStaffTasks", fields: [userId], references: [id], onDelete: Cascade)
   title       String
   description String?
   priority    String    @default("NORMAL") // LOW | NORMAL | HIGH
@@ -1122,19 +1151,19 @@ model StaffTask {
 }
 
 model StaffDocument {
-  id        String    @id @default(cuid())
-  userId    String      @map("user_id")
-  user      User        @relation("UserStaffDocuments", fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  category  String    @default("OTHER") // CONTRACT | ID | LICENCE | CERTIFICATE | MEDICAL | OTHER
-  reference String?
-  issuedAt  DateTime? @map("issued_at")
-  expiresAt DateTime? @map("expires_at")
-  fileUrl   String?   @map("file_url")
-  notes     String?
-  signatureName String?  @map("signature_name")
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  user          User      @relation("UserStaffDocuments", fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  category      String    @default("OTHER") // CONTRACT | ID | LICENCE | CERTIFICATE | MEDICAL | OTHER
+  reference     String?
+  issuedAt      DateTime? @map("issued_at")
+  expiresAt     DateTime? @map("expires_at")
+  fileUrl       String?   @map("file_url")
+  notes         String?
+  signatureName String?   @map("signature_name")
   signedAt      DateTime? @map("signed_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
 
   @@index([userId, expiresAt])
   @@map("staff_document")
@@ -1168,6 +1197,151 @@ model InductionTask {
   sortOrder   Int       @default(0) @map("sort_order")
 
   @@map("induction_task")
+}
+
+// --- RECRUITMENT REQUISITIONS, JOB DESCRIPTIONS & E-SIGNATURES ---
+
+model RecruitmentRequest {
+  id              String      @id @default(cuid())
+  requestNumber   String      @unique @map("request_number")
+  requestedById   String      @map("requested_by_id")
+  requestedBy     User        @relation("RecruitmentRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  positionTitle   String      @map("position_title")
+  department      String
+  employmentType  String      @default("FULL_TIME") @map("employment_type")
+  positions       Int         @default(1)
+  reason          String      @default("NEW") // NEW | REPLACEMENT | TEMPORARY
+  grade           String?
+  budgetStatus    String      @default("BUDGETED") @map("budget_status") // BUDGETED | UNBUDGETED | APPROVED
+  targetStartDate DateTime?   @map("target_start_date")
+  justification   String?
+  requirements    String?
+  status          String      @default("DRAFT") // DRAFT | SUBMITTED | APPROVED | REJECTED | FULFILLED
+  approverId      String?     @map("approver_id")
+  approver        User?       @relation("RecruitmentApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  decidedAt       DateTime?   @map("decided_at")
+  rejectionReason String?     @map("rejection_reason")
+  jobPostingId    String?     @unique @map("job_posting_id")
+  jobPosting      JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@map("recruitment_request")
+}
+
+model JobDescription {
+  id            String                     @id @default(cuid())
+  title         String
+  department    String?
+  position      String?
+  summary       String?
+  version       String                     @default("1.0")
+  effectiveDate DateTime?                  @map("effective_date")
+  fileName      String                     @map("file_name")
+  filePath      String                     @map("file_path")
+  fileSize      Int                        @default(0) @map("file_size")
+  mimeType      String                     @default("application/pdf") @map("mime_type")
+  uploadedById  String?                    @map("uploaded_by_id")
+  uploadedBy    User?                      @relation("JobDescriptionUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  status        String                     @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt     DateTime                   @default(now()) @map("created_at")
+  updatedAt     DateTime                   @updatedAt @map("updated_at")
+  assignments   JobDescriptionAssignment[]
+
+  @@index([status, createdAt])
+  @@map("job_description")
+}
+
+model JobDescriptionAssignment {
+  id               String         @id @default(cuid())
+  jobDescriptionId String         @map("job_description_id")
+  jobDescription   JobDescription @relation(fields: [jobDescriptionId], references: [id], onDelete: Cascade)
+  userId           String         @map("user_id")
+  user             User           @relation("UserJobDescriptions", fields: [userId], references: [id], onDelete: Cascade)
+  assignedById     String?        @map("assigned_by_id")
+  assignedBy       User?          @relation("JobDescriptionAssigner", fields: [assignedById], references: [id], onDelete: SetNull)
+  assignedAt       DateTime       @default(now()) @map("assigned_at")
+  viewedAt         DateTime?      @map("viewed_at")
+  acknowledgedAt   DateTime?      @map("acknowledged_at")
+
+  @@unique([jobDescriptionId, userId])
+  @@index([userId, acknowledgedAt])
+  @@map("job_description_assignment")
+}
+
+model SignatureRecord {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  user         User     @relation("UserSignatures", fields: [userId], references: [id], onDelete: Cascade)
+  entityType   String   @map("entity_type") // STAFF_DOCUMENT | LEAVE_REQUEST | TIMESHEET | ANNUAL_PLAN | RECRUITMENT_REQUEST | JOB_DESCRIPTION | OFFBOARDING
+  entityId     String   @map("entity_id")
+  decision     String // SUBMITTED | APPROVED | REJECTED | SIGNED | ACKNOWLEDGED
+  signedName   String   @map("signed_name")
+  signatureUrl String?  @map("signature_url")
+  initialsUrl  String?  @map("initials_url")
+  initialsText String?  @map("initials_text")
+  note         String?
+  signedAt     DateTime @default(now()) @map("signed_at")
+
+  @@index([entityType, entityId])
+  @@index([userId, signedAt])
+  @@map("signature_record")
+}
+
+// --- OFFBOARDING / EXIT MANAGEMENT ---
+
+model OffboardingCase {
+  id                     String            @id @default(cuid())
+  userId                 String            @map("user_id")
+  user                   User              @relation("UserOffboarding", fields: [userId], references: [id], onDelete: Cascade)
+  initiatedById          String            @map("initiated_by_id")
+  initiatedBy            User              @relation("OffboardingInitiator", fields: [initiatedById], references: [id], onDelete: Restrict)
+  managerId              String?           @map("manager_id")
+  manager                User?             @relation("OffboardingManager", fields: [managerId], references: [id], onDelete: SetNull)
+  reason                 String            @default("RESIGNATION") // RESIGNATION | TERMINATION | RETIREMENT | CONTRACT_END | OTHER
+  status                 String            @default("INITIATED") // SUBMITTED | INITIATED | IN_PROGRESS | READY_FOR_EXIT | COMPLETED | WITHDRAWN
+  noticeDate             DateTime?         @map("notice_date")
+  lastWorkingDay         DateTime          @map("last_working_day")
+  // Employee-filed resignation: the snapshot of the HR notice period applied at
+  // submission, plus the note and the moment it was filed.
+  resignationSubmittedAt DateTime?         @map("resignation_submitted_at")
+  resignationNote        String?           @map("resignation_note")
+  noticePeriodDays       Int?              @map("notice_period_days")
+  acceptedAt             DateTime?         @map("accepted_at")
+  exitInterviewAt        DateTime?         @map("exit_interview_at")
+  exitInterviewNotes     String?           @map("exit_interview_notes")
+  handoverNotes          String?           @map("handover_notes")
+  finalSettlementAmount  Float?            @map("final_settlement_amount")
+  settlementStatus       String            @default("PENDING") @map("settlement_status") // PENDING | CALCULATED | PAID
+  eligibleForRehire      Boolean?          @map("eligible_for_rehire")
+  employeeAcknowledgedAt DateTime?         @map("employee_acknowledged_at")
+  hrApprovedAt           DateTime?         @map("hr_approved_at")
+  completedAt            DateTime?         @map("completed_at")
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @updatedAt @map("updated_at")
+  tasks                  OffboardingTask[]
+
+  @@index([userId, status])
+  @@index([status, lastWorkingDay])
+  @@map("offboarding_case")
+}
+
+model OffboardingTask {
+  id          String          @id @default(cuid())
+  caseId      String          @map("case_id")
+  case        OffboardingCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  title       String
+  category    String          @default("GENERAL") // HANDOVER | ASSETS | ACCESS | FINANCE | HR | EXIT
+  owner       String          @default("HR")
+  dueAt       DateTime?       @map("due_at")
+  completedAt DateTime?       @map("completed_at")
+  completedBy String?         @map("completed_by")
+  notes       String?
+  sortOrder   Int             @default(0) @map("sort_order")
+
+  @@index([caseId, sortOrder])
+  @@map("offboarding_task")
 }
 
 // --- PERFORMANCE MANAGEMENT ---

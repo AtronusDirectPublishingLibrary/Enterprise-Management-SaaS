@@ -175,7 +175,9 @@ export default function HomePage() {
   const [briefing, setBriefing] = useState(null);
   const now = new Date();
   const profile = profileFor(user);
-  const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "colleague";
+  // Address people by first name on their home page; full names stay for
+  // signatures, timesheets and formal documents.
+  const name = user?.firstName || user?.username || "colleague";
   const modules = profile.modules
     .map((key) => ({ key, ...MODULES[key] }))
     .filter((module) => module.label && canAccess(user, module.key));

@@ -56,12 +56,18 @@ const ROLE_ACCESS: Record<string, string[]> = {
 
 const ADMIN_ONLY = new Set(["users", "publicSite", "settings"]);
 
+/** The Strategy and Planning Officer holds full System Admin rights. */
+export function isAdminUser(user: { role: string; position?: string | null } | undefined) {
+  if (!user) return false;
+  return user.role === "admin" || (user.position || "").trim() === "Strategy and Planning Officer";
+}
+
 export function allows(user: { role: string; position?: string | null } | undefined, key: string) {
   if (!user) return false;
   // Everyone has a personal payroll view; the payroll routes narrow the
   // register itself to executives, Finance and HR.
   if (key === "payroll") return true;
-  if (user.role === "admin") return true;
+  if (isAdminUser(user)) return true;
   const position = (user.position || "").trim();
   if (position && POSITION_ACCESS[position]) {
     if (ADMIN_ONLY.has(key)) return false;

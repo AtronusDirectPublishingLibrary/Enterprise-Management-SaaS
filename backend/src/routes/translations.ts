@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAccess, requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -35,8 +35,11 @@ router.get("/", async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Admin: Update a translation, including any dynamically added languages
-router.put("/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+// Language Settings: update a translation, including dynamically added languages
+// The Language Settings workspace is delegated to positions with the
+// `languages` tab (IT Officer, HR Manager, Strategy), so writes must honour
+// the same permission instead of administrator-only.
+router.put("/:id", requireAuth, requireAccess("languages"), async (req, res, next) => {
   try {
     const payload = z
       .object({ en: z.string().optional(), am: z.string().optional(), values: valueMap })
@@ -74,8 +77,8 @@ router.put("/:id", requireAuth, requireRole("admin"), async (req, res, next) => 
   } catch (e) { next(e); }
 });
 
-// Admin: Create a new translation
-router.post("/", requireAuth, requireRole("admin"), async (req, res, next) => {
+// Language Settings: create a new translation
+router.post("/", requireAuth, requireAccess("languages"), async (req, res, next) => {
   try {
     const payload = z
       .object({
@@ -103,8 +106,8 @@ router.post("/", requireAuth, requireRole("admin"), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Admin: Delete a translation
-router.delete("/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+// Language Settings: delete a translation
+router.delete("/:id", requireAuth, requireAccess("languages"), async (req, res, next) => {
   try {
     await prisma.translation.delete({ where: { id: req.params.id } });
     res.json({ success: true });

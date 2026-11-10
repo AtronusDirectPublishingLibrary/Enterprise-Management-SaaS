@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, COOKIE_NAME, JwtPayload } from "../lib/jwt";
-import { allows } from "../lib/access";
+import { allows, isAdminUser } from "../lib/access";
 
 declare global {
   namespace Express {
@@ -34,7 +34,18 @@ export function requireAccess(key: string) {
 export function requireRole(...roles: string[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    if (roles.includes("admin") && isAdminUser(req.user)) return next();
     if (!roles.includes(req.user.role)) return res.status(403).json({ message: "Forbidden" });
     next();
+  };
+}
+
+/** Admin-only areas that one operational position also owns (e.g. IT → media). */
+export function requireAdminOrPosition(...positions: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    const position = (req.user.position || "").trim();
+    if (isAdminUser(req.user) || positions.includes(position)) return next();
+    return res.status(403).json({ message: "Forbidden" });
   };
 }

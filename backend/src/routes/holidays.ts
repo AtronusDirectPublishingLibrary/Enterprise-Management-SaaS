@@ -42,6 +42,17 @@ router.post("/", requireAuth, requireRole("admin", "executive"), async (req, res
     if (existing) {
       return res.status(409).json({ message: `A holiday is already recorded on ${day.toISOString().slice(0, 10)}.` });
     }
+    const duplicateName = await prisma.publicHoliday.findFirst({
+      where: {
+        year: day.getUTCFullYear(),
+        name: { equals: payload.name.trim(), mode: "insensitive" },
+      },
+    });
+    if (duplicateName) {
+      return res.status(409).json({
+        message: `${duplicateName.name} is already in the ${day.getUTCFullYear()} holiday list.`,
+      });
+    }
     const holiday = await prisma.publicHoliday.create({
       data: { name: payload.name, date: day, year: day.getUTCFullYear() },
     });
@@ -59,6 +70,22 @@ router.put("/:id", requireAuth, requireRole("admin", "executive"), async (req, r
       if (Number.isNaN(date.getTime())) return res.status(400).json({ error: "Invalid holiday date" });
       data.date = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
       data.year = data.date.getUTCFullYear();
+    }
+    if (data.name || data.year) {
+      const current = await prisma.publicHoliday.findUnique({ where: { id: req.params.id } });
+      if (!current) return res.status(404).json({ message: "Holiday not found" });
+      const name = data.name || current.name;
+      const year = data.year || current.year;
+      const duplicateName = await prisma.publicHoliday.findFirst({
+        where: {
+          id: { not: current.id },
+          year,
+          name: { equals: name, mode: "insensitive" },
+        },
+      });
+      if (duplicateName) {
+        return res.status(409).json({ message: `${duplicateName.name} is already in the ${year} holiday list.` });
+      }
     }
     const holiday = await prisma.publicHoliday.update({ where: { id: req.params.id }, data });
     res.json(holiday);

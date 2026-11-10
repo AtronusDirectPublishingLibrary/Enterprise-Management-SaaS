@@ -203,30 +203,180 @@ body {
   flex-shrink: 0;
 }
 
-.lang-switch {
+/* Compact language picker: one pill in the header, two-column grid inside. */
+.lang-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lang-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 2.15rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--speed) var(--ease), border-color var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.lang-trigger:hover,
+.lang-trigger.is-open {
+  background: rgba(201, 162, 39, 0.2);
+  border-color: var(--gold);
+}
+
+.lang-trigger:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.lang-trigger__code {
+  min-width: 1.55rem;
+  text-align: center;
+}
+
+.lang-trigger__chev {
+  opacity: 0.7;
+  transition: transform var(--speed) var(--ease);
+}
+
+.lang-trigger.is-open .lang-trigger__chev {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.lang-popover {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 130;
+  width: min(17.5rem, calc(100vw - 2rem));
+  padding: 0.55rem;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--navy-deep);
+  box-shadow: 0 24px 55px -24px rgba(4, 16, 28, 0.6), 0 0 0 1px rgba(11, 37, 69, 0.08);
+  transform-origin: top right;
+  animation: lang-pop 0.16s var(--ease) both;
+}
+
+@keyframes lang-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lang-popover__head {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
-  font-size: 0.76rem;
-  letter-spacing: 0.06em;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 0.15rem;
+  justify-content: space-between;
+  padding: 0.15rem 0.35rem 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(11, 37, 69, 0.55);
 }
 
-.lang-switch button {
-  background: transparent;
-  border: 0;
-  color: var(--white-70);
-  padding: 0.25rem 0.6rem;
+.lang-popover__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
   border-radius: 999px;
-  font-weight: 600;
+  background: #eef3f8;
+  color: var(--navy-deep);
+  letter-spacing: 0;
+}
+
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.42rem 0.45rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: #f6f9fc;
+  color: #243b53;
+  text-align: left;
   cursor: pointer;
+  transition: background var(--speed) var(--ease), border-color var(--speed) var(--ease);
 }
 
-.lang-switch button[aria-pressed="true"] {
+.lang-option:hover {
+  background: #eef3f9;
+  border-color: rgba(11, 37, 69, 0.12);
+}
+
+.lang-option:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.lang-option.is-active {
+  background: rgba(201, 162, 39, 0.16);
+  border-color: rgba(201, 162, 39, 0.5);
+}
+
+.lang-option__short {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 8px;
+  background: #e8eef5;
+  color: var(--navy-deep);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.lang-option.is-active .lang-option__short {
   background: var(--gold);
   color: var(--navy-deep);
+}
+
+.lang-option__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.lang-option__check {
+  flex: 0 0 auto;
+  color: #8a6d1f;
+}
+
+@media (max-width: 575px) {
+  .lang-trigger {
+    padding: 0.3rem 0.45rem;
+  }
+  .lang-popover {
+    width: min(16rem, calc(100vw - 1.5rem));
+  }
 }
 
 .btn-login {

@@ -69,9 +69,9 @@ export default function PrintTimesheet() {
                   const d = new Date(ts.year, ts.month - 1, day);
                   if (d.getMonth() !== ts.month - 1) return null;
                   const entry = entries.find(e => new Date(e.date).getDate() === day);
-                  const hours = entry ? entry.hours : "";
-                  if (hours) projectTotal += Number(hours);
-                  return <td key={day} className="text-center small p-1">{hours}</td>;
+                  const mark = entry ? (entry.leaveCode || entry.hours || "") : "";
+                  if (entry && Number(entry.hours)) projectTotal += Number(entry.hours);
+                  return <td key={day} className="text-center small p-1">{mark}</td>;
                 })}
                 <td className="text-center fw-bold">{projectTotal}</td>
               </tr>

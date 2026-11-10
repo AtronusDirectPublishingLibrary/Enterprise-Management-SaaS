@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, assetUrl } from "../../lib/api";
 import { Helmet } from "react-helmet-async";
-import { useLanguage } from "../../lib/language";
+import { formatEthiopianDate, useLanguage } from "../../lib/language";
 import { Download } from "lucide-react";
 
 export default function Documents() {
   const [items, setItems] = useState([]);
-  const { t } = useLanguage();
+  const { t, tText, lang } = useLanguage();
 
   useEffect(() => {
     api.get("/documents").then(data => setItems(data)).catch(console.error);
@@ -19,17 +19,21 @@ export default function Documents() {
       
       <div className="app-table bg-white shadow-sm rounded">
         <table className="table mb-0">
-          <thead><tr><th>Title</th><th>Type</th><th>Date</th><th className="text-end">Action</th></tr></thead>
+          <thead><tr><th>{tText("Title", "ርዕስ")}</th><th>{tText("Type", "ዓይነት")}</th><th>{tText("Date", "ቀን")}</th><th className="text-end">{tText("Action", "እርምጃ")}</th></tr></thead>
           <tbody>
             {items.length === 0 ? <tr><td colSpan={4} className="text-center py-4 text-muted">{t("documentsNoData")}</td></tr> : 
               items.map(item => (
                 <tr key={item.id}>
                   <td>{item.title}</td>
                   <td>{item.type}</td>
-                  <td>{new Date(item.uploadDate).toLocaleDateString()}</td>
+                  <td>
+                    {lang === "am"
+                      ? formatEthiopianDate(item.uploadDate)
+                      : new Date(item.uploadDate).toLocaleDateString("en-GB")}
+                  </td>
                   <td className="text-end">
-                    <a href={`http://localhost:5000${item.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success">
-                      <Download size={14}/> Download
+                    <a href={assetUrl(item.fileUrl)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success">
+                      <Download size={14}/> {tText("Download", "አውርድ")}
                     </a>
                   </td>
                 </tr>

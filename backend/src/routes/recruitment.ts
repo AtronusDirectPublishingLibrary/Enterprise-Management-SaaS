@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 import { DEFAULT_INDUCTION_TASKS } from "../lib/hrCycles";
 import { logAudit } from "../lib/audit";
+import { isAdminUser } from "../lib/access";
 
 const router = Router();
 
@@ -267,6 +268,309 @@ router.post("/applicants/:id/hire", async (req, res, next) => {
       user: { id: user.id, username: user.username, forceChange: user.forceChange },
       induction: { id: induction.id, tasks: DEFAULT_INDUCTION_TASKS.length },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Recruitment requisitions (request form → signed approval → vacancy) ---
+
+const requestSchema = z.object({
+  positionTitle: z.string().trim().min(2).max(180),
+  department: z.string().trim().min(2).max(180),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"]).optional(),
+  positions: z.number().int().min(1).max(99).optional(),
+  reason: z.enum(["NEW", "REPLACEMENT", "TEMPORARY"]).optional(),
+  grade: z.string().trim().max(80).optional().nullable(),
+  budgetStatus: z.enum(["BUDGETED", "UNBUDGETED", "APPROVED"]).optional(),
+  targetStartDate: z.string().nullable().optional(),
+  justification: z.string().trim().max(4000).optional().nullable(),
+  requirements: z.string().trim().max(8000).optional().nullable(),
+});
+
+async function nextRequestNumber() {
+  const year = new Date().getFullYear();
+  const count = await prisma.recruitmentRequest.count({
+    where: { requestNumber: { startsWith: `RR-${year}-` } },
+  });
+  for (let index = count + 1; index < count + 1000; index += 1) {
+    const candidate = `RR-${year}-${String(index).padStart(4, "0")}`;
+    const exists = await prisma.recruitmentRequest.findUnique({ where: { requestNumber: candidate } });
+    if (!exists) return candidate;
+  }
+  return `RR-${year}-${Date.now()}`;
+}
+
+function canDecideRecruitment(user: Express.Request["user"]) {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  return ["executive"].includes(user.role) ||
+    /human resource|hr manager|strategy/i.test(user.position || "");
+}
+
+router.get("/requests", async (req, res, next) => {
+  try {
+    const requests = await prisma.recruitmentRequest.findMany({
+      include: {
+        requestedBy: { select: { id: true, firstName: true, lastName: true, username: true, position: true, department: true } },
+        approver: { select: { id: true, firstName: true, lastName: true, username: true } },
+        jobPosting: { select: { id: true, title: true, status: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    const signatures = await prisma.signatureRecord.findMany({
+      where: {
+        entityType: "RECRUITMENT_REQUEST",
+        entityId: { in: requests.map((request) => request.id) },
+      },
+      include: { user: { select: { firstName: true, lastName: true, username: true } } },
+      orderBy: { signedAt: "desc" },
+    });
+    res.json(
+      requests.map((request) => ({
+        ...request,
+        signatures: signatures.filter((signature) => signature.entityId === request.id),
+      }))
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/requests", async (req, res, next) => {
+  try {
+    const body = requestSchema.parse(req.body);
+    const request = await prisma.recruitmentRequest.create({
+      data: {
+        requestNumber: await nextRequestNumber(),
+        requestedById: req.user!.sub,
+        positionTitle: body.positionTitle,
+        department: body.department,
+        employmentType: body.employmentType || "FULL_TIME",
+        positions: body.positions || 1,
+        reason: body.reason || "NEW",
+        grade: body.grade || null,
+        budgetStatus: body.budgetStatus || "BUDGETED",
+        targetStartDate: body.targetStartDate ? new Date(body.targetStartDate) : null,
+        justification: body.justification || null,
+        requirements: body.requirements || null,
+      },
+    });
+    await logAudit("HR", "RECRUITMENT_REQUEST_CREATED", req.user!.username, {
+      requestId: request.id,
+      requestNumber: request.requestNumber,
+    });
+    res.status(201).json(request);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/requests/:id", async (req, res, next) => {
+  try {
+    const existing = await prisma.recruitmentRequest.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ message: "Recruitment request not found" });
+    if (existing.status !== "DRAFT" && !isAdminUser(req.user!)) {
+      return res.status(400).json({ message: "Only draft requests can be edited" });
+    }
+    if (existing.requestedById !== req.user!.sub && !isAdminUser(req.user!)) {
+      return res.status(403).json({ message: "Only the requester can edit this request" });
+    }
+    const body = requestSchema.partial().parse(req.body);
+    const request = await prisma.recruitmentRequest.update({
+      where: { id: existing.id },
+      data: {
+        ...(body.positionTitle !== undefined ? { positionTitle: body.positionTitle } : {}),
+        ...(body.department !== undefined ? { department: body.department } : {}),
+        ...(body.employmentType !== undefined ? { employmentType: body.employmentType } : {}),
+        ...(body.positions !== undefined ? { positions: body.positions } : {}),
+        ...(body.reason !== undefined ? { reason: body.reason } : {}),
+        ...(body.grade !== undefined ? { grade: body.grade || null } : {}),
+        ...(body.budgetStatus !== undefined ? { budgetStatus: body.budgetStatus } : {}),
+        ...(body.targetStartDate !== undefined
+          ? { targetStartDate: body.targetStartDate ? new Date(body.targetStartDate) : null }
+          : {}),
+        ...(body.justification !== undefined ? { justification: body.justification || null } : {}),
+        ...(body.requirements !== undefined ? { requirements: body.requirements || null } : {}),
+      },
+    });
+    res.json(request);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/requests/:id", async (req, res, next) => {
+  try {
+    const existing = await prisma.recruitmentRequest.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ message: "Recruitment request not found" });
+    if (existing.status !== "DRAFT" && !isAdminUser(req.user!)) {
+      return res.status(400).json({ message: "Only a draft request can be deleted" });
+    }
+    await prisma.recruitmentRequest.delete({ where: { id: existing.id } });
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Requester signs and submits the requisition to HR. */
+router.post("/requests/:id/submit", async (req, res, next) => {
+  try {
+    const body = z.object({ signedName: z.string().trim().min(3).max(160) }).parse(req.body);
+    const existing = await prisma.recruitmentRequest.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ message: "Recruitment request not found" });
+    if (existing.requestedById !== req.user!.sub && !isAdminUser(req.user!)) {
+      return res.status(403).json({ message: "Only the requester can submit this request" });
+    }
+    if (!["DRAFT", "REJECTED"].includes(existing.status)) {
+      return res.status(400).json({ message: `This request is already ${existing.status.toLowerCase()}` });
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+    });
+    const [request] = await prisma.$transaction([
+      prisma.recruitmentRequest.update({
+        where: { id: existing.id },
+        data: { status: "SUBMITTED", rejectionReason: null },
+      }),
+      prisma.signatureRecord.create({
+        data: {
+          userId: req.user!.sub,
+          entityType: "RECRUITMENT_REQUEST",
+          entityId: existing.id,
+          decision: "SUBMITTED",
+          signedName: body.signedName,
+          signatureUrl: user?.signatureUrl || null,
+          initialsUrl: user?.initialsUrl || null,
+          initialsText: user?.initialsText || null,
+        },
+      }),
+    ]);
+    const approvers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { role: { in: ["admin", "executive"] } },
+          { position: { contains: "Human Resource", mode: "insensitive" } },
+        ],
+      },
+      select: { username: true },
+    });
+    const recipients = approvers.filter((approver) => approver.username !== req.user!.username);
+    if (recipients.length) {
+      await prisma.notification.createMany({
+        data: recipients.map((approver) => ({
+          recipient: approver.username,
+          type: "STATUS_CHANGE",
+          title: "Recruitment request awaiting approval",
+          body: `${request.requestNumber} · ${request.positionTitle} (${request.department})`,
+          link: "/recruitment",
+        })),
+      });
+    }
+    await logAudit("HR", "RECRUITMENT_REQUEST_SUBMITTED", req.user!.username, {
+      requestId: request.id,
+      requestNumber: request.requestNumber,
+    });
+    res.json(request);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** HR / executive signs the decision; approval can open a draft vacancy. */
+router.post("/requests/:id/decision", async (req, res, next) => {
+  try {
+    const body = z
+      .object({
+        decision: z.enum(["APPROVED", "REJECTED"]),
+        signedName: z.string().trim().min(3).max(160),
+        rejectionReason: z.string().trim().max(2000).optional(),
+        note: z.string().trim().max(2000).optional(),
+        createVacancy: z.boolean().optional(),
+      })
+      .parse(req.body);
+    if (!canDecideRecruitment(req.user)) {
+      return res.status(403).json({ message: "Your position cannot approve recruitment requests" });
+    }
+    const existing = await prisma.recruitmentRequest.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ message: "Recruitment request not found" });
+    if (existing.status !== "SUBMITTED") {
+      return res.status(400).json({ message: "Only submitted requests can be decided" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+    });
+
+    const result = await prisma.$transaction(async (tx) => {
+      const request = await tx.recruitmentRequest.update({
+        where: { id: existing.id },
+        data: {
+          status: body.decision,
+          approverId: req.user!.sub,
+          decidedAt: new Date(),
+          rejectionReason: body.decision === "REJECTED" ? body.rejectionReason || "Not approved" : null,
+        },
+      });
+      let jobPosting = null;
+      if (body.decision === "APPROVED" && body.createVacancy !== false) {
+        jobPosting = await tx.jobPosting.create({
+          data: {
+            title: request.positionTitle,
+            department: request.department,
+            summary: request.justification || null,
+            description: request.justification || null,
+            requirements: request.requirements || null,
+            employmentType: request.employmentType,
+            openings: request.positions,
+            targetHire: request.targetStartDate,
+            status: "DRAFT",
+          },
+        });
+        await tx.recruitmentRequest.update({
+          where: { id: request.id },
+          data: { jobPostingId: jobPosting.id },
+        });
+      }
+      await tx.signatureRecord.create({
+        data: {
+          userId: req.user!.sub,
+          entityType: "RECRUITMENT_REQUEST",
+          entityId: request.id,
+          decision: body.decision,
+          signedName: body.signedName,
+          signatureUrl: user?.signatureUrl || null,
+          initialsUrl: user?.initialsUrl || null,
+          initialsText: user?.initialsText || null,
+          note: body.note || body.rejectionReason || null,
+        },
+      });
+      return { request, jobPosting };
+    });
+
+    const requester = await prisma.user.findUnique({
+      where: { id: existing.requestedById },
+      select: { username: true },
+    });
+    if (requester) {
+      await prisma.notification.create({
+        data: {
+          recipient: requester.username,
+          type: "STATUS_CHANGE",
+          title: `Recruitment request ${body.decision.toLowerCase()}`,
+          body: `${existing.requestNumber} · ${existing.positionTitle}${result.jobPosting ? " — draft vacancy created" : ""}`,
+          link: "/recruitment",
+        },
+      }).catch(() => undefined);
+    }
+    await logAudit("HR", `RECRUITMENT_REQUEST_${body.decision}`, req.user!.username, {
+      requestId: existing.id,
+      jobPostingId: result.jobPosting?.id || null,
+    });
+    res.json({ ...result.request, jobPosting: result.jobPosting });
   } catch (error) {
     next(error);
   }

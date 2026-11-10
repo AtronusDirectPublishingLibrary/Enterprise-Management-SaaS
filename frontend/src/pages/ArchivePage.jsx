@@ -1,12 +1,14 @@
 ﻿import { useEffect, useState, useCallback, useRef } from "react";
-import { api } from "../lib/api";
+import { api, assetUrl } from "../lib/api";
 import { Plus, Edit2, Trash2, ExternalLink } from "lucide-react";
 import { useAuth } from "../lib/auth";
+import { canAccess } from "../lib/access";
 
 const slug = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, "-");
 
 export default function ArchivePage() {
   const { user } = useAuth();
+  const canManage = canAccess(user, "documents") || user?.role === "project_manager";
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -31,9 +33,9 @@ export default function ArchivePage() {
   const handleSave = async (formData) => {
     try {
       if (editDoc) {
-        await api.put(`/documents/${editDoc.id}`, formData);
+        await api.upload(`/documents/${editDoc.id}`, formData, "PUT");
       } else {
-        await api.post("/documents", formData);
+        await api.upload("/documents", formData);
       }
       setShowModal(false);
       loadDocs();
@@ -99,9 +101,11 @@ export default function ArchivePage() {
             <option value="Draft">Draft</option>
             <option value="Suspended">Suspended</option>
           </select>
-          <button className="btn-brand btn-sm px-3 d-flex align-items-center" onClick={() => { setEditDoc(null); setShowModal(true); }}>
-            <Plus size={14} className="me-1" /> Add Document
-          </button>
+          {canManage && (
+            <button className="btn-brand btn-sm px-3 d-flex align-items-center" onClick={() => { setEditDoc(null); setShowModal(true); }}>
+              <Plus size={14} className="me-1" /> Add Document
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,18 +134,24 @@ export default function ArchivePage() {
                 <td><span className={"badge-status " + slug(d.status)}>{d.status}</span></td>
                 <td>
                   {d.fileUrl ? (
-                    <a href={`http://localhost:5000${d.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success py-0 px-2">
+                    <a href={assetUrl(d.fileUrl)} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-success py-0 px-2">
                       <ExternalLink size={14} />
                     </a>
                   ) : "Ã¢â‚¬â€"}
                 </td>
                 <td>
-                  <button className="btn btn-sm btn-link text-secondary p-0 me-2" onClick={() => { setEditDoc(d); setShowModal(true); }}>
-                    <Edit2 size={14}/>
-                  </button>
-                  <button className="btn btn-sm btn-link text-danger p-0" onClick={() => handleDelete(d.id)}>
-                    <Trash2 size={14}/>
-                  </button>
+                  {canManage ? (
+                    <>
+                      <button className="btn btn-sm btn-link text-secondary p-0 me-2" onClick={() => { setEditDoc(d); setShowModal(true); }}>
+                        <Edit2 size={14}/>
+                      </button>
+                      <button className="btn btn-sm btn-link text-danger p-0" onClick={() => handleDelete(d.id)}>
+                        <Trash2 size={14}/>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
                 </td>
               </tr>
             ))}

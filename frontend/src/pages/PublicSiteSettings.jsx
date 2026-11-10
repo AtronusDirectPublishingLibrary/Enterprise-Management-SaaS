@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, assetUrl } from "../lib/api";
 import { invalidateSiteSettings } from "../lib/siteSettings";
 import { SOCIAL_LABELS, SOCIAL_PLATFORMS, SocialIcon } from "../components/SocialLinks";
-import { BarChart3, Megaphone, Save, Share2 } from "lucide-react";
+import { BarChart3, Image as ImageIcon, Mail, Megaphone, Save, Share2, Trash2, Upload } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 
 const EMPTY = {
+  brand: { logoUrl: "", logoUpdatedAt: "" },
+  contact: { email: "ebpe@ethiobiopharma.et", phone: "" },
   banner: {
     enabled: true,
     message: "",
@@ -22,6 +24,8 @@ function normalise(data) {
   if (!data) return EMPTY;
   const storedLinks = data.social?.links || [];
   return {
+    brand: { ...EMPTY.brand, ...(data.brand || {}) },
+    contact: { ...EMPTY.contact, ...(data.contact || {}) },
     banner: { ...EMPTY.banner, ...(data.banner || {}) },
     social: {
       enabled: data.social?.enabled ?? true,
@@ -41,6 +45,10 @@ export default function PublicSiteSettings() {
   const [saving, setSaving] = useState(null);
   const [saved, setSaved] = useState(null);
   const [error, setError] = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [draggingLogo, setDraggingLogo] = useState(false);
 
   useEffect(() => {
     api
@@ -70,6 +78,62 @@ export default function PublicSiteSettings() {
     }
   };
 
+  const chooseLogo = (file) => {
+    setError("");
+    if (!file) return;
+    if (file.type !== "image/png") {
+      setError("The logo must be a PNG file with a transparent or solid background.");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setError("The logo must be 3 MB or smaller.");
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const uploadLogo = async () => {
+    if (!logoFile) return;
+    setUploadingLogo(true);
+    setError("");
+    setSaved(null);
+    try {
+      const body = new FormData();
+      body.append("logo", logoFile);
+      const result = await api.upload("/site-settings/logo", body);
+      invalidateSiteSettings();
+      setSettings(normalise(result.settings));
+      setLogoFile(null);
+      setLogoPreview("");
+      setSaved("brand");
+      window.setTimeout(() => setSaved(null), 2500);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    if (!window.confirm("Remove the uploaded logo and return to the EB monogram?")) return;
+    setError("");
+    try {
+      const result = await api.del("/site-settings/logo");
+      invalidateSiteSettings();
+      setSettings(normalise(result.settings));
+      setLogoFile(null);
+      setLogoPreview("");
+      setSaved("brand");
+      window.setTimeout(() => setSaved(null), 2500);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const updateContact = (patch) =>
+    setSettings((s) => ({ ...s, contact: { ...s.contact, ...patch } }));
+
   const updateBanner = (patch) => setSettings((s) => ({ ...s, banner: { ...s.banner, ...patch } }));
 
   const updateSocialLink = (platform, patch) =>
@@ -96,6 +160,131 @@ export default function PublicSiteSettings() {
       />
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
+
+      {/* Brand logo + contact details */}
+      <div className="card border-0 shadow-sm p-4 mb-4">
+        <div className="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+          <div>
+            <h5 className="fw-bold mb-1 d-flex align-items-center gap-2">
+              <ImageIcon size={18} /> Enterprise logo
+            </h5>
+            <p className="small text-muted mb-0">
+              This PNG replaces the EB monogram in the public header, footer and sign-in screen.
+            </p>
+          </div>
+          {settings.brand.logoUrl && (
+            <button type="button" className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" onClick={removeLogo}>
+              <Trash2 size={14} /> Remove logo
+            </button>
+          )}
+        </div>
+
+        <div className="row g-4 align-items-center">
+          <div className="col-lg-3">
+            <div className="brand-logo-preview">
+              {logoPreview || settings.brand.logoUrl ? (
+                <img
+                  src={logoPreview || assetUrl(settings.brand.logoUrl)}
+                  alt="Ethio-Biopharma Enterprise logo preview"
+                />
+              ) : (
+                <span className="brand-logo-fallback">EB</span>
+              )}
+            </div>
+            <div className="text-center small text-muted mt-2">Live preview</div>
+          </div>
+          <div className="col-lg-9">
+            <label
+              className={`logo-dropzone${draggingLogo ? " is-dragging" : ""}`}
+              onDragOver={(event) => { event.preventDefault(); setDraggingLogo(true); }}
+              onDragLeave={() => setDraggingLogo(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDraggingLogo(false);
+                chooseLogo(event.dataTransfer.files?.[0]);
+              }}
+            >
+              <Upload size={22} />
+              <div>
+                <strong>{logoFile ? logoFile.name : "Drop a PNG logo here, or browse"}</strong>
+                <div className="small text-muted">
+                  PNG only · transparent background recommended · 512 × 512 px or larger · max 3 MB
+                </div>
+              </div>
+              <input
+                type="file"
+                accept="image/png,.png"
+                hidden
+                onChange={(event) => chooseLogo(event.target.files?.[0])}
+              />
+            </label>
+            <div className="d-flex align-items-center gap-3 mt-3 flex-wrap">
+              <button
+                type="button"
+                className="btn-brand d-inline-flex align-items-center gap-2"
+                onClick={uploadLogo}
+                disabled={!logoFile || uploadingLogo}
+              >
+                <Save size={15} /> {uploadingLogo ? "Uploading…" : "Save logo"}
+              </button>
+              {logoFile && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => { setLogoFile(null); setLogoPreview(""); }}
+                >
+                  Cancel selection
+                </button>
+              )}
+              {saved === "brand" && <span className="text-success small">Logo updated</span>}
+            </div>
+            <div className="form-text mt-2">
+              Use a crisp square or horizontal PNG with clear space around the mark. The saved logo is
+              served from the site itself and updates every public page immediately.
+            </div>
+          </div>
+        </div>
+
+        <hr className="my-4" />
+
+        <h5 className="fw-bold mb-1 d-flex align-items-center gap-2">
+          <Mail size={18} /> Public contact details
+        </h5>
+        <p className="small text-muted">
+          Shown on the Contact page and in the footer. Leave the email at the official address when in doubt.
+        </p>
+        <div className="row g-3 mt-1">
+          <div className="col-md-5">
+            <label className="form-label small fw-bold">Contact email</label>
+            <input
+              type="email"
+              className="form-control"
+              value={settings.contact.email}
+              onChange={(event) => updateContact({ email: event.target.value })}
+              placeholder="info@ethiobiopharma.et"
+            />
+          </div>
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Phone (optional)</label>
+            <input
+              className="form-control"
+              value={settings.contact.phone}
+              onChange={(event) => updateContact({ phone: event.target.value })}
+              placeholder="+251 …"
+            />
+          </div>
+          <div className="col-md-3 d-flex align-items-end">
+            <button
+              className="btn-brand d-flex align-items-center gap-2 w-100 justify-content-center"
+              onClick={() => save("contact")}
+              disabled={saving === "contact"}
+            >
+              <Save size={15} /> {saving === "contact" ? "Saving…" : "Save contact"}
+            </button>
+          </div>
+        </div>
+        {saved === "contact" && <div className="text-success small mt-2">Contact details saved</div>}
+      </div>
 
       {/* Welcome banner */}
       <div className="card border-0 shadow-sm p-4 mb-4">

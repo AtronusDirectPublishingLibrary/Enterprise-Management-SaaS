@@ -80,6 +80,12 @@ router.get("/overview", async (req, res, next) => {
         profession: true,
         requiresLicence: true,
         profileCompletedAt: true,
+        signatureUrl: true,
+        initialsUrl: true,
+        initialsText: true,
+        signatureUpdatedAt: true,
+        avatarUrl: true,
+        avatarUpdatedAt: true,
         immediateSupervisor: { select: { firstName: true, lastName: true, username: true } },
       },
     });
@@ -633,6 +639,7 @@ router.post("/leave", async (req, res, next) => {
         startDate: z.string().min(1),
         endDate: z.string().min(1),
         reason: z.string().optional(),
+        signedName: z.string().trim().min(3).max(160).optional(),
       })
       .parse(req.body);
 
@@ -652,6 +659,24 @@ router.post("/leave", async (req, res, next) => {
         status: "PENDING",
       },
     });
+    if (body.signedName) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user!.sub,
+          entityType: "LEAVE_REQUEST",
+          entityId: request.id,
+          decision: "SUBMITTED",
+          signedName: body.signedName,
+          signatureUrl: user?.signatureUrl || null,
+          initialsUrl: user?.initialsUrl || null,
+          initialsText: user?.initialsText || null,
+        },
+      });
+    }
     res.status(201).json(request);
   } catch (error) {
     next(error);
@@ -839,16 +864,235 @@ router.post("/documents/:id/sign", async (req, res, next) => {
     const body = z.object({ name: z.string().min(3) }).parse(req.body);
     const existing = await prisma.staffDocument.findFirst({
       where: { id: req.params.id, userId: req.user!.sub },
-      select: { id: true },
+      select: { id: true, title: true },
     });
     if (!existing) return res.status(404).json({ message: "Document not found" });
-
-    const document = await prisma.staffDocument.update({
-      where: { id: existing.id },
-      data: { signatureName: body.name.trim(), signedAt: new Date() },
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { signatureUrl: true, initialsUrl: true, initialsText: true },
     });
+
+    const [document] = await prisma.$transaction([
+      prisma.staffDocument.update({
+        where: { id: existing.id },
+        data: { signatureName: body.name.trim(), signedAt: new Date() },
+      }),
+      prisma.signatureRecord.create({
+        data: {
+          userId: req.user!.sub,
+          entityType: "STAFF_DOCUMENT",
+          entityId: existing.id,
+          decision: "SIGNED",
+          signedName: body.name.trim(),
+          signatureUrl: user?.signatureUrl || null,
+          initialsUrl: user?.initialsUrl || null,
+          initialsText: user?.initialsText || null,
+          note: existing.title,
+        },
+      }),
+    ]);
     await logAudit("HR", "STAFF_DOCUMENT_SIGNED", req.user!.username, { documentId: document.id });
     res.json(document);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Optional e-signature assets ---------------------------------------
+
+const signatureStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const dir = path.join(process.cwd(), "uploads", "signatures");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, unique + path.extname(file.originalname).toLowerCase());
+  },
+});
+
+const signatureUpload = multer({
+  storage: signatureStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (![".png", ".jpg", ".jpeg", ".webp"].includes(ext)) {
+      return cb(new Error("Upload a PNG, JPG or WebP image"));
+    }
+    cb(null, true);
+  },
+});
+
+function removeSignatureFile(url?: string | null) {
+  if (!url || !url.startsWith("/uploads/signatures/")) return;
+  fs.unlink(path.join(process.cwd(), url.replace(/^\//, "")), () => undefined);
+}
+
+/**
+ * Upload (or replace) the optional signature and initials images, or save typed
+ * initials. Images are flattened onto signed records, while the typed name
+ * remains the legal act.
+ */
+router.post(
+  "/signature",
+  signatureUpload.fields([
+    { name: "signature", maxCount: 1 },
+    { name: "initials", maxCount: 1 },
+  ]),
+  async (req, res, next) => {
+    try {
+      const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+      const signatureFile = files?.signature?.[0];
+      const initialsFile = files?.initials?.[0];
+      const typedInitials =
+        typeof req.body?.initialsText === "string"
+          ? z
+              .string()
+              .trim()
+              .max(8, "Use at most 8 characters for your initials")
+              .regex(/^[\p{L}.\s]*$/u, "Initials can only contain letters and full stops")
+              .parse(req.body.initialsText)
+              .toUpperCase()
+          : undefined;
+      if (!signatureFile && !initialsFile && typedInitials === undefined) {
+        return res.status(400).json({ message: "Choose a signature or initials image, or type your initials" });
+      }
+      const current = await prisma.user.findUnique({
+        where: { id: req.user!.sub },
+        select: { signatureUrl: true, initialsUrl: true },
+      });
+      const data: {
+        signatureUpdatedAt: Date;
+        signatureUrl?: string;
+        initialsUrl?: string;
+        initialsText?: string | null;
+      } = {
+        signatureUpdatedAt: new Date(),
+      };
+      if (signatureFile) {
+        data.signatureUrl = `/uploads/signatures/${signatureFile.filename}`;
+        removeSignatureFile(current?.signatureUrl);
+      }
+      if (initialsFile) {
+        data.initialsUrl = `/uploads/signatures/${initialsFile.filename}`;
+        removeSignatureFile(current?.initialsUrl);
+      }
+      if (typedInitials !== undefined) {
+        data.initialsText = typedInitials || null;
+      }
+      const user = await prisma.user.update({ where: { id: req.user!.sub }, data });
+      await logAudit("HR", "SIGNATURE_UPDATED", req.user!.username, {
+        signature: Boolean(signatureFile),
+        initials: Boolean(initialsFile),
+        typedInitials: typedInitials !== undefined,
+      });
+      res.json({
+        signatureUrl: user.signatureUrl,
+        initialsUrl: user.initialsUrl,
+        initialsText: user.initialsText,
+        signatureUpdatedAt: user.signatureUpdatedAt,
+      });
+    } catch (error) {
+      const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+      files?.signature?.[0] && fs.unlink(files.signature[0].path, () => undefined);
+      files?.initials?.[0] && fs.unlink(files.initials[0].path, () => undefined);
+      next(error);
+    }
+  }
+);
+
+router.delete("/signature/:kind", async (req, res, next) => {
+  try {
+    const kind = req.params.kind;
+    if (!["signature", "initials"].includes(kind)) {
+      return res.status(400).json({ message: "Unknown signature asset" });
+    }
+    const current = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { signatureUrl: true, initialsUrl: true },
+    });
+    const data = kind === "signature" ? { signatureUrl: null } : { initialsUrl: null };
+    const user = await prisma.user.update({ where: { id: req.user!.sub }, data });
+    removeSignatureFile(kind === "signature" ? current?.signatureUrl : current?.initialsUrl);
+    res.json({ signatureUrl: user.signatureUrl, initialsUrl: user.initialsUrl });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Round portrait avatars ---------------------------------------------
+
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const dir = path.join(process.cwd(), "uploads", "avatars");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, unique + path.extname(file.originalname).toLowerCase());
+  },
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (![".png", ".jpg", ".jpeg", ".webp"].includes(ext)) {
+      return cb(new Error("Upload a PNG, JPG or WebP portrait"));
+    }
+    cb(null, true);
+  },
+});
+
+function removeAvatarFile(url?: string | null) {
+  if (!url || !url.startsWith("/uploads/avatars/")) return;
+  fs.unlink(path.join(process.cwd(), url.replace(/^\//, "")), () => undefined);
+}
+
+/** Upload or replace the signed-in person's portrait. */
+router.post("/avatar", avatarUpload.single("avatar"), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "Choose a portrait photo" });
+    const current = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { avatarUrl: true },
+    });
+    const user = await prisma.user.update({
+      where: { id: req.user!.sub },
+      data: {
+        avatarUrl: `/uploads/avatars/${req.file.filename}`,
+        avatarUpdatedAt: new Date(),
+      },
+    });
+    removeAvatarFile(current?.avatarUrl);
+    await logAudit("HR", "AVATAR_UPDATED", req.user!.username, { file: req.file.originalname });
+    res.json({
+      avatarUrl: user.avatarUrl,
+      avatarUpdatedAt: user.avatarUpdatedAt,
+    });
+  } catch (error) {
+    if (req.file) fs.unlink(req.file.path, () => undefined);
+    next(error);
+  }
+});
+
+/** Remove the portrait and fall back to initials. */
+router.delete("/avatar", async (req, res, next) => {
+  try {
+    const current = await prisma.user.findUnique({
+      where: { id: req.user!.sub },
+      select: { avatarUrl: true },
+    });
+    await prisma.user.update({
+      where: { id: req.user!.sub },
+      data: { avatarUrl: null, avatarUpdatedAt: new Date() },
+    });
+    removeAvatarFile(current?.avatarUrl);
+    await logAudit("HR", "AVATAR_REMOVED", req.user!.username);
+    res.json({ avatarUrl: null });
   } catch (error) {
     next(error);
   }

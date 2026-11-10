@@ -27,10 +27,21 @@ export function AuthProvider({ children }) {
       email: res.email,
       forceChange: res.forceChange,
       mfaEnabled: res.mfaEnabled,
+      signatureUrl: res.signatureUrl,
+      initialsUrl: res.initialsUrl,
+      initialsText: res.initialsText,
+      avatarUrl: res.avatarUrl,
       permissions: res.permissions,
     };
     setUser(userData);
     return userData;
+  }
+
+  /** Re-read the profile after the person changes their photo or signature. */
+  async function refreshUser() {
+    const fresh = await api.get("/auth/me");
+    setUser(fresh);
+    return fresh;
   }
 
   async function logout() {
@@ -40,7 +51,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, setUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

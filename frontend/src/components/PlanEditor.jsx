@@ -1111,7 +1111,7 @@ function ReportsTab({ plan, onChanged }) {
               {overdue > 0 && <span className="text-danger fw-semibold"> {overdue} overdue.</span>}
             </div>
           </div>
-          <div className="d-flex gap-2 align-items-center">
+          <div className="d-flex gap-2 align-items-center flex-wrap">
             <select className="form-select form-select-sm" style={{ width: 130 }} value={frequency} onChange={(e) => setFrequency(e.target.value)}>
               <option value="MONTHLY">Monthly</option>
               <option value="QUARTERLY">Quarterly</option>

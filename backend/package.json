@@ -25,6 +25,7 @@
     "seed:hr-suite": "ts-node prisma/seed-hr-suite.ts",
     "seed:pms-demo": "ts-node prisma/seed-pms-demo.ts",
     "seed:holidays": "ts-node prisma/seed-holidays.ts",
+    "seed:public-translations": "node prisma/seed-public-translations.js",
     "backup": "ts-node scripts/backup-db.ts",
     "audit:prune": "ts-node scripts/prune-audit.ts"
   },

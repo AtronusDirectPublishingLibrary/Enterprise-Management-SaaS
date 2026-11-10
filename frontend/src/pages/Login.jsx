@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { useAuth } from "../lib/auth";
+import BrandLogo from "../components/BrandLogo";
 
 export default function Login() {
   const { login } = useAuth();
@@ -36,6 +37,7 @@ export default function Login() {
     <div className="auth-wrapper">
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="text-center mb-4">
+          <BrandLogo variant="login" />
           <h1 className="mb-0" style={{ color: "var(--brand-primary)", fontWeight: 800 }}>Ethio-Biopharma</h1>
           <h4 className="mt-1" style={{ color: "var(--brand-secondary)", fontWeight: 600, letterSpacing: "1px" }}>Database</h4>
         </div>

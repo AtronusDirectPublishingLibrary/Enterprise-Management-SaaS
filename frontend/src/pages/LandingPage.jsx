@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowRight, ArrowUpRight, Factory, Pause, Pill, Play, ShieldCheck, TestTube, Syringe } from "lucide-react";
 import { api } from "../lib/api";
-import { useLanguage } from "../lib/language";
+import { formatEthiopianDate, localizeAmharic, useLanguage } from "../lib/language";
 import { localiseCopy } from "../lib/localiseCopy";
 import AnimatedNumber from "../components/AnimatedNumber";
 
@@ -302,14 +302,16 @@ function videoType(url) {
   return VIDEO_TYPES[0];
 }
 
-function formatBudget(value) {
+function formatBudget(value, lang) {
   if (!value) return "—";
   const billions = value / 1_000_000_000;
+  if (lang === "am") return `${billions.toFixed(1)} ቢሊዮን ብር`;
   return `ETB ${billions.toFixed(1)}bn`;
 }
 
-function formatDate(value) {
+function formatDate(value, lang) {
   if (!value) return "";
+  if (lang === "am") return formatEthiopianDate(value);
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(
     new Date(value)
   );
@@ -395,13 +397,17 @@ export default function LandingPage() {
   const facts = useMemo(() => {
     const programme = stats.programme || FALLBACK_STATS.programme;
     const roadmap = stats.roadmap || FALLBACK_STATS.roadmap;
+    const doses = roadmap.dosesTarget ?? 55;
+    const horizon = lang === "am"
+      ? `${Number(roadmap.startYear) - 7}–${Number(roadmap.endYear) - 7} ዓ.ም.`
+      : `${roadmap.startYear}–${roadmap.endYear}`;
     return [
-      { value: formatBudget(programme.value), label: copy.facts[0].label, animate: true },
-      { value: String(programme.majorActivities ?? 7), label: copy.facts[1].label, animate: true },
-      { value: `${roadmap.dosesTarget ?? 55}m`, label: copy.facts[2].label, animate: true },
-      { value: `${roadmap.startYear}–${roadmap.endYear}`, label: copy.facts[3].label, animate: false },
+      { value: formatBudget(programme.value, lang), label: copy.facts[0].label, animate: lang !== "am" },
+      { value: String(programme.majorActivities ?? 7), label: copy.facts[1].label, animate: lang !== "am" },
+      { value: lang === "am" ? `${doses} ሚሊዮን` : `${doses}m`, label: copy.facts[2].label, animate: lang !== "am" },
+      { value: horizon, label: copy.facts[3].label, animate: false },
     ];
-  }, [stats, copy]);
+  }, [stats, copy, lang]);
 
   const planCards = useMemo(() => {
     const labels = copy.planTypes;
@@ -415,10 +421,10 @@ export default function LandingPage() {
       type: plan.type,
       typeLabel: labels[plan.type] || plan.type,
       title: t(plan.title, plan.title),
-      period: plan.periodLabel,
+      period: lang === "am" ? localizeAmharic(plan.periodLabel) : plan.periodLabel,
       targets: typeof plan.targets === "number" ? plan.targets : null,
     }));
-  }, [plans, copy, t]);
+  }, [plans, copy, t, lang]);
 
   const slide = slides.length ? slides[activeSlide] : null;
   const heroBackgrounds = useMemo(
@@ -431,10 +437,10 @@ export default function LandingPage() {
     [slides, heroImages]
   );
   const isAmharic = lang === "am";
-  const slideTitle = slide ? (isAmharic ? slide.titleAm || slide.title : slide.title) : "";
-  const slideSubtitle = slide ? (isAmharic ? slide.subtitleAm || slide.subtitle : slide.subtitle) || "" : "";
-  const slideTagline = slide ? (isAmharic ? slide.taglineAm || slide.tagline : slide.tagline) || "" : "";
-  const slideCtaLabel = slide ? (isAmharic ? slide.ctaLabelAm || slide.ctaLabel : slide.ctaLabel) || "" : "";
+  const slideTitle = slide ? (isAmharic ? localizeAmharic(slide.titleAm || slide.title) : slide.title) : "";
+  const slideSubtitle = slide ? (isAmharic ? localizeAmharic(slide.subtitleAm || slide.subtitle) : slide.subtitle) || "" : "";
+  const slideTagline = slide ? (isAmharic ? localizeAmharic(slide.taglineAm || slide.tagline) : slide.tagline) || "" : "";
+  const slideCtaLabel = slide ? (isAmharic ? localizeAmharic(slide.ctaLabelAm || slide.ctaLabel) : slide.ctaLabel) || "" : "";
   const slideshowRunning = autoPlay && !pageHidden;
 
   return (
@@ -586,7 +592,7 @@ export default function LandingPage() {
           </div>
           <p className="facts-note">
             {copy.factsNote}
-            {asOf ? ` · ${copy.updated} ${formatDate(asOf)}` : ""}
+            {asOf ? ` · ${copy.updated} ${formatDate(asOf, lang)}` : ""}
           </p>
         </div>
       </section>

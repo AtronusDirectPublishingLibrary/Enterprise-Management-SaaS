@@ -34,6 +34,51 @@ const DB_DICT = {
   "Direct jobs created by 2030": "በ2030 የተፈጠሩ ቀጥታ ስራዎች"
 };
 
+const ETHIOPIAN_MONTHS = [
+  "መስከረም", "ጥቅምት", "ኅዳር", "ታህሳስ", "ጥር", "የካቲት", "መጋቢት",
+  "ሚያዝያ", "ግንቦት", "ሰኔ", "ሐምሌ", "ነሐሴ", "ጳጉሜ",
+];
+
+/** Gregorian → Ethiopian calendar (Amete Mihret). */
+export function toEthiopianDate(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const jd = Math.floor(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) / 86400000) + 2440588;
+  const r = (jd - 1723856) % 1461;
+  const n = (r % 365) + 365 * Math.floor(r / 1460);
+  return {
+    year: 4 * Math.floor((jd - 1723856) / 1461) + Math.floor(r / 365) - Math.floor(r / 1460),
+    month: Math.floor(n / 30) + 1,
+    day: (n % 30) + 1,
+  };
+}
+
+export function formatEthiopianDate(value) {
+  const converted = toEthiopianDate(value);
+  if (!converted) return "";
+  return `${converted.day} ${ETHIOPIAN_MONTHS[converted.month - 1] || ""} ${converted.year} ዓ.ም.`;
+}
+
+/**
+ * House style for Amharic copy: ብር instead of ETB, ቢሊዮን/ሚሊዮን instead of
+ * bn/m, Ethiopian years with ዓ.ም., በጀት ዓመት instead of E.F.Y., and the
+ * Amharic names of WHO and GMP. Safe to run on text that is already Amharic.
+ */
+export function localizeAmharic(value) {
+  if (typeof value !== "string" || !value) return value;
+  return value
+    .replace(/\bETB\b/g, "ብር")
+    .replace(/(\d[\d.,]*)\s?\bbn\b/gi, "$1 ቢሊዮን")
+    .replace(/(\d[\d.,]*)\s?\bm\b/g, "$1 ሚሊዮን")
+    .replace(/\bE\.F\.Y\.?\b/g, "በጀት ዓመት")
+    .replace(/\bWHO\b/g, "የዓለም ጤና ድርጅት")
+    .replace(/\bGMP\b/g, "የመልካም አመራረት ስርዓት")
+    .replace(/\b(20[2-9]\d)\s*[–-]\s*(20[2-9]\d)\b(?!\s*ዓ\.ም)/g, (_match, from, to) => `${Number(from) - 7}–${Number(to) - 7} ዓ.ም.`)
+    // 2020+ are Gregorian years on this site; 2019 and below are Ethiopian
+    // years that must be left alone (and prevents re-converting our output).
+    .replace(/(?<![/\d])(20[2-9]\d)(?![/\d])(?!\s*ዓ\.ም)/g, (match, year) => `${Number(year) - 7} ዓ.ም.`);
+}
+
 const DEFAULT_LANGUAGES = [
   { code: "en", name: "English", nativeName: "English", sortOrder: 0 },
   { code: "am", name: "Amharic", nativeName: "አማርኛ", sortOrder: 1 },
@@ -99,7 +144,7 @@ export function LanguageProvider({ children }) {
     const row = translations[key];
     if (!row) return fallback || key;
 
-    if (lang === "am") return row.am || row.en || fallback || key;
+    if (lang === "am") return localizeAmharic(row.am || row.en || fallback || key);
     if (lang === "en") return row.en || fallback || key;
     return row.values?.[lang] || row.en || fallback || key;
   };
@@ -109,7 +154,15 @@ export function LanguageProvider({ children }) {
   const byEnglish = useMemo(() => {
     const map = new Map();
     Object.values(translations).forEach((row) => {
-      if (row && row.en) map.set(normalise(row.en), row);
+      if (!row || !row.en) return;
+      const key = normalise(row.en);
+      const current = map.get(key);
+      // Some legacy seeds created the same English string under two keys.
+      // The most recently edited row wins, so saving either row in Admin →
+      // Language Settings immediately changes the public page.
+      if (!current || new Date(row.updatedAt || 0) >= new Date(current.updatedAt || 0)) {
+        map.set(key, row);
+      }
     });
     return map;
   }, [translations]);
@@ -117,7 +170,7 @@ export function LanguageProvider({ children }) {
   const tText = useCallback(
     (english, amFallback) => {
       const row = byEnglish.get(normalise(english));
-      if (lang === "am") return row?.am || amFallback || english;
+      if (lang === "am") return localizeAmharic(row?.am || amFallback || english);
       if (lang === "en") return row?.en || english;
       return row?.values?.[lang] || row?.en || english;
     },

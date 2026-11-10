@@ -67,8 +67,10 @@ export const POSITION_ACCESS = {
   ],
   "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents"],
   "Strategy and Planning Officer": [
+    "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "alerts", "news", "documents",
+    "myhr", "approvals", "alerts", "news", "documents", "languages", "users", "publicSite", "settings",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "media",
   ],
   "Legal Counsel": [...PLANS_READ, "progress", "documents"],
   "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts"],
@@ -120,13 +122,19 @@ const ROLE_ACCESS = {
 
 const ADMIN_ONLY = new Set(["users", "publicSite", "settings"]);
 
+/** The Strategy and Planning Officer holds full System Admin rights. */
+export function isSystemAdmin(user) {
+  if (!user) return false;
+  return user.role === "admin" || (user.position || "").trim() === "Strategy and Planning Officer";
+}
+
 export function canAccess(user, key) {
   if (!user) return false;
   if (!key || key === "dashboard") return true;
   // Everyone has a personal payroll view; the API exposes the full register
   // only to executives, Finance and HR.
   if (key === "payroll") return true;
-  if (user.role === "admin") return true;
+  if (isSystemAdmin(user)) return true;
 
   const position = (user.position || "").trim();
   const allowed = POSITION_ACCESS[position];
@@ -184,7 +192,7 @@ export function canAccessPath(user, pathname) {
 
 export function accessSummary(user) {
   if (!user) return [];
-  if (user.role === "admin") return ["All tabs (administrator)"];
+  if (isSystemAdmin(user)) return ["All tabs (system administrator)"];
   const position = (user.position || "").trim();
   const allowed = POSITION_ACCESS[position];
   if (allowed) return allowed.includes("*") ? ["All planning and delivery tabs"] : allowed;

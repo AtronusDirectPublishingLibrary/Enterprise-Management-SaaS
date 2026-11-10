@@ -37,7 +37,21 @@ export type VisitorSettings = {
   propertyId: string;
 };
 
+export type BrandSettings = {
+  /** Public path of the uploaded PNG logo, e.g. /uploads/brand/… */
+  logoUrl: string;
+  /** Optional dark/light note is not stored; the same PNG is used everywhere. */
+  logoUpdatedAt: string;
+};
+
+export type ContactSettings = {
+  email: string;
+  phone: string;
+};
+
 export type PublicSiteSettings = {
+  brand: BrandSettings;
+  contact: ContactSettings;
   banner: BannerSettings;
   social: SocialSettings;
   visitors: VisitorSettings;
@@ -46,6 +60,14 @@ export type PublicSiteSettings = {
 export const SOCIAL_PLATFORMS: SocialPlatform[] = ["facebook", "x", "linkedin", "telegram", "youtube"];
 
 export const DEFAULT_SETTINGS: PublicSiteSettings = {
+  brand: {
+    logoUrl: "",
+    logoUpdatedAt: "",
+  },
+  contact: {
+    email: "ebpe@ethiobiopharma.et",
+    phone: "",
+  },
   banner: {
     enabled: true,
     message: "Welcome to Ethio-Biopharma Enterprise — building Ethiopia's health security.",
@@ -66,6 +88,8 @@ export const DEFAULT_SETTINGS: PublicSiteSettings = {
 };
 
 const KEYS = {
+  brand: "public.brand",
+  contact: "public.contact",
   banner: "public.banner",
   social: "public.social",
   visitors: "public.visitors",
@@ -81,6 +105,22 @@ function asString(value: unknown, fallback = ""): string {
 
 function asBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function normaliseBrand(value: unknown): BrandSettings {
+  const raw = isObject(value) ? value : {};
+  return {
+    logoUrl: asString(raw.logoUrl).trim(),
+    logoUpdatedAt: asString(raw.logoUpdatedAt),
+  };
+}
+
+function normaliseContact(value: unknown): ContactSettings {
+  const raw = isObject(value) ? value : {};
+  return {
+    email: asString(raw.email, DEFAULT_SETTINGS.contact.email).trim(),
+    phone: asString(raw.phone).trim(),
+  };
 }
 
 function normaliseBanner(value: unknown): BannerSettings {
@@ -125,11 +165,13 @@ function normaliseVisitors(value: unknown): VisitorSettings {
 /** Reads every public-site block, falling back to defaults for missing keys. */
 export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
   const rows = await prisma.appSetting.findMany({
-    where: { key: { in: [KEYS.banner, KEYS.social, KEYS.visitors] } },
+    where: { key: { in: [KEYS.brand, KEYS.contact, KEYS.banner, KEYS.social, KEYS.visitors] } },
   });
   const byKey = new Map(rows.map((row) => [row.key, row.value]));
 
   return {
+    brand: normaliseBrand(byKey.get(KEYS.brand)),
+    contact: normaliseContact(byKey.get(KEYS.contact)),
     banner: normaliseBanner(byKey.get(KEYS.banner)),
     social: normaliseSocial(byKey.get(KEYS.social)),
     visitors: normaliseVisitors(byKey.get(KEYS.visitors)),
@@ -146,13 +188,22 @@ async function saveSetting(key: string, value: unknown, updatedBy?: string) {
 
 export async function savePublicSiteSettings(
   patch: Partial<{
+    brand: unknown;
+    contact: unknown;
     banner: unknown;
     social: unknown;
     visitors: unknown;
   }>,
   updatedBy?: string
 ): Promise<PublicSiteSettings> {
+  const current = await getPublicSiteSettings();
   const writes: Promise<void>[] = [];
+  if (patch.brand !== undefined) {
+    writes.push(saveSetting(KEYS.brand, normaliseBrand({ ...current.brand, ...(isObject(patch.brand) ? patch.brand : {}) }), updatedBy));
+  }
+  if (patch.contact !== undefined) {
+    writes.push(saveSetting(KEYS.contact, normaliseContact({ ...current.contact, ...(isObject(patch.contact) ? patch.contact : {}) }), updatedBy));
+  }
   if (patch.banner !== undefined) {
     writes.push(saveSetting(KEYS.banner, normaliseBanner(patch.banner), updatedBy));
   }
@@ -170,6 +221,8 @@ export async function savePublicSiteSettings(
 export function toPublicPayload(settings: PublicSiteSettings) {
   const { measurementId } = settings.visitors;
   return {
+    brand: settings.brand,
+    contact: settings.contact,
     banner: settings.banner,
     social: {
       enabled: settings.social.enabled,

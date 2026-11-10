@@ -16,6 +16,7 @@ import CommentThread from "../components/CommentThread";
 import MessageFeed from "../components/MessageFeed";
 import BriefEditor from "../components/BriefEditor";
 import PmsTabs from "../components/PmsTabs";
+import ProjectDocuments from "../components/ProjectDocuments";
 
 const STATUSES = ["All", "Not Started", "In Progress", "On Hold", "Completed", "Cancelled"];
 const FUNDS = ["All", "Treasury", "Competitive Grants", "Grand Challenges Eth.", "Other"];
@@ -564,6 +565,11 @@ function ProjectDetail({ project, onBack }) {
           </button>
         </li>
         <li className="nav-item">
+          <button className={"nav-link " + (activeTab === 'documents' ? "active" : "")} onClick={() => setActiveTab('documents')}>
+            <FileText size={14} className="me-1"/> Documents
+          </button>
+        </li>
+        <li className="nav-item">
           <button className={"nav-link " + (activeTab === 'messages' ? "active" : "")} onClick={() => setActiveTab('messages')}>
             <MessageSquare size={14} className="me-1"/> Messages
           </button>
@@ -661,6 +667,7 @@ function ProjectDetail({ project, onBack }) {
       )}
 
       {activeTab === 'brief' && <BriefEditor projectId={project.projectId} />}
+      {activeTab === 'documents' && <ProjectDocuments projectId={project.projectId} />}
       {activeTab === 'messages' && <MessageFeed projectId={project.projectId} />}
       {activeTab === 'comments' && (
         <div className="card border-0 shadow-sm p-3 mt-3">

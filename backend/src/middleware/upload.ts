@@ -25,3 +25,15 @@ export const upload = multer({
     else cb(new Error("Invalid file type"));
   }
 });
+
+/** News and other editorial images. */
+export const uploadImage = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error("Use a JPG, PNG, WebP, GIF or AVIF image"));
+  },
+});

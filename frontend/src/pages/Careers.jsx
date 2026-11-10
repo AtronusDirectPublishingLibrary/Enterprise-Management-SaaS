@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ArrowRight, Briefcase, Building2, CalendarClock, MapPin, Send, Upload } from "lucide-react";
 import { api, API_BASE } from "../lib/api";
-import { useLanguage } from "../lib/language";
+import { formatEthiopianDate, useLanguage } from "../lib/language";
+import { localiseCopy } from "../lib/localiseCopy";
 
 const COPY = {
   en: {
@@ -79,14 +80,25 @@ const TYPE_LABEL = {
   INTERNSHIP: "Internship",
 };
 
-const formatDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : null;
+const TYPE_LABEL_AM = {
+  FULL_TIME: "ሙሉ ጊዜ",
+  PART_TIME: "የትርፍ ጊዜ",
+  CONTRACT: "በኮንትራት",
+  INTERNSHIP: "የልምምድ ጊዜ",
+};
+
+const formatDate = (iso, lang) => {
+  if (!iso) return null;
+  if (lang === "am") return formatEthiopianDate(iso);
+  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 export default function Careers() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { lang } = useLanguage();
-  const copy = COPY[lang] || COPY.en;
+  const { lang, tText } = useLanguage();
+  const copy = useMemo(() => localiseCopy(COPY.en, COPY[lang] || COPY.en, tText), [lang, tText]);
+  const typeLabel = (value) => tText(TYPE_LABEL[value] || value, TYPE_LABEL_AM[value] || value);
 
   const [jobs, setJobs] = useState([]);
   const [job, setJob] = useState(null);
@@ -172,8 +184,8 @@ export default function Careers() {
               <div className="job-meta" style={{ color: "rgba(255,255,255,0.75)" }}>
                 <span><Building2 size={14} /> {job.department}</span>
                 <span><MapPin size={14} /> {job.location || "Kilinto, Addis Ababa"}</span>
-                <span><Briefcase size={14} /> {TYPE_LABEL[job.employmentType] || job.employmentType}</span>
-                {job.closesAt ? <span><CalendarClock size={14} /> {copy.closing} {formatDate(job.closesAt)}</span> : null}
+                <span><Briefcase size={14} /> {typeLabel(job.employmentType)}</span>
+                {job.closesAt ? <span><CalendarClock size={14} /> {copy.closing} {formatDate(job.closesAt, lang)}</span> : null}
               </div>
             ) : null}
           </div>
@@ -366,12 +378,12 @@ export default function Careers() {
                   <div className="job-meta">
                     <span><Building2 size={13} /> {item.department}</span>
                     <span><MapPin size={13} /> {item.location || "Kilinto"}</span>
-                    <span><Briefcase size={13} /> {TYPE_LABEL[item.employmentType] || item.employmentType}</span>
+                    <span><Briefcase size={13} /> {typeLabel(item.employmentType)}</span>
                   </div>
                   <p className="job-summary">{item.summary || (item.description || "").slice(0, 140)}</p>
                   <div className="d-flex justify-content-between align-items-center mt-auto pt-2">
                     <span className="small text-muted">
-                      {item.closesAt ? `${copy.closing} ${formatDate(item.closesAt)}` : ""}
+                      {item.closesAt ? `${copy.closing} ${formatDate(item.closesAt, lang)}` : ""}
                     </span>
                     <Link className="btn btn-sm btn-brand d-inline-flex align-items-center gap-1" to={`/careers/${item.id}`}>
                       {copy.view} <ArrowRight size={14} />

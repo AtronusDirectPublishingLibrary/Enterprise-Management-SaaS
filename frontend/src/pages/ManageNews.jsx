@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api, assetUrl } from "../lib/api";
 import { Newspaper, Plus, Trash2, Edit2 } from "lucide-react";
 
 export default function ManageNews() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ title: "", content: "", titleAm: "", contentAm: "" });
+  const [form, setForm] = useState({ title: "", content: "", titleAm: "", contentAm: "", videoUrl: "" });
   const [image, setImage] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -22,27 +22,19 @@ export default function ManageNews() {
     formData.append("content", form.content);
     formData.append("titleAm", form.titleAm);
     formData.append("contentAm", form.contentAm);
+    formData.append("videoUrl", form.videoUrl.trim());
     if (image) formData.append("image", image);
 
     try {
-      const token = document.cookie.split("; ").find(row => row.startsWith("ep_auth="))?.split("=")[1];
-      const url = editingId ? `http://localhost:5000/api/news/${editingId}` : "http://localhost:5000/api/news";
-      const method = editingId ? "PUT" : "POST";
-      
-      const res = await fetch(url, {
-        method,
-        headers: { "Authorization": `Bearer ${token}` },
-        body: formData
-      });
-      
-      if (!res.ok) throw new Error("Failed to save");
-      
-      setForm({ title: "", content: "", titleAm: "", contentAm: "" });
+      if (editingId) await api.upload(`/news/${editingId}`, formData, "PUT");
+      else await api.upload("/news", formData);
+
+      setForm({ title: "", content: "", titleAm: "", contentAm: "", videoUrl: "" });
       setImage(null);
       setEditingId(null);
       setShowForm(false);
       load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(e.message || "Failed to save"); }
   };
 
   const handleDelete = async (id) => {
@@ -56,7 +48,8 @@ export default function ManageNews() {
       title: item.title, 
       content: item.content,
       titleAm: item.titleAm || "",
-      contentAm: item.contentAm || ""
+      contentAm: item.contentAm || "",
+      videoUrl: item.videoUrl || ""
     });
     setEditingId(item.id);
     setShowForm(true);
@@ -68,7 +61,7 @@ export default function ManageNews() {
         <h2 className="fw-bold d-flex align-items-center gap-2" style={{ color: "var(--brand-primary)" }}>
           <Newspaper size={28} /> Manage News
         </h2>
-        <button className="btn-brand d-flex align-items-center gap-2" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({title:"",content:"",titleAm:"",contentAm:""}); setImage(null); }}>
+        <button className="btn-brand btn-sm d-flex align-items-center gap-2" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({title:"",content:"",titleAm:"",contentAm:"",videoUrl:""}); setImage(null); }}>
           <Plus size={16} /> New Article
         </button>
       </div>
@@ -98,6 +91,11 @@ export default function ManageNews() {
               </div>
             </div>
             <div className="mb-3">
+              <label className="form-label small fw-semibold">Video link (optional)</label>
+              <input type="url" className="form-control" placeholder="https://www.youtube.com/watch?v=…" value={form.videoUrl} onChange={e => setForm({ ...form, videoUrl: e.target.value })} />
+              <div className="form-text">Shown with the article as a “Watch the video” link.</div>
+            </div>
+            <div className="mb-3">
               <label className="form-label small fw-semibold">Image Upload</label>
               <input type="file" accept="image/*" className="form-control" onChange={e => setImage(e.target.files[0])} />
             </div>
@@ -112,7 +110,7 @@ export default function ManageNews() {
           {items.map(item => (
             <div className="col-md-6 col-lg-4" key={item.id}>
               <div className="card h-100 border-0 shadow-sm">
-                {item.imageUrl && <img src={`http://localhost:5000${item.imageUrl}`} className="card-img-top" style={{ height: 150, objectFit: "cover" }} />}
+                {item.imageUrl && <img src={assetUrl(item.imageUrl)} className="card-img-top" style={{ height: 150, objectFit: "cover" }} />}
                 <div className="card-body">
                   <h5 className="fw-bold">{item.title}</h5>
                   <p className="text-muted small text-truncate">{item.content}</p>

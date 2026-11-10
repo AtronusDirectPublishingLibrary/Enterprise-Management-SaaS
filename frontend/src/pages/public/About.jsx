@@ -3,7 +3,7 @@ import { useLanguage } from "../../lib/language";
 import { Target, Eye, ShieldCheck, CheckCircle2, Factory, Users, LineChart, Shield, Landmark, MapPin, TrendingUp, Stethoscope, Building2, Network, Briefcase } from "lucide-react";
 
 export default function About() {
-  const { t } = useLanguage();
+  const { t, tText } = useLanguage();
   return (
     <div className="container py-5">
       <Helmet><title>About Us - Ethio-Biopharma</title></Helmet>
@@ -69,7 +69,12 @@ export default function About() {
       <section id="objectives" className="mb-5 pt-5 fly-in">
         <div className="text-center mb-4">
           <h2 className="fw-bold mb-3" style={{ color: "var(--brand-primary)" }}>{t("strategicObjectivesHeading")}</h2>
-          <p className="lead text-muted mx-auto" style={{ maxWidth: "800px" }}>The core of the 2026-2030 plan is defined by five {t("strategicObjectivesHeading")} (SOs).</p>
+          <p className="lead text-muted mx-auto" style={{ maxWidth: "800px" }}>
+            {tText(
+              "The core of the 2026-2030 plan is defined by five Strategic Objectives (SOs).",
+              "የ2019–2023 ዓ.ም ስትራቴጂካዊ ዕቅዱ ዋና ይዘት በአምስት ስትራቴጂካዊ ግቦች (SOs) ይተረጎማል።"
+            )}
+          </p>
         </div>
         <div className="row g-4">
           {[

@@ -3,6 +3,7 @@ import MyApprovals from "./pages/MyApprovals";
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./lib/auth";
+import { isSystemAdmin } from "./lib/access";
 import AuditLog from "./pages/AuditLog";
 import Payroll from "./pages/Payroll";
 import Recruitment from "./pages/Recruitment";
@@ -56,7 +57,7 @@ function RoleRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-primary" /></div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  if (!isSystemAdmin(user) && !allowedRoles.includes(user.role)) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -146,7 +147,7 @@ export default function App() {
         <Route path="/planning-calendar" element={<PlanningPeriods />} />
         <Route path="/manage-news" element={<ManageNews />} />
         <Route path="/manage-documents" element={<ManageDocuments />} />
-        <Route path="/manage-media" element={<RoleRoute allowedRoles={["admin"]}><ManageMedia /></RoleRoute>} />
+        <Route path="/manage-media" element={<ManageMedia />} />
         <Route path="/public-site" element={<RoleRoute allowedRoles={["admin"]}><PublicSiteSettings /></RoleRoute>} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/progress-updates" element={<ProgressUpdates />} />

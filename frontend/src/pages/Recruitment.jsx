@@ -3,6 +3,8 @@ import {
   Briefcase,
   CalendarClock,
   CheckCircle2,
+  ClipboardList,
+  FileSignature,
   ChevronLeft,
   FileText,
   ExternalLink,
@@ -16,6 +18,9 @@ import {
   X,
 } from "lucide-react";
 import { api, API_BASE } from "../lib/api";
+import RecruitmentRequestsPanel from "../components/RecruitmentRequestsPanel";
+import JobDescriptionsPanel from "../components/JobDescriptionsPanel";
+import RecruitmentProcedurePanel from "../components/RecruitmentProcedurePanel";
 
 const STAGES = [
   { key: "APPLIED", label: "Applied" },
@@ -50,6 +55,7 @@ const statusChip = (status) => {
 };
 
 export default function Recruitment() {
+  const [view, setView] = useState("pipeline");
   const [jobs, setJobs] = useState([]);
   const [applicants, setApplicants] = useState([]);
   const [jobFilter, setJobFilter] = useState("ALL");
@@ -217,9 +223,31 @@ export default function Recruitment() {
         </div>
       </div>
 
+      <div className="recruit-tabs mb-4" role="tablist" aria-label="Recruitment sections">
+        {[
+          { key: "pipeline", label: "Vacancies & pipeline", icon: Briefcase },
+          { key: "requests", label: "Requisitions", icon: FileSignature },
+          { key: "descriptions", label: "Job descriptions", icon: FileText },
+          { key: "procedure", label: "Procedure", icon: ClipboardList },
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={view === key}
+            className={view === key ? "is-active" : ""}
+            onClick={() => setView(key)}
+          >
+            <Icon size={15} /> {label}
+          </button>
+        ))}
+      </div>
+
       {notice ? <div className="alert alert-success py-2">{notice}</div> : null}
       {error ? <div className="alert alert-danger py-2">{error}</div> : null}
 
+      {view === "pipeline" ? (
+        <>
       <div className="hrx-card mb-4">
         <div className="hrx-card-head">
           <h2 className="d-flex align-items-center gap-2"><Briefcase size={16} /> Vacancies</h2>
@@ -566,6 +594,14 @@ export default function Recruitment() {
           </div>
         </div>
       ) : null}
+
+        </>
+      ) : null}
+
+      {view === "requests" ? <RecruitmentRequestsPanel onChanged={load} /> : null}
+      {view === "descriptions" ? <JobDescriptionsPanel /> : null}
+      {view === "procedure" ? <RecruitmentProcedurePanel onStart={() => setView("requests")} /> : null}
+
     </div>
   );
 }

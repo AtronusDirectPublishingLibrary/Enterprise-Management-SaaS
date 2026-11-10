@@ -63,24 +63,61 @@ router.post("/", async (req: any, res) => {
 });
 
 // Submit plan to supervisor
-router.post("/:id/submit", async (req, res) => {
+router.post("/:id/submit", async (req: any, res) => {
   try {
     const data = await prisma.annualLeavePlan.update({
       where: { id: req.params.id },
       data: { status: "SUBMITTED", submittedAt: new Date() },
     });
+    if (typeof req.body?.signedName === "string" && req.body.signedName.trim().length >= 3) {
+      const signer = await prisma.user.findUnique({
+        where: { id: req.user.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user.sub,
+          entityType: "ANNUAL_PLAN",
+          entityId: data.id,
+          decision: "SUBMITTED",
+          signedName: req.body.signedName.trim(),
+          signatureUrl: signer?.signatureUrl || null,
+          initialsUrl: signer?.initialsUrl || null,
+          initialsText: signer?.initialsText || null,
+        },
+      });
+    }
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to submit plan" }); }
 });
 
 // Supervisor approves/rejects
-router.put("/:id/action", async (req, res) => {
+router.put("/:id/action", async (req: any, res) => {
   try {
-    const { status, rejectionReason } = req.body;
+    const { status, rejectionReason, signedName } = req.body;
     const data = await prisma.annualLeavePlan.update({
       where: { id: req.params.id },
       data: { status, rejectionReason, approvedAt: status === "APPROVED" ? new Date() : null },
     });
+    if (typeof signedName === "string" && signedName.trim().length >= 3) {
+      const signer = await prisma.user.findUnique({
+        where: { id: req.user.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user.sub,
+          entityType: "ANNUAL_PLAN",
+          entityId: data.id,
+          decision: status,
+          signedName: signedName.trim(),
+          signatureUrl: signer?.signatureUrl || null,
+          initialsUrl: signer?.initialsUrl || null,
+          initialsText: signer?.initialsText || null,
+          note: rejectionReason || null,
+        },
+      });
+    }
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to update plan" }); }
 });

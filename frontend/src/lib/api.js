@@ -24,13 +24,37 @@ async function request(method, path, body) {
   return data;
 }
 
+async function uploadRequest(method, path, formData) {
+  // Never set Content-Type for FormData: the browser must add its own
+  // multipart boundary or the upload arrives empty on the server.
+  const res = await fetch(BASE + path, { method, credentials: "include", body: formData });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
+  if (!res.ok) {
+    const err = new Error(data?.message || `HTTP ${res.status} ${res.statusText}`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
 export const api = {
   get: (p) => request("GET", p),
   post: (p, b) => request("POST", p, b),
   put: (p, b) => request("PUT", p, b),
   patch: (p, b) => request("PATCH", p, b),
   del: (p) => request("DELETE", p),
+  upload: (p, formData, method = "POST") => uploadRequest(method, p, formData),
 };
+
+/** Absolute URL for an uploaded file (`/uploads/...`) or a full external URL. */
+export function assetUrl(url) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${BASE.replace(/\/api$/, "")}${url.startsWith("/") ? "" : "/"}${url}`;
+}
 
 export function buildQuery(params) {
   const q = new URLSearchParams();

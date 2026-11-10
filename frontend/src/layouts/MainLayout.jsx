@@ -3,6 +3,7 @@ import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, CalendarRange, Archive, Settings, ShieldAlert, TrendingUp, Globe, Newspaper, FileText, BellRing, CheckSquare, Film, Megaphone, Menu, X, ClipboardList, BarChart3, Wallet } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import NotificationBell from "../components/NotificationBell";
+import Avatar from "../components/Avatar";
 import GlobalSearch from "../components/GlobalSearch";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { canAccess, canAccessPath } from "../lib/access";
@@ -11,6 +12,8 @@ export default function MainLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "";
 
   const isArchive = location.pathname === "/database/archive";
   const isSettings = location.pathname === "/database/hero-settings";
@@ -129,7 +132,17 @@ export default function MainLayout() {
         <div className="d-flex align-items-center gap-3 text-white">
           <div className="d-none d-md-block"><GlobalSearch /></div>
           <NotificationBell style={{ color: "white" }} />
-          <span className="d-none d-sm-inline" style={{ fontSize: "0.8rem", opacity: 0.8 }}>{user?.username}</span>
+          <NavLink
+            to="/my-hr"
+            className="header-identity d-flex align-items-center gap-2 text-decoration-none"
+            title="Open My Portal"
+          >
+            <Avatar name={displayName} src={user?.avatarUrl} size={34} ring />
+            <span className="header-identity__text d-none d-md-flex">
+              <strong>{displayName}</strong>
+              <small>{user?.position || user?.role || "Staff"}</small>
+            </span>
+          </NavLink>
           <button className="btn btn-sm d-flex align-items-center gap-1" style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "none" }} onClick={logout}>
             <LogOut size={14} /><span className="d-none d-sm-inline">Logout</span>
           </button>

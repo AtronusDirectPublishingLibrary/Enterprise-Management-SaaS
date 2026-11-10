@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { languageShortLabel, useLanguage } from "../lib/language";
+import { useLanguage } from "../lib/language";
 import { localiseCopy } from "../lib/localiseCopy";
 import { useSiteSettings, useVisitorSummary } from "../lib/siteSettings";
 import { initAnalytics, logVisitOnce, trackPageView } from "../lib/analytics";
 import SocialLinks from "../components/SocialLinks";
 import VisitorCounter from "../components/VisitorCounter";
+import BrandLogo from "../components/BrandLogo";
+import LanguageMenu from "../components/LanguageMenu";
 
 const NAV = [
+  { to: "/", en: "Home", am: "መነሻ" },
   { to: "/about", en: "About", am: "ስለ እኛ" },
   { to: "/products", en: "Capabilities", am: "አቅሞች" },
   { to: "/#roadmap", en: "Roadmap", am: "መንገድ ካርታ" },
   { to: "/partners", en: "Partners", am: "አጋሮች" },
   { to: "/news", en: "News", am: "ዜና" },
   { to: "/documents", en: "Documents", am: "ሰነዶች" },
-  { to: "/investors", en: "Investors", am: "ባለሀብቶች" },
 ];
 
 const FOOTER = {
@@ -33,12 +35,13 @@ const FOOTER = {
     partners: "Partners",
     documents: "Document library",
     careers: "Careers",
-    investors: "Investor relations",
+    home: "Home",
     news: "Newsroom",
     staff: "Staff login",
     contactLink: "Contact us",
     backToTop: "Back to top",
     follow: "Follow us",
+    credit: "Designed and developed by",
     rights: "All rights reserved.",
     bannerDismiss: "Dismiss welcome banner",
   },
@@ -56,12 +59,13 @@ const FOOTER = {
     partners: "አጋሮች",
     documents: "የሰነድ መዝገብ",
     careers: "የስራ ዕድሎች",
-    investors: "የባለሀብት ግንኙነት",
+    home: "መነሻ",
     news: "ዜና ማዕከል",
     staff: "የሰራተኛ መግቢያ",
     contactLink: "ያግኙን",
     backToTop: "ወደ ላይ",
     follow: "ይከተሉን",
+    credit: "በዲዛይንና ግንባታ የተዘጋጀው በ",
     rights: "መብቱ በህግ የተጠበቀ ነው።",
     bannerDismiss: "የእንኳን ደህና መጡ ማስታወቂያውን ዝጋ",
   },
@@ -70,7 +74,7 @@ const FOOTER = {
 const BANNER_DISMISSED_KEY = "ebpe_banner_dismissed";
 
 export default function PublicLayout() {
-  const { lang, setLang, t, tText, languages } = useLanguage();
+  const { lang, t, tText } = useLanguage();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = useMemo(
@@ -166,7 +170,7 @@ export default function PublicLayout() {
       style={{ "--banner-h": bannerHeight }}
     >
       <a className="skip-link" href="#main-content">
-        {lang === "am" ? "ወደ ዋና ይዘት ዝለል" : "Skip to content"}
+        {tText("Skip to content", "ወደ ዋና ይዘት ዝለል")}
       </a>
 
       {showBanner && (
@@ -203,9 +207,7 @@ export default function PublicLayout() {
       <header className={headerClass}>
         <div className="site-header-inner">
           <Link className="brand" to="/" aria-label="Ethio-Biopharma Enterprise — home">
-            <span className="brand-mark" aria-hidden="true">
-              EB
-            </span>
+            <BrandLogo variant="header" />
             <span className="brand-text">
               <strong>Ethio-Biopharma</strong>
               <small>Enterprise</small>
@@ -230,21 +232,7 @@ export default function PublicLayout() {
           </nav>
 
           <div className="header-actions">
-            <div className="lang-switch" role="group" aria-label="Language">
-              {(languages?.length ? languages : [{ code: "en", name: "English" }, { code: "am", name: "Amharic", nativeName: "አማርኛ" }]).map(
-                (language) => (
-                  <button
-                    key={language.code}
-                    type="button"
-                    aria-pressed={lang === language.code}
-                    title={language.nativeName || language.name}
-                    onClick={() => setLang(language.code)}
-                  >
-                    {languageShortLabel(language)}
-                  </button>
-                )
-              )}
-            </div>
+            <LanguageMenu />
             <Link className="btn-login" to="/login">
               {copy.staff}
             </Link>
@@ -275,9 +263,7 @@ export default function PublicLayout() {
           <div className="footer-grid">
             <div className="footer-brand-col">
               <div className="footer-brand">
-                <span className="brand-mark" aria-hidden="true">
-                  EB
-                </span>
+                <BrandLogo variant="footer" />
                 <strong>Ethio-Biopharma Enterprise</strong>
               </div>
               <p>{copy.description}</p>
@@ -286,6 +272,9 @@ export default function PublicLayout() {
             <div className="footer-col">
               <h2>{copy.explore}</h2>
               <ul>
+                <li>
+                  <Link to="/">{copy.home}</Link>
+                </li>
                 <li>
                   <Link to="/about">{copy.about}</Link>
                 </li>
@@ -311,9 +300,6 @@ export default function PublicLayout() {
                   <Link to="/documents">{copy.documents}</Link>
                 </li>
                 <li>
-                  <Link to="/investors">{copy.investors}</Link>
-                </li>
-                <li>
                   <Link to="/news">{copy.news}</Link>
                 </li>
                 <li>
@@ -332,6 +318,16 @@ export default function PublicLayout() {
                 <br />
                 {address2}
               </address>
+              {settings?.contact?.email ? (
+                <a className="footer-contact-link d-block" href={`mailto:${settings.contact.email}`}>
+                  {settings.contact.email}
+                </a>
+              ) : null}
+              {settings?.contact?.phone ? (
+                <a className="footer-contact-link d-block" href={`tel:${settings.contact.phone}`}>
+                  {settings.contact.phone}
+                </a>
+              ) : null}
               <Link className="footer-contact-link" to="/contact">
                 {copy.contactLink} →
               </Link>
@@ -348,7 +344,7 @@ export default function PublicLayout() {
               © {new Date().getFullYear()} Ethio-Biopharma Enterprise. {copy.rights}
             </p>
             <p className="footer-credit">
-              Designed and developed by{" "}
+              {tText("Designed and developed by", "በዲዛይንና ግንባታ የተዘጋጀው በ")}{" "}
               <a href="https://www.linkedin.com/in/dessalew-adane" target="_blank" rel="noreferrer">
                 Dessalew Adane
               </a>

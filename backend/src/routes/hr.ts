@@ -17,6 +17,7 @@ router.get("/staff", async (req, res) => {
         id: true, firstName: true, lastName: true, username: true, email: true,
         role: true, department: true, subDepartment: true, immediateSupervisorId: true,
         position: true, jobTitle: true, employeeNo: true, phone: true, hireDate: true,
+        contractEnd: true, employmentType: true, avatarUrl: true,
         lastLogin: true, createdDate: true,
       },
       orderBy: { createdDate: "desc" },
@@ -27,7 +28,7 @@ router.get("/staff", async (req, res) => {
 
 router.post("/staff", async (req, res) => {
   try {
-    const { firstName, lastName, username, email, role, department, subDepartment, password, immediateSupervisorId, position, jobTitle, employeeNo, phone } = req.body;
+    const { firstName, lastName, username, email, role, department, subDepartment, password, immediateSupervisorId, position, jobTitle, employeeNo, phone, employmentType, contractEnd, hireDate } = req.body;
     if (!username) return res.status(400).json({ error: "Username is required" });
     const existing = await prisma.user.findUnique({ where: { username } });
     if (existing) return res.status(400).json({ error: "Username already exists" });
@@ -41,6 +42,9 @@ router.post("/staff", async (req, res) => {
         immediateSupervisorId: immediateSupervisorId || null,
         position: position || null, jobTitle: jobTitle || position || null,
         employeeNo: employeeNo || null, phone: phone || null,
+        employmentType: employmentType || "Regular",
+        contractEnd: employmentType === "Regular" ? null : (contractEnd ? new Date(contractEnd) : null),
+        hireDate: hireDate ? new Date(hireDate) : null,
       },
     });
     res.json(user);
@@ -49,7 +53,7 @@ router.post("/staff", async (req, res) => {
 
 router.put("/staff/:id", async (req, res) => {
   try {
-    const { firstName, lastName, username, email, role, department, subDepartment, immediateSupervisorId, position, jobTitle, employeeNo, phone } = req.body;
+    const { firstName, lastName, username, email, role, department, subDepartment, immediateSupervisorId, position, jobTitle, employeeNo, phone, employmentType, contractEnd, hireDate } = req.body;
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: {
@@ -60,6 +64,11 @@ router.put("/staff/:id", async (req, res) => {
         ...(jobTitle !== undefined ? { jobTitle: jobTitle || null } : {}),
         ...(employeeNo !== undefined ? { employeeNo: employeeNo || null } : {}),
         ...(phone !== undefined ? { phone: phone || null } : {}),
+        ...(employmentType !== undefined ? {
+          employmentType: employmentType || null,
+          contractEnd: employmentType === "Regular" ? null : (contractEnd ? new Date(contractEnd) : null),
+        } : {}),
+        ...(hireDate !== undefined ? { hireDate: hireDate ? new Date(hireDate) : null } : {}),
       },
     });
     res.json(user);
@@ -94,6 +103,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           subDepartment: row.subDepartment || null,
           position: row.position || null, jobTitle: row.position || null,
           employeeNo: row.employeeNo || null, phone: row.phone || null,
+          employmentType: row.employmentType || "Regular",
+          hireDate: row.hireDate ? new Date(row.hireDate) : null,
+          contractEnd: row.employmentType && row.employmentType !== "Regular" && row.contractEnd ? new Date(row.contractEnd) : null,
         },
       });
       added++;
@@ -182,7 +194,7 @@ router.post("/leave", async (req: any, res) => {
 // PUT /leave/:id - Approve or Reject with auto-deduction
 router.put("/leave/:id", async (req: any, res) => {
   try {
-    const { status, rejectionReason } = req.body;
+    const { status, rejectionReason, signedName } = req.body;
     const isAdmin = ['admin', 'executive'].includes(req.user?.role);
 
     const leave = await prisma.leaveRequest.findUnique({ where: { id: req.params.id } });
@@ -217,6 +229,25 @@ router.put("/leave/:id", async (req: any, res) => {
       where: { id: req.params.id },
       data: { status, rejectionReason, approvedById: req.user?.sub },
     });
+    if (typeof signedName === "string" && signedName.trim().length >= 3) {
+      const signer = await prisma.user.findUnique({
+        where: { id: req.user!.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user!.sub,
+          entityType: "LEAVE_REQUEST",
+          entityId: data.id,
+          decision: status,
+          signedName: signedName.trim(),
+          signatureUrl: signer?.signatureUrl || null,
+          initialsUrl: signer?.initialsUrl || null,
+          initialsText: signer?.initialsText || null,
+          note: rejectionReason || null,
+        },
+      });
+    }
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to update leave" }); }
 });

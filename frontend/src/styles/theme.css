@@ -68,6 +68,22 @@ body {
 }
 .btn-brand:disabled { opacity: 0.6; }
 
+/* Compact brand buttons: .btn-sm must stay small (the base padding above is
+   for full-size actions and otherwise makes "+ Add" buttons look oversized). */
+.btn-brand.btn-sm,
+.btn-accent.btn-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  border-radius: 7px;
+  /* Keep icon + label on one line: a squeezed flex row used to wrap "Add"
+     into three lines and stretch the button to 60–80px tall. */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-brand.btn-sm svg,
+.btn-accent.btn-sm svg { flex-shrink: 0; }
+
 .btn-accent {
   background: linear-gradient(135deg, var(--brand-accent), #8a3a3a);
   color: white;

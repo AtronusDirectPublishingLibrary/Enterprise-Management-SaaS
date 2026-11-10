@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAdminOrPosition, requireAuth } from "../middleware/auth";
 import { MEDIA_UPLOAD_FIELDS } from "../middleware/uploadMedia";
 
 const router = Router();
@@ -43,7 +43,7 @@ router.get("/", async (_req, res, next) => {
 });
 
 /** Admin: every video, including hidden ones. */
-router.get("/all", requireAuth, requireRole("admin"), async (_req, res, next) => {
+router.get("/all", requireAuth, requireAdminOrPosition("IT Officer"), async (_req, res, next) => {
   try {
     const videos = await prisma.mediaVideo.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -54,7 +54,7 @@ router.get("/all", requireAuth, requireRole("admin"), async (_req, res, next) =>
   }
 });
 
-router.post("/", requireAuth, requireRole("admin"), MEDIA_UPLOAD_FIELDS, async (req, res, next) => {
+router.post("/", requireAuth, requireAdminOrPosition("IT Officer"), MEDIA_UPLOAD_FIELDS, async (req, res, next) => {
   try {
     const body = z
       .object({
@@ -94,7 +94,7 @@ router.post("/", requireAuth, requireRole("admin"), MEDIA_UPLOAD_FIELDS, async (
   }
 });
 
-router.put("/:id", requireAuth, requireRole("admin"), MEDIA_UPLOAD_FIELDS, async (req, res, next) => {
+router.put("/:id", requireAuth, requireAdminOrPosition("IT Officer"), MEDIA_UPLOAD_FIELDS, async (req, res, next) => {
   try {
     const body = z
       .object({
@@ -134,7 +134,7 @@ router.put("/:id", requireAuth, requireRole("admin"), MEDIA_UPLOAD_FIELDS, async
   }
 });
 
-router.delete("/:id", requireAuth, requireRole("admin"), async (req, res, next) => {
+router.delete("/:id", requireAuth, requireAdminOrPosition("IT Officer"), async (req, res, next) => {
   try {
     await prisma.mediaVideo.delete({ where: { id: req.params.id } });
     res.json({ success: true });

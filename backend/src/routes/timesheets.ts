@@ -24,19 +24,31 @@ router.get("/my-timesheet", async (req: any, res) => {
 router.post("/save", async (req: any, res) => {
   try {
     const { month, year, entries } = req.body;
+    if (!Array.isArray(entries)) return res.status(400).json({ error: "Entries must be a list" });
     const userId = req.user.sub;
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { immediateSupervisorId: true } });
+    const rows = entries.map((entry: any) => {
+      const leaveCode = entry.leaveCode ? String(entry.leaveCode).trim().toUpperCase().slice(0, 4) : null;
+      const hours = Number(entry.hours);
+      return {
+        date: new Date(entry.date),
+        hours: leaveCode ? 0 : (Number.isFinite(hours) ? hours : 0),
+        leaveCode,
+        description: entry.description || null,
+        projectName: entry.projectName || "Regular",
+      };
+    });
 
     const timesheet = await prisma.timesheet.upsert({
       where: { userId_month_year: { userId, month, year } },
       update: {
         status: "DRAFT",
-        entries: { deleteMany: {}, create: entries.map((e: any) => ({ date: new Date(e.date), hours: Number(e.hours), description: e.description, projectName: e.projectName || "Regular" })) }
+        entries: { deleteMany: {}, create: rows }
       },
       create: {
         userId, month, year, status: "DRAFT",
         supervisorId: user?.immediateSupervisorId || null,
-        entries: { create: entries.map((e: any) => ({ date: new Date(e.date), hours: Number(e.hours), description: e.description, projectName: e.projectName || "Regular" })) }
+        entries: { create: rows }
       },
       include: { entries: true },
     });
@@ -45,17 +57,35 @@ router.post("/save", async (req: any, res) => {
 });
 
 // POST /api/timesheets/:id/submit
-router.post("/:id/submit", async (req, res) => {
+router.post("/:id/submit", async (req: any, res) => {
   try {
     const ts = await prisma.timesheet.findUnique({ where: { id: req.params.id }, select: { userId: true } });
     if (!ts) return res.status(404).json({ error: "Not found" });
-    if (ts.userId !== (req as any).user?.id && (req as any).user?.role !== "admin") {
+    if (ts.userId !== (req as any).user?.sub && (req as any).user?.role !== "admin") {
       return res.status(403).json({ error: "Only the owner can submit this timesheet" });
     }
     const data = await prisma.timesheet.update({
       where: { id: req.params.id },
       data: { status: "SUBMITTED", submittedAt: new Date() },
     });
+    if (typeof req.body?.signedName === "string" && req.body.signedName.trim().length >= 3) {
+      const signer = await prisma.user.findUnique({
+        where: { id: req.user.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user.sub,
+          entityType: "TIMESHEET",
+          entityId: data.id,
+          decision: "SUBMITTED",
+          signedName: req.body.signedName.trim(),
+          signatureUrl: signer?.signatureUrl || null,
+          initialsUrl: signer?.initialsUrl || null,
+          initialsText: signer?.initialsText || null,
+        },
+      });
+    }
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to submit" }); }
 });
@@ -101,13 +131,32 @@ router.get("/:id", async (req: any, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to fetch" }); }
 });
 // PUT /api/timesheets/:id/action
-router.put("/:id/action", canApprove, async (req, res) => {
+router.put("/:id/action", canApprove, async (req: any, res) => {
   try {
-    const { status, rejectionReason } = req.body;
+    const { status, rejectionReason, signedName } = req.body;
     const data = await prisma.timesheet.update({
       where: { id: req.params.id },
       data: { status, rejectionReason, approvedAt: status === "APPROVED" ? new Date() : null },
     });
+    if (typeof signedName === "string" && signedName.trim().length >= 3) {
+      const signer = await prisma.user.findUnique({
+        where: { id: req.user.sub },
+        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+      });
+      await prisma.signatureRecord.create({
+        data: {
+          userId: req.user.sub,
+          entityType: "TIMESHEET",
+          entityId: data.id,
+          decision: status,
+          signedName: signedName.trim(),
+          signatureUrl: signer?.signatureUrl || null,
+          initialsUrl: signer?.initialsUrl || null,
+          initialsText: signer?.initialsText || null,
+          note: rejectionReason || null,
+        },
+      });
+    }
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to update" }); }
 });
