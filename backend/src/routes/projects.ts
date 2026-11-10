@@ -148,7 +148,7 @@ router.get("/", async (req, res, next) => {
 router.get("/template", canImport, (_req, res) => {
   const csv = [
     "projectId,title,description,projectCategory,sourceOfFunds,startDate,endDate,status,priority,progress,leadDirectorate,leadDivision,projectManager",
-    'P-0001,Expanded vaccine distribution,Regional distribution and cold-chain coverage,Access,Treasury,2026-01-01,2026-12-31,In Progress,High,35,Operations,Distribution,Dawit Mekonnen',
+    'P-0001,Expanded vaccine distribution,Regional distribution and cold-chain coverage,Access,Treasury,2026-01-01,2026-12-31,In Progress,High,35,Operations,Distribution,Dessalew Adane',
     ',New diagnostics laboratory,Establish diagnostic testing capacity,Diagnostics,Competitive Grants,2026-03-01,2027-02-28,Not Started,Medium,0,Quality,Quality Assurance,Hirut Bekele',
   ].join("\n");
   res.setHeader("Content-Type", "text/csv; charset=utf-8");

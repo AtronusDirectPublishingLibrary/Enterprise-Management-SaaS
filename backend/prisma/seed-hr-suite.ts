@@ -30,8 +30,8 @@ const previousYear = month === 1 ? year - 1 : year;
 const PEOPLE = [
   {
     username: "ceo",
-    firstName: "Selamawit",
-    lastName: "Girma",
+    firstName: "Dr. Markos",
+    lastName: "Abebe",
     position: "Chief Executive Officer",
     role: "executive",
     department: "Office of the CEO",
@@ -83,8 +83,8 @@ const PEOPLE = [
   },
   {
     username: "strategy.officer",
-    firstName: "Dawit",
-    lastName: "Mekonnen",
+    firstName: "Dessalew",
+    lastName: "Adane",
     position: "Strategy and Planning Officer",
     role: "project_manager",
     department: "Strategy & Planning",
@@ -149,8 +149,8 @@ const PEOPLE = [
   },
   {
     username: "hr.manager",
-    firstName: "Eden",
-    lastName: "Wolde",
+    firstName: "Tegest",
+    lastName: "Aschalew",
     position: "Human Resource and Administration Manager",
     role: "executive",
     department: "Human Resource & Administration",

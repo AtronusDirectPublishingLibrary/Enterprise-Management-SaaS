@@ -24,11 +24,11 @@ const STAFF = [
   { username: "finance.officer", first: "Abel", last: "Tadesse", position: "Finance Officer", role: "staff" },
   { username: "property.officer", first: "Kalkidan", last: "Abera", position: "Property Management Officer", role: "viewer" },
   { username: "legal.counsel", first: "Rahel", last: "Tesfaye", position: "Legal Counsel", role: "viewer" },
-  { username: "strategy.officer", first: "Dawit", last: "Mekonnen", position: "Strategy and Planning Officer", role: "project_manager" },
-  { username: "hr.manager", first: "Eden", last: "Wolde", position: "Human Resource and Administration Manager", role: "executive" },
+  { username: "strategy.officer", first: "Dessalew", last: "Adane", position: "Strategy and Planning Officer", role: "project_manager" },
+  { username: "hr.manager", first: "Tegest", last: "Aschalew", position: "Human Resource and Administration Manager", role: "executive" },
   { username: "finance.manager", first: "Meseret", last: "Desta", position: "Finance Manager", role: "executive" },
   { username: "board.secretary", first: "Tewodros", last: "Alemu", position: "Board Secretary", role: "viewer" },
-  { username: "ceo", first: "Selamawit", last: "Girma", position: "Chief Executive Officer", role: "executive" },
+  { username: "ceo", first: "Dr. Markos", last: "Abebe", position: "Chief Executive Officer", role: "executive" },
 ];
 
 const pct = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
