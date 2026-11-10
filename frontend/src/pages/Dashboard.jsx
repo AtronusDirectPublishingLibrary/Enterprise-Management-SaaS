@@ -6,6 +6,7 @@ import {
 } from "chart.js";
 import { Doughnut, Bar, Line } from "react-chartjs-2";
 import PmsTabs from "../components/PmsTabs";
+import AutoFitNumber from "../components/AutoFitNumber";
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend, Filler);
 
@@ -33,7 +34,7 @@ export default function Dashboard() {
   const dirData      = directorateProgress.map((d) => d.avgProgress);
   const divLabels    = divisionProgress.map((d) => d.division);
   const divData      = divisionProgress.map((d) => d.avgProgress);
-  const paLabels     = planActualData.map((d) => d.title.length > 20 ? d.title.slice(0, 20) + "â€¦" : d.title);
+  const paLabels     = planActualData.map((d) => d.title.length > 20 ? d.title.slice(0, 20) + "…" : d.title);
   const paPlan       = planActualData.map((d) => d.plan);
   const paActual     = planActualData.map((d) => d.actual);
   const srcLabels    = Object.keys(sourceOfFundsDistribution);
@@ -131,7 +132,7 @@ function KPI({ label, value, tone = "" }) {
   return (
     <div className="col-md-3 col-6">
       <div className={"card-kpi " + tone} style={{ padding: "0.75rem 1rem" }}>
-        <div className="kpi-number">{value}</div>
+        <AutoFitNumber className="kpi-number" maxRem={1.4} minRem={0.76}>{value}</AutoFitNumber>
         <div className="kpi-label">{label}</div>
       </div>
     </div>

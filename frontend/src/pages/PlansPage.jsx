@@ -22,6 +22,8 @@ import {
 import { api, buildQuery, API_BASE } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import PlanEditor from "../components/PlanEditor";
+import StaffAssigneeSelect from "../components/StaffAssigneeSelect";
+import { canGovernPlans } from "../lib/access";
 
 const TYPE_META = {
   ROADMAP: {
@@ -61,7 +63,8 @@ const STATUS_STYLES = {
 export default function PlansPage({ type }) {
   const meta = TYPE_META[type];
   const { user } = useAuth();
-  const canWrite = ["admin", "project_manager"].includes(user?.role);
+  const canWrite = ["admin", "executive", "project_manager"].includes(user?.role);
+  const canGovern = canGovernPlans(user);
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get("plan");
 
@@ -384,7 +387,7 @@ export default function PlansPage({ type }) {
                   <h5 className="fw-bold mb-1" style={{ color: "var(--brand-primary)" }}>{plan.title}</h5>
                   <div className="text-muted small mb-3">
                     {new Date(plan.startDate).toLocaleDateString()} &ndash; {new Date(plan.endDate).toLocaleDateString()}
-                    {plan.owner ? ` Â· ${plan.owner}` : ""}
+                    {plan.owner ? ` · ${plan.owner}` : ""}
                   </div>
 
                   <div className="mb-3">
@@ -417,7 +420,7 @@ export default function PlansPage({ type }) {
                     <div className="mb-3 small">
                       {plan.childPlans.map((child) => (
                         <div className="d-flex justify-content-between border-bottom py-1" key={child.id}>
-                          <span className="text-truncate me-2">{child.periodLabel} Â· {child.title}</span>
+                          <span className="text-truncate me-2">{child.periodLabel} · {child.title}</span>
                           <span className="fw-semibold">{Math.round(child.completion)}%</span>
                         </div>
                       ))}
@@ -462,7 +465,7 @@ export default function PlansPage({ type }) {
                       >
                         <option value="">Not linked</option>
                         {parentOptions.map((parent) => (
-                          <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
+                          <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
                         ))}
                       </select>
                       <button className="btn btn-sm btn-brand" onClick={() => linkParent(plan)}>Save</button>
@@ -481,6 +484,7 @@ export default function PlansPage({ type }) {
           type={type}
           meta={meta}
           parentOptions={parentOptions}
+          canGovern={canGovern}
           onClose={() => setCreating(false)}
           onCreated={(id) => {
             setCreating(false);
@@ -661,7 +665,7 @@ export default function PlansPage({ type }) {
   );
 }
 
-function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
+function CreatePlanModal({ type, meta, parentOptions, canGovern, onClose, onCreated }) {
   const currentYear = new Date().getFullYear();
   const [mode, setMode] = useState(type === "AOP" ? "template" : "blank");
   const [fyYear, setFyYear] = useState(currentYear);
@@ -699,7 +703,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
         const result = await api.post("/plans/from-template", {
           fyStartYear: Number(fyYear),
           title: form.title || undefined,
-          owner: form.owner || null,
+          ...(canGovern ? { owner: form.owner || null } : {}),
           parentPlanId: form.parentPlanId || null,
           status: form.status,
           isPublished: form.isPublished,
@@ -713,7 +717,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
           startDate: form.startDate,
           endDate: form.endDate,
           status: form.status,
-          owner: form.owner || null,
+          ...(canGovern ? { owner: form.owner || null } : {}),
           summary: form.summary || null,
           parentPlanId: form.parentPlanId || null,
           isPublished: form.isPublished,
@@ -759,38 +763,48 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
 
               {mode === "template" ? (
                 <div className="row g-3">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label small fw-semibold">Fiscal year starts</label>
                     <select className="form-select form-select-sm" value={fyYear} onChange={(e) => setFyYear(Number(e.target.value))}>
                       {[currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map((year) => (
-                        <option key={year} value={year}>July {year} â€“ June {year + 1}</option>
+                        <option key={year} value={year}>July {year} – June {year + 1}</option>
                       ))}
                     </select>
                     <div className="form-text">
                       Period label: <strong>{template?.fyLabel || fyYear} EFY</strong>
                     </div>
                   </div>
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label small fw-semibold">Status</label>
                     <select className="form-select form-select-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                       <option>Draft</option>
                       <option>Active</option>
                     </select>
                   </div>
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <label className="form-label small fw-semibold">Link to strategic plan</label>
                     <select className="form-select form-select-sm" value={form.parentPlanId} onChange={(e) => setForm({ ...form, parentPlanId: e.target.value })}>
                       <option value="">Not linked</option>
                       {parentOptions.map((parent) => (
-                        <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
+                        <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label small fw-semibold" htmlFor="template-plan-owner">Owner</label>
+                    <StaffAssigneeSelect
+                      id="template-plan-owner"
+                      value={form.owner}
+                      onChange={(owner) => setForm({ ...form, owner })}
+                      disabled={!canGovern}
+                      hint={canGovern ? undefined : "CEO and Strategy and Planning Officer only."}
+                    />
                   </div>
 
                   <div className="col-12">
                     <div className="border rounded p-3 bg-light">
                       {templateError && <div className="text-danger small">{templateError}</div>}
-                      {!template && !templateError && <div className="small text-muted">Building template previewâ€¦</div>}
+                      {!template && !templateError && <div className="small text-muted">Building template preview…</div>}
                       {template && (
                         <>
                           <div className="d-flex flex-wrap gap-3 small mb-2">
@@ -799,7 +813,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                             <span>{template.activities} quarterly activities</span>
                             <span>{template.kpis} KPIs with quarterly targets</span>
                             <span className="text-muted">
-                              {new Date(template.startDate).toLocaleDateString()} â€“ {new Date(template.endDate).toLocaleDateString()}
+                              {new Date(template.startDate).toLocaleDateString()} – {new Date(template.endDate).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="small" style={{ maxHeight: 180, overflowY: "auto" }}>
@@ -807,7 +821,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                               <div className="mb-1" key={pillar.code}>
                                 <span className="badge bg-secondary me-1">{pillar.code}</span>
                                 <strong>{pillar.title}</strong>
-                                <div className="text-muted ps-4">{pillar.objectives.join(" Â· ")}</div>
+                                <div className="text-muted ps-4">{pillar.objectives.join(" · ")}</div>
                               </div>
                             ))}
                           </div>
@@ -843,8 +857,14 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                     </select>
                   </div>
                   <div className="col-md-3">
-                    <label className="form-label small fw-semibold">Owner</label>
-                    <input className="form-control form-control-sm" value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} placeholder="username" />
+                    <label className="form-label small fw-semibold" htmlFor="new-plan-owner">Owner</label>
+                    <StaffAssigneeSelect
+                      id="new-plan-owner"
+                      value={form.owner}
+                      onChange={(owner) => setForm({ ...form, owner })}
+                      disabled={!canGovern}
+                      hint={canGovern ? undefined : "CEO and Strategy and Planning Officer only."}
+                    />
                   </div>
                   {meta.parentType && (
                     <div className="col-md-6">
@@ -852,7 +872,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
                       <select className="form-select form-select-sm" value={form.parentPlanId} onChange={(e) => setForm({ ...form, parentPlanId: e.target.value })}>
                         <option value="">Not linked</option>
                         {parentOptions.map((parent) => (
-                          <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
+                          <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
                         ))}
                       </select>
                     </div>
@@ -874,7 +894,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
               {mode === "template" && (
                 <div className="mt-2 small text-muted">
                   <AlertTriangle size={13} className="me-1" />
-                  Template items and KPI targets are editable after creation â€” nothing here is hard-coded.
+                  Template items and KPI targets are editable after creation — nothing here is hard-coded.
                 </div>
               )}
               {error && <div className="alert alert-danger py-2 small mt-3 mb-0">{error}</div>}
@@ -882,7 +902,7 @@ function CreatePlanModal({ type, meta, parentOptions, onClose, onCreated }) {
             <div className="modal-footer">
               <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>Cancel</button>
               <button type="submit" className="btn-brand btn-sm" disabled={saving}>
-                {saving ? "Creatingâ€¦" : mode === "template" ? "Create from template" : "Create plan"}
+                {saving ? "Creating…" : mode === "template" ? "Create from template" : "Create plan"}
               </button>
             </div>
           </form>

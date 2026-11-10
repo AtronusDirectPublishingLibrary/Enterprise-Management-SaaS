@@ -1,6 +1,9 @@
 ﻿import { useEffect, useState } from "react";
 import { Plus, Trash2, Link2 } from "lucide-react";
 import { api } from "../lib/api";
+import { useAuth } from "../lib/auth";
+import { canGovernPlans } from "../lib/access";
+import StaffAssigneeSelect from "./StaffAssigneeSelect";
 
 const KINDS = ["PILLAR", "GOAL", "OBJECTIVE", "STRATEGY", "ACTIVITY", "KPI", "MILESTONE"];
 const STATUSES = ["Planned", "In Progress", "Completed", "At Risk"];
@@ -18,6 +21,8 @@ const KIND_COLORS = {
 const toDateInput = (value) => (value ? new Date(value).toISOString().slice(0, 10) : "");
 
 export default function PlanItemModal({ plan, item, parentId, defaultKind, onClose, onSaved }) {
+  const { user } = useAuth();
+  const canGovern = canGovernPlans(user);
   const isKpi = (kind) => kind === "KPI";
   const [form, setForm] = useState({
     kind: item?.kind || defaultKind || "OBJECTIVE",
@@ -72,7 +77,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
       code: form.code || null,
       title: form.title,
       description: form.description || null,
-      owner: form.owner || null,
+      ...(canGovern ? { owner: form.owner || null } : {}),
       linkedItemId: form.linkedItemId || null,
       status: form.status,
       progress: Number(form.progress) || 0,
@@ -145,8 +150,18 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
                   <input className="form-control form-control-sm" value={form.code} onChange={(e) => set("code", e.target.value)} placeholder="SO1, P2..." />
                 </div>
                 <div className="col-md-5">
-                  <label className="form-label small fw-semibold">Owner</label>
-                  <input className="form-control form-control-sm" value={form.owner} onChange={(e) => set("owner", e.target.value)} placeholder="username responsible" />
+                  <label className="form-label small fw-semibold" htmlFor="plan-item-owner">Owner</label>
+                  <StaffAssigneeSelect
+                    id="plan-item-owner"
+                    value={form.owner}
+                    onChange={(owner) => set("owner", owner)}
+                    disabled={!canGovern}
+                    hint={
+                      canGovern
+                        ? "Grouped by department — type to jump to a name."
+                        : "Only the CEO and the Strategy and Planning Officer can change ownership."
+                    }
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label small fw-semibold">Title</label>
@@ -166,7 +181,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
                       <option value="">Not aligned</option>
                       {linkable.map((linked) => (
                         <option key={linked.id} value={linked.id}>
-                          {linked.code ? `${linked.code} Â· ` : ""}{linked.title} ({linked.kind})
+                          {linked.code ? `${linked.code} · ` : ""}{linked.title} ({linked.kind})
                         </option>
                       ))}
                     </select>
@@ -275,7 +290,7 @@ export default function PlanItemModal({ plan, item, parentId, defaultKind, onClo
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>Cancel</button>
-              <button type="submit" className="btn-brand btn-sm" disabled={saving}>{saving ? "Savingâ€¦" : "Save item"}</button>
+              <button type="submit" className="btn-brand btn-sm" disabled={saving}>{saving ? "Saving…" : "Save item"}</button>
             </div>
           </form>
         </div>

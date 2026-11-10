@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Briefcase, TrendingUp, AlertTriangle } from "lucide-react";
 import PmsTabs from "../components/PmsTabs";
+import AutoFitNumber from "../components/AutoFitNumber";
 
 export default function Portfolios() {
   const [data, setData] = useState(null);
@@ -29,19 +30,19 @@ export default function Portfolios() {
         <div className="col-md-4">
           <div className="card border-0 shadow-sm p-3" style={{ borderLeft: "4px solid var(--brand-primary)" }}>
             <span className="text-muted small fw-bold">Total Portfolio Budget</span>
-            <h3 className="fw-bold mb-0">{data.summary.totalBudget.toLocaleString()} ETB</h3>
+            <AutoFitNumber as="h3" className="fw-bold mb-0" maxRem={1.75} minRem={0.8}>{data.summary.totalBudget.toLocaleString()} ETB</AutoFitNumber>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card border-0 shadow-sm p-3" style={{ borderLeft: "4px solid #e74c3c" }}>
             <span className="text-muted small fw-bold">Total Spent</span>
-            <h3 className="fw-bold mb-0 text-danger">{data.summary.totalSpent.toLocaleString()} ETB</h3>
+            <AutoFitNumber as="h3" className="fw-bold mb-0 text-danger" maxRem={1.75} minRem={0.8}>{data.summary.totalSpent.toLocaleString()} ETB</AutoFitNumber>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card border-0 shadow-sm p-3" style={{ borderLeft: "4px solid #f39c12" }}>
             <span className="text-muted small fw-bold">Average Progress</span>
-            <h3 className="fw-bold mb-0">{data.summary.avgProgress}%</h3>
+            <AutoFitNumber as="h3" className="fw-bold mb-0" maxRem={1.75} minRem={0.8}>{data.summary.avgProgress}%</AutoFitNumber>
           </div>
         </div>
       </div>

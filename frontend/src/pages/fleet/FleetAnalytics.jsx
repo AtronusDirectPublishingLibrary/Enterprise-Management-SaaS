@@ -7,6 +7,7 @@ import {
   MapPin, Users, AlertCircle,
 } from "lucide-react";
 import { Doughnut, Bar, Line } from "react-chartjs-2";
+import AutoFitNumber from "../../components/AutoFitNumber";
 import {
   Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement,
   LineElement, PointElement, Tooltip, Legend, Title,
@@ -197,9 +198,9 @@ export default function FleetAnalytics() {
                 <span className="text-uppercase small fw-bold text-muted">Ride Spend</span>
                 <DollarSign size={20} style={{ color: GOLD }} />
               </div>
-              <h2 className="display-6 fw-bold mb-0">
+              <AutoFitNumber as="h2" className="display-6 fw-bold mb-0" maxRem={2.5} minRem={1.2}>
                 {stats.rideSpend.total.toLocaleString()}
-              </h2>
+              </AutoFitNumber>
               <div className="small text-muted">{stats.rideSpend.currency}</div>
             </div>
           </div>

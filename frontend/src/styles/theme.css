@@ -274,7 +274,7 @@ body {
 
 .subactivity { padding-left: 2rem; position: relative; }
 .subactivity::before {
-  content: "Ã¢â€ Â³";
+  content: "↳";
   position: absolute;
   left: 1rem;
   color: var(--brand-secondary);
@@ -745,7 +745,7 @@ body {
 }
 
 /* ============================================================
-   NAVY BRAND Ã¢â‚¬â€ BARS + TEXT-INPUT FOCUS ONLY (Option 1)
+   NAVY BRAND — BARS + TEXT-INPUT FOCUS ONLY (Option 1)
    Added: 2026-11-06 14:32:57 by apply-navy.ps1
    Rollback: delete this block, or run rollback-navy.ps1.
    ============================================================ */
@@ -768,7 +768,7 @@ textarea.form-control:focus {
 .progress-bar.bg-success { background-color: #0B2545 !important; }
 
 /* ============================================================
-   FULL REBRAND â€” kill remaining brand greens
+   FULL REBRAND — kill remaining brand greens
    Added: 2026-11-06 14:47:32 by rebrand-to-navy.ps1
    Semantic greens (status badges, success alerts) preserved.
    ============================================================ */

@@ -32,7 +32,9 @@ import {
 } from "lucide-react";
 import { api, API_BASE } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { canGovernPlans } from "../lib/access";
 import PlanItemModal from "./PlanItemModal";
+import StaffAssigneeSelect from "./StaffAssigneeSelect";
 
 const TABS = [
   { id: "structure", label: "Structure", icon: ListTree },
@@ -69,6 +71,7 @@ export default function PlanEditor({ planId, onBack }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const canGovern = canGovernPlans(user);
   const [plan, setPlan] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,11 +211,11 @@ export default function PlanEditor({ planId, onBack }) {
             {plan.parent && (
               <span className="badge bg-light text-muted border">
                 <Link2 size={11} className="me-1" />
-                {plan.parent.periodLabel} Â· {plan.parent.title}
+                {plan.parent.periodLabel} · {plan.parent.title}
               </span>
             )}
             <span className="text-muted">
-              {new Date(plan.startDate).toLocaleDateString()} â€“ {new Date(plan.endDate).toLocaleDateString()}
+              {new Date(plan.startDate).toLocaleDateString()} – {new Date(plan.endDate).toLocaleDateString()}
             </span>
           </div>
         </div>
@@ -261,7 +264,7 @@ export default function PlanEditor({ planId, onBack }) {
         {plan.approvedBy && (
           <span className="align-self-center small text-muted">
             Approved by {plan.approvedBy} on {new Date(plan.approvedAt).toLocaleDateString()}
-            {plan.publishedAt ? ` Â· published ${new Date(plan.publishedAt).toLocaleDateString()}` : ""}
+            {plan.publishedAt ? ` · published ${new Date(plan.publishedAt).toLocaleDateString()}` : ""}
           </span>
         )}
       </div>
@@ -372,9 +375,9 @@ export default function PlanEditor({ planId, onBack }) {
                             <div className="fw-semibold small">{item.title}</div>
                             {item.owner && <div className="text-muted" style={{ fontSize: 11 }}>Owner: {item.owner}</div>}
                           </td>
-                          <td className="small text-muted">{item.unit || "â€”"}</td>
-                          <td className="text-end small">{item.targetValue ?? "â€”"}</td>
-                          <td className="text-end small">{item.currentValue ?? "â€”"}</td>
+                          <td className="small text-muted">{item.unit || "—"}</td>
+                          <td className="text-end small">{item.targetValue ?? "—"}</td>
+                          <td className="text-end small">{item.currentValue ?? "—"}</td>
                           <td>
                             <div className="d-flex align-items-center gap-2">
                               <div className="progress flex-grow-1" style={{ height: 6 }}>
@@ -384,7 +387,7 @@ export default function PlanEditor({ planId, onBack }) {
                             </div>
                           </td>
                           <td className="small text-muted">
-                            {latest ? `${latest.periodLabel}: ${latest.actual ?? "â€”"} / ${latest.target ?? "â€”"}` : "â€”"}
+                            {latest ? `${latest.periodLabel}: ${latest.actual ?? "—"} / ${latest.target ?? "—"}` : "—"}
                           </td>
                           <td>
                             <input
@@ -416,7 +419,7 @@ export default function PlanEditor({ planId, onBack }) {
 
       {tab === "actuals" && <ActualsTab plan={plan} onChanged={load} />}
 
-      {tab === "reports" && <ReportsTab plan={plan} onChanged={load} />}
+      {tab === "reports" && <ReportsTab plan={plan} onChanged={load} canGovern={canGovern} />}
 
       {tab === "alerts" && (
         <div className="card border-0 shadow-sm">
@@ -427,12 +430,12 @@ export default function PlanEditor({ planId, onBack }) {
                 <div className="small text-muted">
                   KPI pace, missed targets, overdue milestones and reporting deadlines.
                   {!plan.mailConfigured && (
-                    <span className="text-warning ms-1"><Mail size={12} className="me-1" />Email is not configured â€” alerts are stored in-app.</span>
+                    <span className="text-warning ms-1"><Mail size={12} className="me-1" />Email is not configured — alerts are stored in-app.</span>
                   )}
                 </div>
               </div>
               <button className="btn-brand btn-sm d-flex align-items-center" onClick={runAlerts} disabled={running}>
-                <Play size={13} className="me-1" /> {running ? "Checkingâ€¦" : "Run check now"}
+                <Play size={13} className="me-1" /> {running ? "Checking…" : "Run check now"}
               </button>
             </div>
 
@@ -479,7 +482,7 @@ export default function PlanEditor({ planId, onBack }) {
                             <div className="fw-semibold small">{alert.title}</div>
                             <div className="text-muted" style={{ fontSize: 12 }}>{alert.message}</div>
                           </td>
-                          <td className="small text-muted">{alert.periodLabel || "â€”"}</td>
+                          <td className="small text-muted">{alert.periodLabel || "—"}</td>
                           <td className="small text-muted">{alert.rule.replace(/_/g, " ").toLowerCase()}</td>
                           <td className="small text-muted">{new Date(alert.createdAt).toLocaleDateString()}</td>
                           <td>
@@ -510,7 +513,7 @@ export default function PlanEditor({ planId, onBack }) {
 
       {tab === "history" && <HistoryTab plan={plan} onChanged={load} />}
 
-      {tab === "settings" && <SettingsTab plan={plan} onChanged={load} onBack={onBack} />}
+      {tab === "settings" && <SettingsTab plan={plan} onChanged={load} onBack={onBack} canGovern={canGovern} />}
 
       {modal && (
         <PlanItemModal
@@ -653,7 +656,7 @@ function ActualsTab({ plan, onChanged }) {
               ))}
             </select>
             <button className="btn-brand btn-sm" onClick={save} disabled={saving || !kpis.length}>
-              {saving ? "Savingâ€¦" : "Save all actuals"}
+              {saving ? "Saving…" : "Save all actuals"}
             </button>
           </div>
         </div>
@@ -681,8 +684,8 @@ function ActualsTab({ plan, onChanged }) {
                   return (
                     <tr key={kpi.id}>
                       <td className="small fw-semibold">{kpi.title}</td>
-                      <td className="small text-muted">{kpi.unit || "â€”"}</td>
-                      <td className="text-end small">{target ?? "â€”"}</td>
+                      <td className="small text-muted">{kpi.unit || "—"}</td>
+                      <td className="text-end small">{target ?? "—"}</td>
                       <td>
                         <input
                           type="number"
@@ -693,7 +696,7 @@ function ActualsTab({ plan, onChanged }) {
                         />
                       </td>
                       <td className="text-end small">
-                        {achieved == null ? "â€”" : (
+                        {achieved == null ? "—" : (
                           <span className={achieved >= 80 ? "text-success" : achieved >= 40 ? "text-warning" : "text-danger"}>
                             {achieved}%
                           </span>
@@ -783,7 +786,7 @@ function HistoryTab({ plan, onChanged }) {
                       <tr key={revision.id}>
                         <td className="fw-semibold small">r{revision.revision}</td>
                         <td className="small">{revision.status}</td>
-                        <td className="small text-muted">{revision.note || "â€”"}</td>
+                        <td className="small text-muted">{revision.note || "—"}</td>
                         <td className="small">{revision.createdBy}</td>
                         <td className="small text-muted">{new Date(revision.createdAt).toLocaleString()}</td>
                         <td className="text-end">
@@ -806,10 +809,10 @@ function HistoryTab({ plan, onChanged }) {
           <div className="card-body">
             <h6 className="fw-bold mb-2">Workflow</h6>
             <div className="small mb-1">Status: <strong>{plan.status}</strong></div>
-            <div className="small text-muted mb-1">Submitted by: {plan.reviewedBy || "â€”"}</div>
-            <div className="small text-muted mb-1">Approved by: {plan.approvedBy || "â€”"}</div>
+            <div className="small text-muted mb-1">Submitted by: {plan.reviewedBy || "—"}</div>
+            <div className="small text-muted mb-1">Approved by: {plan.approvedBy || "—"}</div>
             <div className="small text-muted mb-3">
-              Published: {plan.publishedAt ? new Date(plan.publishedAt).toLocaleString() : "â€”"}
+              Published: {plan.publishedAt ? new Date(plan.publishedAt).toLocaleString() : "—"}
             </div>
             <label className="form-label small fw-semibold">Snapshot note</label>
             <input
@@ -957,7 +960,7 @@ function ShareTab({ plan }) {
                     {!share.isActive && <span className="badge bg-secondary ms-2">Revoked</span>}
                   </div>
                   <div className="small text-muted">
-                    {share._count?.comments ?? 0} comments Â· {share.viewCount} views
+                    {share._count?.comments ?? 0} comments · {share.viewCount} views
                   </div>
                 </div>
                 <div className="input-group input-group-sm mb-1">
@@ -978,8 +981,8 @@ function ShareTab({ plan }) {
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="text-muted" style={{ fontSize: 11 }}>
                     Created {new Date(share.createdAt).toLocaleDateString()}
-                    {share.expiresAt ? ` Â· expires ${new Date(share.expiresAt).toLocaleDateString()}` : ""}
-                    {share.lastViewedAt ? ` Â· last viewed ${new Date(share.lastViewedAt).toLocaleDateString()}` : ""}
+                    {share.expiresAt ? ` · expires ${new Date(share.expiresAt).toLocaleDateString()}` : ""}
+                    {share.lastViewedAt ? ` · last viewed ${new Date(share.lastViewedAt).toLocaleDateString()}` : ""}
                   </span>
                   <span className="d-flex gap-1">
                     <button className="btn btn-sm btn-outline-secondary py-0" onClick={() => toggle(share)}>
@@ -1016,7 +1019,7 @@ function ShareTab({ plan }) {
                     <div className="d-flex justify-content-between align-items-center">
                       <div className="small fw-semibold">
                         {comment.authorName}
-                        {comment.authorEmail && <span className="text-muted fw-normal"> Â· {comment.authorEmail}</span>}
+                        {comment.authorEmail && <span className="text-muted fw-normal"> · {comment.authorEmail}</span>}
                       </div>
                       <span className="text-muted" style={{ fontSize: 11 }}>{new Date(comment.createdAt).toLocaleString()}</span>
                     </div>
@@ -1040,7 +1043,7 @@ function ShareTab({ plan }) {
   );
 }
 
-function ReportsTab({ plan, onChanged }) {
+function ReportsTab({ plan, onChanged, canGovern }) {
   const [frequency, setFrequency] = useState("QUARTERLY");
   const [dueDays, setDueDays] = useState(15);
   const [busy, setBusy] = useState(false);
@@ -1110,29 +1113,36 @@ function ReportsTab({ plan, onChanged }) {
               Every deadline triggers reminders {openDeadlineWindow()} before it falls due and escalates once missed.
               {overdue > 0 && <span className="text-danger fw-semibold"> {overdue} overdue.</span>}
             </div>
+            {!canGovern && (
+              <div className="small text-muted mt-1">
+                Only the CEO and the Strategy and Planning Officer can change deadlines. You can still update a report’s status.
+              </div>
+            )}
           </div>
-          <div className="d-flex gap-2 align-items-center flex-wrap">
-            <select className="form-select form-select-sm" style={{ width: 130 }} value={frequency} onChange={(e) => setFrequency(e.target.value)}>
-              <option value="MONTHLY">Monthly</option>
-              <option value="QUARTERLY">Quarterly</option>
-              <option value="SEMI_ANNUAL">Semi-annual</option>
-              <option value="ANNUAL">Annual</option>
-            </select>
-            <div className="input-group input-group-sm" style={{ width: 150 }}>
-              <span className="input-group-text">due +</span>
-              <input type="number" min="0" max="90" className="form-control" value={dueDays} onChange={(e) => setDueDays(e.target.value)} />
-              <span className="input-group-text">days</span>
+          {canGovern ? (
+            <div className="d-flex gap-2 align-items-center flex-wrap">
+              <select className="form-select form-select-sm" style={{ width: 130 }} value={frequency} onChange={(e) => setFrequency(e.target.value)}>
+                <option value="MONTHLY">Monthly</option>
+                <option value="QUARTERLY">Quarterly</option>
+                <option value="SEMI_ANNUAL">Semi-annual</option>
+                <option value="ANNUAL">Annual</option>
+              </select>
+              <div className="input-group input-group-sm" style={{ width: 150 }}>
+                <span className="input-group-text">due +</span>
+                <input type="number" min="0" max="90" className="form-control" value={dueDays} onChange={(e) => setDueDays(e.target.value)} />
+                <span className="input-group-text">days</span>
+              </div>
+              <button className="btn btn-sm btn-outline-secondary" onClick={generate} disabled={busy}>
+                <Sparkles size={13} className="me-1" />{busy ? "Generating…" : "Generate schedule"}
+              </button>
+              <button className="btn-brand btn-sm" onClick={() => setAdding(!adding)}>
+                <Plus size={13} className="me-1" /> Add
+              </button>
             </div>
-            <button className="btn btn-sm btn-outline-secondary" onClick={generate} disabled={busy}>
-              <Sparkles size={13} className="me-1" />{busy ? "Generatingâ€¦" : "Generate schedule"}
-            </button>
-            <button className="btn-brand btn-sm" onClick={() => setAdding(!adding)}>
-              <Plus size={13} className="me-1" /> Add
-            </button>
-          </div>
+          ) : null}
         </div>
 
-        {adding && (
+        {adding && canGovern && (
           <form className="row g-2 align-items-end bg-light p-2 rounded mb-3" onSubmit={add}>
             <div className="col-md-4">
               <label className="form-label small mb-0">Title</label>
@@ -1186,17 +1196,21 @@ function ReportsTab({ plan, onChanged }) {
                       <td className="small">{report.title}</td>
                       <td className="small text-muted">{report.type.replace("_", " ").toLowerCase()}</td>
                       <td>
-                        <input
-                          type="date"
-                          className="form-control form-control-sm"
-                          style={{ width: 145 }}
-                          defaultValue={new Date(report.dueDate).toISOString().slice(0, 10)}
-                          onBlur={(e) => {
-                            if (e.target.value && e.target.value !== new Date(report.dueDate).toISOString().slice(0, 10)) {
-                              update(report, { dueDate: e.target.value });
-                            }
-                          }}
-                        />
+                        {canGovern ? (
+                          <input
+                            type="date"
+                            className="form-control form-control-sm"
+                            style={{ width: 145 }}
+                            defaultValue={new Date(report.dueDate).toISOString().slice(0, 10)}
+                            onBlur={(e) => {
+                              if (e.target.value && e.target.value !== new Date(report.dueDate).toISOString().slice(0, 10)) {
+                                update(report, { dueDate: e.target.value });
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span className="small text-muted">{new Date(report.dueDate).toLocaleDateString()}</span>
+                        )}
                       </td>
                       <td>
                         <select
@@ -1212,9 +1226,11 @@ function ReportsTab({ plan, onChanged }) {
                         </select>
                       </td>
                       <td className="text-end">
-                        <button className="btn btn-sm btn-outline-danger py-0" onClick={() => remove(report)}>
-                          <Trash2 size={12} />
-                        </button>
+                        {canGovern && (
+                          <button className="btn btn-sm btn-outline-danger py-0" onClick={() => remove(report)}>
+                            <Trash2 size={12} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1232,7 +1248,7 @@ function openDeadlineWindow() {
   return "the configured lead time";
 }
 
-function SettingsTab({ plan, onChanged, onBack }) {
+function SettingsTab({ plan, onChanged, onBack, canGovern }) {
   const [form, setForm] = useState({
     title: plan.title,
     periodLabel: plan.periodLabel,
@@ -1254,9 +1270,10 @@ function SettingsTab({ plan, onChanged, onBack }) {
     event.preventDefault();
     setSaving(true);
     try {
+      const { owner, ...metadata } = form;
       await api.put(`/plans/${plan.id}`, {
-        ...form,
-        owner: form.owner || null,
+        ...metadata,
+        ...(canGovern ? { owner: owner || null } : {}),
         summary: form.summary || null,
         vision: form.vision || null,
         mission: form.mission || null,
@@ -1371,8 +1388,18 @@ function SettingsTab({ plan, onChanged, onBack }) {
                 </select>
               </div>
               <div className="col-md-6">
-                <label className="form-label small fw-semibold">Owner</label>
-                <input className="form-control form-control-sm" value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} />
+                <label className="form-label small fw-semibold" htmlFor="plan-owner">Owner</label>
+                <StaffAssigneeSelect
+                  id="plan-owner"
+                  value={form.owner}
+                  onChange={(owner) => setForm({ ...form, owner })}
+                  disabled={!canGovern}
+                  hint={
+                    canGovern
+                      ? "The plan owner can be assigned to any available staff member."
+                      : "Only the CEO and the Strategy and Planning Officer can change plan ownership."
+                  }
+                />
               </div>
               <div className="col-md-6 d-flex align-items-end">
                 <div className="form-check">
@@ -1393,7 +1420,7 @@ function SettingsTab({ plan, onChanged, onBack }) {
                 <textarea className="form-control form-control-sm" rows={2} value={form.mission} onChange={(e) => setForm({ ...form, mission: e.target.value })} />
               </div>
               <div className="col-12 text-end">
-                <button className="btn-brand btn-sm" disabled={saving}>{saving ? "Savingâ€¦" : "Save changes"}</button>
+                <button className="btn-brand btn-sm" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button>
               </div>
             </form>
           </div>
@@ -1411,7 +1438,7 @@ function SettingsTab({ plan, onChanged, onBack }) {
             <select className="form-select form-select-sm mb-3" value={plan.parent?.id || ""} onChange={(e) => changeParent(e.target.value)}>
               <option value="">Not linked</option>
               {(plan.linkablePlans || []).map((parent) => (
-                <option key={parent.id} value={parent.id}>{parent.periodLabel} Â· {parent.title}</option>
+                <option key={parent.id} value={parent.id}>{parent.periodLabel} · {parent.title}</option>
               ))}
             </select>
 
@@ -1420,9 +1447,9 @@ function SettingsTab({ plan, onChanged, onBack }) {
                 <label className="form-label small fw-semibold">Link a child plan</label>
                 <div className="input-group input-group-sm mb-3">
                   <select className="form-select" value={childToAdopt} onChange={(e) => setChildToAdopt(e.target.value)}>
-                    <option value="">Select planâ€¦</option>
+                    <option value="">Select plan…</option>
                     {(plan.adoptablePlans || []).map((child) => (
-                      <option key={child.id} value={child.id}>{child.periodLabel} Â· {child.title}</option>
+                      <option key={child.id} value={child.id}>{child.periodLabel} · {child.title}</option>
                     ))}
                   </select>
                   <button className="btn btn-outline-secondary" onClick={adopt} disabled={!childToAdopt}>Link</button>
@@ -1435,7 +1462,7 @@ function SettingsTab({ plan, onChanged, onBack }) {
                 <div className="small fw-semibold mb-1">Linked child plans</div>
                 {plan.children.map((child) => (
                   <div key={child.id} className="d-flex justify-content-between align-items-center small border-bottom py-1">
-                    <span className="text-truncate me-2">{child.periodLabel} Â· {child.title}</span>
+                    <span className="text-truncate me-2">{child.periodLabel} · {child.title}</span>
                     <div className="d-flex align-items-center gap-2">
                       <span className="badge bg-light text-dark border">
                         {percent(plan.childPlanProgress?.find((entry) => entry.id === child.id)?.completion)}%

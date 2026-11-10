@@ -6,6 +6,7 @@ import { Trash2, FileText, Mail, RefreshCw, Send, PlusCircle, Wallet, Upload, Do
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../lib/auth";
 import { canApprovePayroll, canManagePayroll } from "../lib/access";
+import AutoFitNumber from "../components/AutoFitNumber";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -246,23 +247,23 @@ export default function Payroll() {
         <div className="payroll-kpis payroll-kpis--personal">
           <div className="payroll-kpi">
             <div className="label">Latest gross</div>
-            <div className="value">ETB {fmt(latestSlip.gross)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(latestSlip.gross)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi">
             <div className="label">Other earnings</div>
-            <div className="value">ETB {fmt(latestSlip.otherEarnings)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(latestSlip.otherEarnings)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi">
             <div className="label">Pension</div>
-            <div className="value">ETB {fmt(latestSlip.pension)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(latestSlip.pension)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi">
             <div className="label">PAYE (income tax)</div>
-            <div className="value">ETB {fmt(latestSlip.tax)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(latestSlip.tax)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi payroll-kpi--net">
             <div className="label">Latest net pay</div>
-            <div className="value">ETB {fmt(latestSlip.net)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(latestSlip.net)}</AutoFitNumber>
           </div>
         </div>
       )}
@@ -275,19 +276,19 @@ export default function Payroll() {
           </div>
           <div className="payroll-kpi">
             <div className="label">Gross payroll</div>
-            <div className="value">ETB {fmt(totals.gross)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(totals.gross)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi">
             <div className="label">Pension</div>
-            <div className="value">ETB {fmt(totals.pension)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(totals.pension)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi">
             <div className="label">PAYE (income tax)</div>
-            <div className="value">ETB {fmt(totals.tax)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(totals.tax)}</AutoFitNumber>
           </div>
           <div className="payroll-kpi payroll-kpi--net">
             <div className="label">Net payable</div>
-            <div className="value">ETB {fmt(totals.net)}</div>
+            <AutoFitNumber className="value" maxRem={1.08} minRem={0.7}>ETB {fmt(totals.net)}</AutoFitNumber>
           </div>
         </div>
       )}

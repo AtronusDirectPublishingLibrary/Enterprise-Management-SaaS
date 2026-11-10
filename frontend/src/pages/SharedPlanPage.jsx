@@ -172,11 +172,11 @@ export default function SharedPlanPage() {
                               <td className="small">
                                 <div className="fw-semibold">{kpi.title}</div>
                                 <div className="text-muted" style={{ fontSize: 11 }}>
-                                  {latest ? `${latest.periodLabel}${kpi.unit ? ` Ã‚Â· ${kpi.unit}` : ""}` : kpi.unit || ""}
+                                  {latest ? `${latest.periodLabel}${kpi.unit ? ` · ${kpi.unit}` : ""}` : kpi.unit || ""}
                                 </div>
                               </td>
-                              <td className="text-end small">{latest?.target ?? kpi.targetValue ?? "Ã¢â‚¬â€"}</td>
-                              <td className="text-end small">{latest?.actual ?? kpi.currentValue ?? "Ã¢â‚¬â€"}</td>
+                              <td className="text-end small">{latest?.target ?? kpi.targetValue ?? "—"}</td>
+                              <td className="text-end small">{latest?.actual ?? kpi.currentValue ?? "—"}</td>
                               <td>
                                 <div className="d-flex align-items-center gap-2">
                                   <div className="progress flex-grow-1" style={{ height: 6 }}>
@@ -208,7 +208,7 @@ export default function SharedPlanPage() {
                   <div className="text-center py-3">
                     <CheckCircle2 size={34} className="text-success mb-2" />
                     <div className="fw-semibold">Comment sent</div>
-                    <div className="small text-muted mb-3">Thank you Ã¢â‚¬â€ the plan owner has been notified.</div>
+                    <div className="small text-muted mb-3">Thank you — the plan owner has been notified.</div>
                     <button className="btn btn-sm btn-outline-secondary" onClick={() => setSent(false)}>
                       Write another comment
                     </button>
@@ -249,7 +249,7 @@ export default function SharedPlanPage() {
                     </div>
                     {formError && <div className="alert alert-danger py-1 small mb-2">{formError}</div>}
                     <button className="btn-brand btn-sm w-100" disabled={sending}>
-                      {sending ? "SendingÃ¢â‚¬Â¦" : "Send comment"} <ArrowRight size={14} className="ms-1" />
+                      {sending ? "Sending…" : "Send comment"} <ArrowRight size={14} className="ms-1" />
                     </button>
                   </form>
                 )}

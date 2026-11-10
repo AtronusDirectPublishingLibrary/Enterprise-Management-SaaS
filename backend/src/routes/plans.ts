@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { canGovernPlans } from "../lib/access";
 import {
   DEFAULT_PLAN_ALERT_SETTINGS,
   getPlanAlertSettings,
@@ -38,13 +39,14 @@ const REPORT_STATUSES = ["Pending", "Submitted", "Approved", "Waived"] as const;
 const planTypeSchema = z.enum(PLAN_TYPES);
 const itemKindSchema = z.enum(ITEM_KINDS);
 
-const canWriteRole = requireRole("admin", "project_manager");
+const canWriteRole = requireRole("admin", "executive", "project_manager");
 const csvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 /**
- * Row-level plan permission: administrators may edit any plan, while project
- * managers may only change plans they created or own. Routes that address a
- * child record (item, report, import batch) are resolved back to their plan.
+ * Row-level plan permission: the CEO, the Strategy and Planning Officer and
+ * administrators may edit any plan, while project managers may only change
+ * plans they created or own. Routes that address a child record (item,
+ * report, import batch) are resolved back to their plan.
  */
 async function planIdForRequest(req: any): Promise<string | null> {
   if (req.params.planId) return String(req.params.planId);
@@ -74,7 +76,9 @@ async function planIdForRequest(req: any): Promise<string | null> {
 
 async function assertPlanWrite(req: any, res: any, next: any) {
   try {
-    if (req.user!.role === "admin") return next();
+    // The CEO and the Strategy and Planning Officer hold cross-plan authority.
+    // Project managers keep their existing PMS rights and their own-plan edits.
+    if (canGovernPlans(req.user)) return next();
     const planId = await planIdForRequest(req);
     if (!planId) return next();
     const plan = await prisma.plan.findUnique({
@@ -161,6 +165,19 @@ function notFound(message: string) {
   const error = new Error(message) as Error & { status?: number };
   error.status = 404;
   return error;
+}
+
+/**
+ * Ownership and reporting-deadline changes are reserved for the CEO and the
+ * Strategy and Planning Officer, with the technical admin as emergency
+ * override. Other plan writers can still edit plan content.
+ */
+function denyPlanGovernance(req: any, res: any, action: string) {
+  if (canGovernPlans(req.user)) return false;
+  res.status(403).json({
+    message: `Only the Chief Executive Officer and the Strategy and Planning Officer can ${action}.`,
+  });
+  return true;
 }
 
 function parsePeriodYear(label: string): number | null {
@@ -458,6 +475,45 @@ router.get("/shared/:token/calendar.ics", async (req, res, next) => {
 
 // Everything below requires a session.
 router.use(requireAuth);
+
+// ─── Staff directory for ownership pickers ────────────────────────────────────
+// Plan editors need to assign owners without holding HR-module permissions.
+// Only the display fields used by the picker are returned.
+router.get("/assignable-staff", async (_req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        username: true,
+        firstName: true,
+        lastName: true,
+        department: true,
+        position: true,
+        jobTitle: true,
+        role: true,
+        avatarUrl: true,
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { username: "asc" }],
+    });
+
+    res.json(
+      users.map((user) => {
+        const name = [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.username;
+        return {
+          username: user.username,
+          name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          department: user.department,
+          position: user.position || user.jobTitle || null,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+        };
+      })
+    );
+  } catch (e) {
+    next(e);
+  }
+});
 
 // ─── Alert settings (admin-editable, no code changes) ─────────────────────────
 
@@ -926,6 +982,8 @@ router.post("/", canWrite, async (req, res, next) => {
       })
       .parse(req.body);
 
+    if (body.owner && denyPlanGovernance(req, res, "assign a plan owner")) return;
+
     if (body.endDate <= body.startDate) throw badRequest("End date must be after the start date");
 
     if (body.parentPlanId) {
@@ -976,6 +1034,8 @@ router.post("/from-template", canWrite, async (req, res, next) => {
         isPublished: z.boolean().default(false),
       })
       .parse(req.body);
+
+    if (body.owner && denyPlanGovernance(req, res, "assign a plan owner")) return;
 
     const fy = fiscalYear(body.fyStartYear);
     const periodLabel = `${fy.label} EFY`;
@@ -1103,6 +1163,12 @@ router.put("/:planId", canWrite, async (req, res, next) => {
 
     const plan = await prisma.plan.findUnique({ where: { id: req.params.planId } });
     if (!plan) throw notFound("Plan not found");
+
+    if (
+      body.owner !== undefined &&
+      (body.owner ?? null) !== (plan.owner ?? null) &&
+      denyPlanGovernance(req, res, "change a plan owner")
+    ) return;
 
     if (body.parentPlanId) {
       if (body.parentPlanId === plan.id) throw badRequest("A plan cannot be its own parent");
@@ -1239,6 +1305,8 @@ router.post("/:planId/duplicate", canWrite, async (req, res, next) => {
       });
     }
 
+    const copyOwners = canGovernPlans(req.user);
+
     const plan = await prisma.plan.create({
       data: {
         type: source.type,
@@ -1250,7 +1318,7 @@ router.post("/:planId/duplicate", canWrite, async (req, res, next) => {
         summary: source.summary,
         vision: source.vision,
         mission: source.mission,
-        owner: source.owner,
+        owner: copyOwners ? source.owner : null,
         parentPlanId: body.parentPlanId ?? null,
         isPublished: body.isPublished,
         createdBy: req.user!.username,
@@ -1279,7 +1347,7 @@ router.post("/:planId/duplicate", canWrite, async (req, res, next) => {
             code: item.code,
             title: item.title,
             description: item.description,
-            owner: item.owner,
+            owner: copyOwners ? item.owner : null,
             sortOrder: order,
             unit: item.unit,
             baseline: item.baseline,
@@ -1623,6 +1691,7 @@ router.post("/:planId/import", canWrite, csvUpload.single("file"), async (req, r
     }
     if (!rows.length) return res.status(400).json({ message: "The CSV has no plan-item rows." });
 
+    const canAssignOwners = canGovernPlans(req.user);
     const existingItems = await prisma.planItem.findMany({ where: { planId: plan.id } });
     const existingById = new Map(existingItems.map((item) => [item.id, item]));
     const byCode = new Map<string, string>();
@@ -1683,7 +1752,7 @@ router.post("/:planId/import", canWrite, csvUpload.single("file"), async (req, r
         if (value != null && !Number.isNaN(value)) optional[field] = value;
       };
       setText("description", "description");
-      setText("owner", "owner");
+      if (canAssignOwners) setText("owner", "owner");
       setText("status", "status");
       setText("unit", "unit");
       setText("direction", "direction");
@@ -1953,6 +2022,8 @@ router.post("/:planId/items", canWrite, async (req, res, next) => {
     const plan = await prisma.plan.findUnique({ where: { id: req.params.planId } });
     if (!plan) throw notFound("Plan not found");
 
+    if (body.owner && denyPlanGovernance(req, res, "assign a KPI, activity or milestone owner")) return;
+
     if (body.parentId) {
       const parent = await prisma.planItem.findUnique({ where: { id: body.parentId } });
       if (!parent || parent.planId !== plan.id) throw badRequest("Parent item is not part of this plan");
@@ -2013,6 +2084,12 @@ router.put("/items/:itemId", canWrite, async (req, res, next) => {
 
     const item = await prisma.planItem.findUnique({ where: { id: req.params.itemId } });
     if (!item) throw notFound("Item not found");
+
+    if (
+      body.owner !== undefined &&
+      (body.owner ?? null) !== (item.owner ?? null) &&
+      denyPlanGovernance(req, res, "change a KPI, activity or milestone owner")
+    ) return;
 
     if (body.parentId) {
       if (body.parentId === item.id) throw badRequest("An item cannot be its own parent");
@@ -2104,6 +2181,8 @@ router.post("/:planId/reports", canWrite, async (req, res, next) => {
       })
       .parse(req.body);
 
+    if (denyPlanGovernance(req, res, "create or change reporting deadlines")) return;
+
     const report = await prisma.planReport.create({
       data: { ...body, planId: req.params.planId },
     });
@@ -2124,6 +2203,8 @@ router.post("/:planId/reports/generate", canWrite, async (req, res, next) => {
         owner: z.string().optional().nullable(),
       })
       .parse(req.body);
+
+    if (denyPlanGovernance(req, res, "create or change reporting deadlines")) return;
 
     const result = await generatePlanReports(req.params.planId, {
       frequency: body.frequency,
@@ -2152,6 +2233,12 @@ router.put("/reports/:reportId", canWrite, async (req, res, next) => {
       })
       .parse(req.body);
 
+    // Report status is operational and stays with plan writers. The schedule
+    // itself — deadline, period, type, title or owner — is governance-only.
+    const governanceFields = ["title", "type", "periodLabel", "dueDate", "owner"];
+    const changesSchedule = governanceFields.some((field) => body[field as keyof typeof body] !== undefined);
+    if (changesSchedule && denyPlanGovernance(req, res, "create or change reporting deadlines")) return;
+
     const report = await prisma.planReport.update({
       where: { id: req.params.reportId },
       data: {
@@ -2171,6 +2258,7 @@ router.put("/reports/:reportId", canWrite, async (req, res, next) => {
 
 router.delete("/reports/:reportId", canWrite, async (req, res, next) => {
   try {
+    if (denyPlanGovernance(req, res, "delete reporting deadlines")) return;
     await prisma.planReport.delete({ where: { id: req.params.reportId } });
     res.json({ ok: true });
   } catch (e) {

@@ -274,7 +274,7 @@ export default function NewFleetRequest() {
           {tab === "ride" && (
             <form onSubmit={submitRide} noValidate>
               <div className="alert alert-info small">
-                <strong>Ride Service</strong> â€” used when no vehicle is available. Your supervisor approves the ride; the fleet manager assigns the provider.
+                <strong>Ride Service</strong> — used when no vehicle is available. Your supervisor approves the ride; the fleet manager assigns the provider.
               </div>
 
               <div className="row g-3">

@@ -129,6 +129,19 @@ export function isSystemAdmin(user) {
   return user.role === "admin" || (user.position || "").trim() === "Strategy and Planning Officer";
 }
 
+/**
+ * Plan ownership and reporting deadlines are reserved for the CEO and the
+ * Strategy and Planning Officer. The technical admin keeps an emergency
+ * override, matching the server-side rule.
+ */
+export const PLAN_GOVERNANCE_POSITIONS = ["Chief Executive Officer", "Strategy and Planning Officer"];
+
+export function canGovernPlans(user) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return PLAN_GOVERNANCE_POSITIONS.includes((user.position || "").trim());
+}
+
 export function canAccess(user, key) {
   if (!user) return false;
   if (!key || key === "dashboard") return true;

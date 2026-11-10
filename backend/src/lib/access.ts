@@ -56,6 +56,20 @@ const ROLE_ACCESS: Record<string, string[]> = {
 
 const ADMIN_ONLY = new Set(["users", "publicSite", "settings"]);
 
+/**
+ * Planning ownership and reporting deadlines are a two-person governance
+ * control: the CEO and the Strategy and Planning Officer. A technical system
+ * administrator keeps an emergency override so the platform cannot be locked
+ * out if either office is vacant.
+ */
+export const PLAN_GOVERNANCE_POSITIONS = ["Chief Executive Officer", "Strategy and Planning Officer"];
+
+export function canGovernPlans(user: { role?: string; position?: string | null } | undefined) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return PLAN_GOVERNANCE_POSITIONS.includes((user.position || "").trim());
+}
+
 /** The Strategy and Planning Officer holds full System Admin rights. */
 export function isAdminUser(user: { role: string; position?: string | null } | undefined) {
   if (!user) return false;

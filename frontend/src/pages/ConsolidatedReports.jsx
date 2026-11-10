@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { Helmet } from "react-helmet-async";
 import { BarChart3, Download, FileSpreadsheet, FileText, Printer, RefreshCw } from "lucide-react";
 import ReportSchedules from "../components/ReportSchedules";
+import AutoFitNumber from "../components/AutoFitNumber";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -272,11 +273,11 @@ export default function ConsolidatedReports() {
                 : "No verified progress update in this window — figures come from plan items only"}
             </div>
             <div className="report-kpis">
-              <div className="report-kpi"><span className="num">{headline.completion}%</span><span className="label">Overall delivery</span></div>
-              <div className="report-kpi"><span className="num">{headline.kpis.onTrack}/{headline.kpis.total}</span><span className="label">KPIs on track</span></div>
-              <div className="report-kpi"><span className="num">{headline.milestones.completed}/{headline.milestones.total}</span><span className="label">Milestones complete</span></div>
-              <div className="report-kpi"><span className="num">{headline.activities.total}</span><span className="label">Activities tracked</span></div>
-              <div className="report-kpi"><span className="num">ETB {Math.round(headline.budget).toLocaleString()}</span><span className="label">Budget under delivery</span></div>
+              <div className="report-kpi"><AutoFitNumber className="num">{headline.completion}%</AutoFitNumber><span className="label">Overall delivery</span></div>
+              <div className="report-kpi"><AutoFitNumber className="num">{headline.kpis.onTrack}/{headline.kpis.total}</AutoFitNumber><span className="label">KPIs on track</span></div>
+              <div className="report-kpi"><AutoFitNumber className="num">{headline.milestones.completed}/{headline.milestones.total}</AutoFitNumber><span className="label">Milestones complete</span></div>
+              <div className="report-kpi"><AutoFitNumber className="num">{headline.activities.total}</AutoFitNumber><span className="label">Activities tracked</span></div>
+              <div className="report-kpi"><AutoFitNumber className="num">ETB {Math.round(headline.budget).toLocaleString()}</AutoFitNumber><span className="label">Budget under delivery</span></div>
             </div>
           </header>
 
