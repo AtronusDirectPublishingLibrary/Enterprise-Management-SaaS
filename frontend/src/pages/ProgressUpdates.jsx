@@ -169,7 +169,7 @@ export default function ProgressUpdates() {
         <div className="d-flex justify-content-center py-5"><div className="spinner-border text-success" role="status" /></div>
       ) : (
         <div className="row g-4">
-          <div className="col-xl-7">
+          <div className="col-lg-8">
             <div className="card border-0 shadow-sm">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-3">
@@ -195,10 +195,16 @@ export default function ProgressUpdates() {
                       </div>
                       <span className="badge bg-light text-dark">{group.rows.length} items</span>
                     </div>
-                    <div className="table-responsive">
-                      <table className="table table-sm align-middle mb-0">
+                    <div className="table-responsive progress-assignments">
+                      <table className="table table-sm align-middle mb-0 progress-assignments__table">
                         <thead className="table-light">
-                          <tr><th>Item</th><th>Owner</th><th className="text-end">Progress</th><th>Latest</th><th className="text-end">Action</th></tr>
+                          <tr>
+                            <th>Item</th>
+                            <th className="progress-col-owner">Owner</th>
+                            <th className="text-end progress-col-progress">Progress</th>
+                            <th className="progress-col-latest">Latest</th>
+                            <th className="text-end progress-col-action">Action</th>
+                          </tr>
                         </thead>
                         <tbody>
                           {group.rows.map((target) => (
@@ -242,14 +248,18 @@ export default function ProgressUpdates() {
             </div>
           </div>
 
-          <div className="col-xl-5">
-            <div className="card border-0 shadow-sm">
+          <div className="col-lg-4">
+            <div className="card border-0 shadow-sm progress-recent">
               <div className="card-body">
                 <h5 className="fw-bold mb-3 d-flex align-items-center gap-2"><MessageSquare size={18} /> Recent updates</h5>
                 {updates.length === 0 ? (
-                  <div className="text-muted small py-4 text-center">No progress updates have been submitted yet.</div>
+                  <div className="progress-recent__empty">
+                    <span className="progress-recent__empty-icon"><MessageSquare size={22} /></span>
+                    <strong>No updates yet</strong>
+                    <p className="mb-0">Submitted progress notes will appear here with their verification status, ready for review.</p>
+                  </div>
                 ) : (
-                  <div className="d-flex flex-column gap-3">
+                  <div className="progress-recent__list">
                     {updates.slice(0, 25).map((update) => (
                       <div key={update.id} className="progress-update-card">
                         <div className="d-flex flex-wrap justify-content-between gap-2 mb-1">
