@@ -86,10 +86,28 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 const ALLOWED_ORIGINS = CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
+
+/**
+ * Vite moves to the next free port when 5173 is occupied (for example 5174).
+ * Those local ports are still the developer's own machine, so accept loopback
+ * origins during development only. Production continues to enforce the
+ * explicitly configured CORS_ORIGIN list.
+ */
+function isLocalDevelopmentOrigin(origin: string) {
+  if (process.env.NODE_ENV === "production") return false;
+  try {
+    const parsed = new URL(origin);
+    return ["http:", "https:"].includes(parsed.protocol) &&
+      ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 app.use(
   cors({
     origin: (origin, callback) =>
-      !origin || ALLOWED_ORIGINS.includes(origin)
+      !origin || ALLOWED_ORIGINS.includes(origin) || isLocalDevelopmentOrigin(origin)
         ? callback(null, true)
         : callback(new Error(`Origin ${origin} is not allowed by CORS`)),
     credentials: true,
