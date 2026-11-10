@@ -51,6 +51,7 @@ export const TAB_KEYS = [
   "publicSite",
   "users",
   "settings",
+  "fleet",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -81,7 +82,7 @@ export const POSITION_ACCESS = {
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -112,7 +113,7 @@ export function canApprovePayroll(user) {
 const ROLE_ACCESS = {
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -170,6 +171,7 @@ export const PATH_ACCESS = [
   { prefix: "/recruitment", key: "recruitment" },
   { prefix: "/payroll", key: "payroll" },
   { prefix: "/payslips", key: "payroll" },
+  { prefix: "/fleet", key: "fleet" },
   { prefix: "/language-settings", key: "languages" },
   { prefix: "/plan-alerts", key: "alerts" },
   { prefix: "/manage-news", key: "news" },

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function ItemForm({ title, initialData, isWp, onSave, onClose, availableActivities = [] }) {
+export default function ItemForm({ title, initialData, isWp, onSave, onClose, availableActivities = [], members = [] }) {
   const [data, setData] = useState({
     title: "", description: "", startDate: "", endDate: "", progress: 0, status: "Not Started",
     financialPlan: 0, actualExpenditure: 0, predecessorIds: []
@@ -32,6 +32,10 @@ export default function ItemForm({ title, initialData, isWp, onSave, onClose, av
     setData({ ...data, predecessorIds: options.map(o => o.value) });
   };
 
+  const assigneeValue = isWp ? data.ownerUsername || "" : data.assignedTo || "";
+  const assigneeField = isWp ? "ownerUsername" : "assignedTo";
+  const assigneeKnown = !assigneeValue || members.some((member) => member.username === assigneeValue);
+
   return (
     <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)", zIndex: 1050 }}>
       <div className="modal-dialog">
@@ -45,6 +49,10 @@ export default function ItemForm({ title, initialData, isWp, onSave, onClose, av
               <label className="form-label">Title</label>
               <input className="form-control form-control-sm" name="title" value={data.title} onChange={handleChange} />
             </div>
+            <div className="mb-2">
+              <label className="form-label">Description</label>
+              <textarea className="form-control form-control-sm" name="description" rows={2} value={data.description || ""} onChange={handleChange} placeholder="What does this deliver?" />
+            </div>
             <div className="row g-2 mb-2">
               <div className="col-6">
                 <label className="form-label">Start Date</label>
@@ -54,6 +62,31 @@ export default function ItemForm({ title, initialData, isWp, onSave, onClose, av
                 <label className="form-label">End Date</label>
                 <input type="date" className="form-control form-control-sm" name="endDate" value={data.endDate} onChange={handleChange} />
               </div>
+            </div>
+
+            <div className="mb-2 p-2 rounded border" style={{ background: "#f8fafc" }}>
+              <label className="form-label text-primary fw-semibold mb-1">
+                {isWp ? "Accountable team member" : "Assigned team member"}
+              </label>
+              {members.length ? (
+                <select className="form-select form-select-sm" name={assigneeField} value={assigneeValue} onChange={handleChange}>
+                  <option value="">Unassigned</option>
+                  {!assigneeKnown ? <option value={assigneeValue}>{assigneeValue} (not in team)</option> : null}
+                  {members.map((member) => (
+                    <option key={member.username} value={member.username}>
+                      {member.name || [member.firstName, member.lastName].filter(Boolean).join(" ") || member.username}
+                      {member.position
+                        ? ` · ${member.position}`
+                        : member.role && member.role !== "member"
+                          ? ` · ${member.roleLabel || member.role}`
+                          : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input className="form-control form-control-sm" name={assigneeField} value={assigneeValue} onChange={handleChange} placeholder="Add team members first (Team tab)" />
+              )}
+              <div className="form-text">Only project team members appear here. Add people from the Team tab.</div>
             </div>
             <div className="row g-2 mb-2">
               <div className="col-6">

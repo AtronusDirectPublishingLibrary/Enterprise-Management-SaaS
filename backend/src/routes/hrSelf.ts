@@ -9,6 +9,7 @@ import { PROFESSIONS, findProfession } from "../lib/professions";
 import { runHrReminders } from "../lib/hrReminders";
 import { cycleForDate } from "../lib/hrCycles";
 import { logAudit } from "../lib/audit";
+import { nextStaffDocumentReference } from "../lib/numbering";
 
 /**
  * Staff self-service. Every authenticated member of staff can read their own
@@ -596,7 +597,15 @@ router.patch("/profile", async (req, res, next) => {
         expiresAt: new Date(expiry),
       };
       if (existing) await prisma.staffDocument.update({ where: { id: existing.id }, data });
-      else await prisma.staffDocument.create({ data: { userId, ...data } });
+      else {
+        await prisma.staffDocument.create({
+          data: {
+            userId,
+            ...data,
+            reference: data.reference || (await nextStaffDocumentReference()),
+          },
+        });
+      }
     };
 
     if (profession.requiresLicence) {
@@ -779,7 +788,7 @@ router.post("/documents", async (req, res, next) => {
         userId: req.user!.sub,
         title: body.title,
         category: body.category || "OTHER",
-        reference: body.reference || null,
+        reference: body.reference?.trim() || (await nextStaffDocumentReference()),
         issuedAt: body.issuedAt ? new Date(body.issuedAt) : null,
         expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
         fileUrl: body.fileUrl || null,

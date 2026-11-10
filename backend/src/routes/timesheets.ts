@@ -116,7 +116,20 @@ router.get("/:id", async (req: any, res) => {
     const ts = await prisma.timesheet.findUnique({
       where: { id: req.params.id },
       include: {
-        user: { select: { firstName: true, lastName: true, username: true } },
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            username: true,
+            position: true,
+            department: true,
+            employeeNo: true,
+            signatureUrl: true,
+            initialsUrl: true,
+            initialsText: true,
+          },
+        },
+        supervisor: { select: { firstName: true, lastName: true, position: true, signatureUrl: true } },
         entries: { orderBy: { date: "asc" } },
       },
     });

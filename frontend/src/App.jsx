@@ -43,8 +43,20 @@ import Goals from "./pages/Goals";
 import Portfolios from "./pages/Portfolios";
 import Users from "./pages/Users";
 import ProgressUpdates from "./pages/ProgressUpdates";
+import TeamTasks from "./pages/TeamTasks";
 import ConsolidatedReports from "./pages/ConsolidatedReports";
 import PayslipPage from "./pages/PayslipPage";
+import FleetDashboard from "./pages/fleet/FleetDashboard";
+import FleetRequests from "./pages/fleet/FleetRequests";
+import NewFleetRequest from "./pages/fleet/NewFleetRequest";
+import FleetApprovals from "./pages/fleet/FleetApprovals";
+import FleetVehicles from "./pages/fleet/FleetVehicles";
+import FleetDrivers from "./pages/fleet/FleetDrivers";
+import RideServices from "./pages/fleet/RideServices";
+import FleetSettings from "./pages/fleet/FleetSettings";
+import FleetAnalytics from "./pages/fleet/FleetAnalytics";
+import GatePassVerifyPage from "./pages/fleet/GatePassVerifyPage";
+import GatePassPage from "./pages/fleet/GatePassPage";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const PlansPage = lazy(() => import("./pages/PlansPage"));
@@ -115,6 +127,7 @@ export default function App() {
       {/* Auth & Intake */}
       <Route path="/print-timesheet/:id" element={<PrintTimesheet />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+      <Route path="/fleet/gate-pass/:requestId/verify" element={<GatePassVerifyPage />} />
       <Route path="/request" element={<PublicForm />} />
       
       {/* Protected Application Routes */}
@@ -126,6 +139,7 @@ export default function App() {
           <Route path="/pms-dashboard" element={<Dashboard />} />
         <Route path="/my-hr" element={<MyHRPortal />} />
         <Route path="/my-approvals" element={<MyApprovals />} />
+        <Route path="/team-tasks" element={<TeamTasks />} />
           <Route path="/database/roadmap" element={<PlansPage type="ROADMAP" />} />
           <Route path="/database/strategic-plan" element={<PlansPage type="STRATEGIC" />} />
           <Route path="/database/pms/*" element={<Projects />} />
@@ -137,6 +151,16 @@ export default function App() {
         <Route path="/users" element={<RoleRoute allowedRoles={["admin"]}><Users /></RoleRoute>} />
         <Route path="/audit-log" element={<RoleRoute allowedRoles={["admin"]}><AuditLog /></RoleRoute>} />
         <Route path="/payroll" element={<Payroll />} />
+        <Route path="/fleet" element={<FleetDashboard />} />
+        <Route path="/fleet/gate-pass/:requestId" element={<GatePassPage />} />
+        <Route path="/fleet/requests" element={<FleetRequests />} />
+        <Route path="/fleet/new" element={<NewFleetRequest />} />
+        <Route path="/fleet/approvals" element={<FleetApprovals />} />
+        <Route path="/fleet/vehicles" element={<FleetVehicles />} />
+        <Route path="/fleet/drivers" element={<FleetDrivers />} />
+        <Route path="/fleet/rides" element={<RideServices />} />
+        <Route path="/fleet/settings" element={<FleetSettings />} />
+        <Route path="/fleet/analytics" element={<FleetAnalytics />} />
         <Route path="/recruitment" element={<RoleRoute allowedRoles={["admin", "executive"]}><Recruitment /></RoleRoute>} />
         <Route path="/hr-operations" element={<RoleRoute allowedRoles={["admin", "executive"]}><HrOperations /></RoleRoute>} />
         <Route path="/hr-analytics" element={<RoleRoute allowedRoles={["admin", "executive"]}><HRAnalytics /></RoleRoute>} />

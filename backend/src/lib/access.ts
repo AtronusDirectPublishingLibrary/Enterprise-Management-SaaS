@@ -6,7 +6,7 @@
 export const TAB_KEYS = [
   "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
   "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll",
-  "languages", "alerts", "news", "documents", "media", "publicSite", "users", "settings",
+  "languages", "alerts", "news", "documents", "media", "publicSite", "users", "settings", "fleet",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -34,7 +34,7 @@ export const POSITION_ACCESS: Record<string, string[]> = {
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -46,7 +46,7 @@ const ROLE_ACCESS: Record<string, string[]> = {
   admin: ["*"],
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -76,4 +76,16 @@ export function allows(user: { role: string; position?: string | null } | undefi
   if (ADMIN_ONLY.has(key)) return false;
   const fallback = ROLE_ACCESS[user.role] || ROLE_ACCESS.viewer;
   return fallback.includes("*") || fallback.includes(key);
+}
+
+/**
+ * Fleet & Transport manager identity.
+ * Per the Ethio-Biopharma org model, the Human Resource and Administration
+ * Manager is the fleet manager for both vehicles and ride services. Admins
+ * and Strategy & Planning Officers retain admin override.
+ */
+export function isFleetManager(user: { role: string; position?: string | null } | undefined) {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  return (user.position || "").trim() === "Human Resource and Administration Manager";
 }

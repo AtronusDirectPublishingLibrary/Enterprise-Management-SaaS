@@ -350,6 +350,7 @@ export default function MyHRPortal() {
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.username;
   const openTasks = tasks.filter((task) => task.status === "OPEN");
   const doneTasks = tasks.filter((task) => task.status === "DONE");
+  const assignedTasks = openTasks.filter((task) => task.assignedById);
   const sheetLocked = timesheet && (timesheet.status === "SUBMITTED" || timesheet.status === "APPROVED");
   const planLocked = plan && ["SUBMITTED", "APPROVED", "VERIFIED"].includes(plan.status);
 
@@ -497,9 +498,16 @@ export default function MyHRPortal() {
               <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">
                 <ClipboardList size={18} /> My tasks
               </h2>
-              <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setShowTaskForm((open) => !open)}>
-                <Plus size={14} /> Add
-              </button>
+              <div className="d-flex align-items-center gap-2">
+                {assignedTasks.length ? (
+                  <Link to="/team-tasks" className="badge bg-light text-dark text-decoration-none">
+                    {assignedTasks.length} from supervisor
+                  </Link>
+                ) : null}
+                <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setShowTaskForm((open) => !open)}>
+                  <Plus size={14} /> Add
+                </button>
+              </div>
             </div>
 
             {showTaskForm ? (
@@ -547,10 +555,21 @@ export default function MyHRPortal() {
                       <input className="form-check-input mt-1" type="checkbox" checked={false} onChange={() => toggleTask(task)} aria-label={`Complete ${task.title}`} />
                       <div className="flex-grow-1">
                         <div className="fw-semibold small">{task.title}</div>
+                        {task.assignedById ? (
+                          <div className="text-muted" style={{ fontSize: "0.72rem" }}>
+                            Assigned by {task.assignedByName || "your supervisor"}
+                            {task.progress ? ` · ${task.progress}% complete` : ""}
+                          </div>
+                        ) : null}
                         <div className="text-muted" style={{ fontSize: "0.74rem" }}>
                           {task.dueAt ? `${relativeDue(task.dueAt)} · ${formatDate(task.dueAt)}` : "No due date"}
                           {task.priority === "HIGH" ? <span className="text-danger fw-semibold"> · High</span> : null}
                         </div>
+                        {task.latestUpdate ? (
+                          <div className="text-muted fst-italic" style={{ fontSize: "0.72rem" }}>
+                            Latest: {task.latestUpdate}
+                          </div>
+                        ) : null}
                       </div>
                       {due !== null && due < 0 ? (
                         <span className="badge bg-danger align-self-center">Overdue</span>

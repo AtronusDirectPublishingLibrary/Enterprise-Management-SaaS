@@ -46,6 +46,50 @@ body {
   margin-bottom: 0.25rem;
 }
 
+/* Sign-in lockup: organisation, system name and the EB-EMS monogram form one
+   typographic unit rather than three competing headings. */
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  margin-top: 0.65rem;
+}
+.auth-brand__org {
+  color: var(--brand-secondary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.auth-brand__system {
+  max-width: 19ch;
+  color: var(--brand-primary);
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.62rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  text-align: center;
+}
+.auth-brand__badge {
+  margin-top: 0.35rem;
+  padding: 0.18rem 0.6rem;
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.1);
+  color: var(--brand-gold-deep, #8a6a12);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+.auth-brand__note {
+  margin: 0.55rem 0 0;
+  color: var(--brand-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
 .auth-card .subtitle {
   color: var(--brand-muted);
   margin-bottom: 1.5rem;

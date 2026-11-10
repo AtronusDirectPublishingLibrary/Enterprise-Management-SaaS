@@ -57,6 +57,9 @@ model WorkPackage {
   status        String   @default("Not Started")
   createdBy     String
   dependencies  String?
+  // Username of the project-team member accountable for delivery.
+  ownerUsername String?  @map("owner_username")
+  ownerName     String?  @map("owner_name")
 
   createdDate      DateTime  @default(now())
   lastModifiedBy   String?
@@ -208,6 +211,15 @@ model User {
   offboardingInitiated    OffboardingCase[]          @relation("OffboardingInitiator")
   offboardingManaged      OffboardingCase[]          @relation("OffboardingManager")
 
+  // Fleet & transport
+  vehicleRequestsMade          VehicleRequest[] @relation("VehicleRequester")
+  vehicleRequestsToApprove     VehicleRequest[] @relation("VehicleRequestSupervisor")
+  vehicleRequestsFleetApproved VehicleRequest[] @relation("VehicleRequestFleetApprover")
+  rideRequestsMade             RideRequest[]    @relation("RideRequester")
+  rideRequestsToApprove        RideRequest[]    @relation("RideSupervisor")
+  rideRequestsApproved         RideRequest[]    @relation("RideApprover")
+  driverProfile                Driver?          @relation("DriverUser")
+
   @@map("users")
 }
 
@@ -225,7 +237,7 @@ model AuditLog {
 model Document {
   id               String   @id @default(cuid())
   title            String
-  docNumber        String?  @map("doc_number")
+  docNumber        String?  @unique @map("doc_number")
   thematic         String
   thematicOther    String?  @map("thematic_other")
   type             String
@@ -244,6 +256,9 @@ model Document {
   uploadDate       DateTime @default(now()) @map("upload_date")
   folderPath       String?  @map("folder_path")
   projectId        String?  @map("project_id")
+  // Internal archive by default; only public documents appear on the website.
+  isPublic         Boolean  @default(false) @map("is_public")
+  publishedAt      DateTime? @map("published_at")
 
   project Project? @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
@@ -1145,9 +1160,34 @@ model StaffTask {
   link        String?
   createdAt   DateTime  @default(now()) @map("created_at")
   completedAt DateTime? @map("completed_at")
+  // Supervisor assignment and two-way progress exchange.
+  assignedById   String?   @map("assigned_by_id")
+  assignedByName String?   @map("assigned_by_name")
+  progress       Int       @default(0)
+  latestUpdate   String?   @map("latest_update")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  updates        StaffTaskUpdate[]
 
   @@index([userId, status, dueAt])
+  @@index([assignedById, status])
   @@map("staff_task")
+}
+
+// A timestamped progress note on a task, visible to the assignee and the
+// supervisor who assigned it. The task keeps the latest note for list views.
+model StaffTaskUpdate {
+  id         String   @id @default(cuid())
+  taskId     String   @map("task_id")
+  task       StaffTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId   String   @map("author_id")
+  authorName String?  @map("author_name")
+  progress   Int?
+  note       String
+  status     String? // OPEN | DONE snapshot at the time of the note
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([taskId, createdAt])
+  @@map("staff_task_update")
 }
 
 model StaffDocument {
@@ -1156,7 +1196,7 @@ model StaffDocument {
   user          User      @relation("UserStaffDocuments", fields: [userId], references: [id], onDelete: Cascade)
   title         String
   category      String    @default("OTHER") // CONTRACT | ID | LICENCE | CERTIFICATE | MEDICAL | OTHER
-  reference     String?
+  reference     String?   @unique
   issuedAt      DateTime? @map("issued_at")
   expiresAt     DateTime? @map("expires_at")
   fileUrl       String?   @map("file_url")
@@ -1167,6 +1207,20 @@ model StaffDocument {
 
   @@index([userId, expiresAt])
   @@map("staff_document")
+}
+
+// Atomic counters behind human-readable document references. A row is created
+// on first use, then incremented inside a transaction so two simultaneous
+// uploads can never receive the same number.
+model NumberSequence {
+  id        String   @id @default(cuid())
+  scope     String
+  year      Int
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([scope, year])
+  @@map("number_sequence")
 }
 
 // --- INDUCTION ---
@@ -1380,4 +1434,159 @@ model AppraisalItem {
   sortOrder    Int       @default(0) @map("sort_order")
 
   @@map("appraisal_item")
+}
+
+// ============================================================
+// FLEET & TRANSPORT
+// Vehicles, drivers, requests (2-stage approval), ride-service
+// alternative, and settings. Added for Ethio-Biopharma.
+// ============================================================
+
+model Vehicle {
+  id               String    @id @default(cuid())
+  vehicleCode      String    @unique // "V001"
+  type             String // Sedan | 4x4 | Minibus | Ambulance | Truck | Motorcycle
+  licensePlate     String    @unique
+  capacity         Int
+  assignedDriverId String?   @map("assigned_driver_id")
+  assignedDriver   Driver?   @relation("VehicleDriver", fields: [assignedDriverId], references: [id], onDelete: SetNull)
+  status           String    @default("Available") // Available | In Use | Under Maintenance | Unavailable
+  lastMaintenance  DateTime? @map("last_maintenance")
+  nextMaintenance  DateTime? @map("next_maintenance")
+  odometer         Float?
+  fuelType         String?   @map("fuel_type") // Petrol | Diesel | Electric | Hybrid
+  remarks          String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  requests VehicleRequest[]
+
+  @@index([status])
+  @@map("vehicle")
+}
+
+model Driver {
+  id            String    @id @default(cuid())
+  driverCode    String    @unique // "D001"
+  name          String
+  phone         String
+  email         String?
+  userId        String?   @unique @map("user_id") // optional link to User (hybrid Q6c)
+  user          User?     @relation("DriverUser", fields: [userId], references: [id], onDelete: SetNull)
+  status        String    @default("Available") // Available | On Leave | Suspended
+  licenseExpiry DateTime? @map("license_expiry")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  vehicles Vehicle[]        @relation("VehicleDriver")
+  requests VehicleRequest[] @relation("VehicleRequestDriver")
+
+  @@index([status])
+  @@map("driver")
+}
+
+model VehicleRequest {
+  id                   String    @id @default(cuid())
+  requestCode          String    @unique // "REQ-20261110-0001"
+  requesterId          String    @map("requester_id")
+  requester            User      @relation("VehicleRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  requestType          String    @map("request_type") // In-Town | Field
+  tripPurpose          String    @map("trip_purpose")
+  directorate          String?
+  division             String?
+  vehicleTypePreferred String?   @map("vehicle_type_preferred")
+  passengers           Int       @default(1)
+  departureDate        DateTime  @map("departure_date")
+  returnDate           DateTime  @map("return_date")
+  departureTime        String    @map("departure_time")
+  returnTime           String?   @map("return_time")
+  pickupLocation       String    @map("pickup_location")
+  destination          String
+  distance             Float?
+  odometerStart        Float?    @map("odometer_start")
+  odometerEnd          Float?    @map("odometer_end")
+  status               String    @default("PENDING")
+  // PENDING | SUPERVISOR_APPROVED | FLEET_APPROVED | ASSIGNED | IN_PROGRESS | COMPLETED | REJECTED | CANCELLED | EXPIRED
+  supervisorId         String?   @map("supervisor_id")
+  supervisor           User?     @relation("VehicleRequestSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  fleetApproverId      String?   @map("fleet_approver_id")
+  fleetApprover        User?     @relation("VehicleRequestFleetApprover", fields: [fleetApproverId], references: [id], onDelete: SetNull)
+  vehicleId            String?   @map("vehicle_id")
+  vehicle              Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driverId             String?   @map("driver_id")
+  driver               Driver?   @relation("VehicleRequestDriver", fields: [driverId], references: [id], onDelete: SetNull)
+  rejectionReason      String?   @map("rejection_reason")
+  gatePassNo           String?   @map("gate_pass_no")
+  gatePassSentAt       DateTime? @map("gate_pass_sent_at")
+  remarks              String?
+  requestedAt          DateTime  @default(now()) @map("requested_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  rideRequests RideRequest[]
+
+  @@index([status, departureDate])
+  @@index([requesterId, requestedAt])
+  @@index([supervisorId, status])
+  @@map("vehicle_request")
+}
+
+model RideProvider {
+  id           String   @id @default(cuid())
+  name         String   @unique // "Ride", "ZayRide", "Feres", etc.
+  contactName  String?  @map("contact_name")
+  contactPhone String?  @map("contact_phone")
+  contactEmail String?  @map("contact_email")
+  pricingNote  String?  @map("pricing_note")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  rideRequests RideRequest[]
+
+  @@map("ride_provider")
+}
+
+model RideRequest {
+  id                     String          @id @default(cuid())
+  requestCode            String          @unique // "RIDE-20261110-0001"
+  requesterId            String          @map("requester_id")
+  requester              User            @relation("RideRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  linkedVehicleRequestId String?         @map("linked_vehicle_request_id")
+  linkedVehicleRequest   VehicleRequest? @relation(fields: [linkedVehicleRequestId], references: [id], onDelete: SetNull)
+  tripPurpose            String          @map("trip_purpose")
+  pickupLocation         String          @map("pickup_location")
+  destination            String
+  departureDate          DateTime        @map("departure_date")
+  departureTime          String          @map("departure_time")
+  returnTime             String?         @map("return_time")
+  passengers             Int             @default(1)
+  providerId             String?         @map("provider_id")
+  provider               RideProvider?   @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  estimatedFare          Float?          @map("estimated_fare")
+  actualFare             Float?          @map("actual_fare")
+  currency               String          @default("ETB")
+  receiptUrl             String?         @map("receipt_url")
+  status                 String          @default("PENDING")
+  // PENDING | SUPERVISOR_APPROVED | FLEET_APPROVED | ASSIGNED | COMPLETED | REJECTED | CANCELLED
+  supervisorId           String?         @map("supervisor_id")
+  supervisor             User?           @relation("RideSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  approverId             String?         @map("approver_id")
+  approver               User?           @relation("RideApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  rejectionReason        String?         @map("rejection_reason")
+  remarks                String?
+  requestedAt            DateTime        @default(now()) @map("requested_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+
+  @@index([status, departureDate])
+  @@index([requesterId, requestedAt])
+  @@index([supervisorId, status])
+  @@map("ride_request")
+}
+
+model FleetSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("fleet_setting")
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../lib/auth";
 import BrandLogo from "../components/BrandLogo";
 
@@ -35,11 +36,22 @@ export default function Login() {
 
   return (
     <div className="auth-wrapper">
+      <Helmet>
+        <title>Sign in | EB-EMS</title>
+        <meta name="description" content="Sign in to the Ethio-Biopharma Enterprise Management System (EB-EMS)." />
+      </Helmet>
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="text-center mb-4">
           <BrandLogo variant="login" />
-          <h1 className="mb-0" style={{ color: "var(--brand-primary)", fontWeight: 800 }}>Ethio-Biopharma</h1>
-          <h4 className="mt-1" style={{ color: "var(--brand-secondary)", fontWeight: 600, letterSpacing: "1px" }}>Database</h4>
+          <h1
+            className="auth-brand mb-0"
+            aria-label="Ethio-Biopharma Enterprise Management System (EB-EMS)"
+          >
+            <span className="auth-brand__org">Ethio-Biopharma</span>
+            <span className="auth-brand__system">Enterprise Management System</span>
+            <span className="auth-brand__badge">EB-EMS</span>
+          </h1>
+          <p className="auth-brand__note">Integrated corporate operations platform</p>
         </div>
 
         {err && <div className="alert alert-danger py-2">{err}</div>}

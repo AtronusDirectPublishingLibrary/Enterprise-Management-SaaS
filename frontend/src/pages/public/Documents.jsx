@@ -9,7 +9,7 @@ export default function Documents() {
   const { t, tText, lang } = useLanguage();
 
   useEffect(() => {
-    api.get("/documents").then(data => setItems(data)).catch(console.error);
+    api.get("/documents/public").then(data => setItems(data)).catch(console.error);
   }, []);
 
   return (
@@ -19,13 +19,14 @@ export default function Documents() {
       
       <div className="app-table bg-white shadow-sm rounded">
         <table className="table mb-0">
-          <thead><tr><th>{tText("Title", "ርዕስ")}</th><th>{tText("Type", "ዓይነት")}</th><th>{tText("Date", "ቀን")}</th><th className="text-end">{tText("Action", "እርምጃ")}</th></tr></thead>
+          <thead><tr><th>{tText("Title", "ርዕስ")}</th><th>{tText("Reference", "መለያ ቁጥር")}</th><th>{tText("Type", "ዓይነት")}</th><th>{tText("Date", "ቀን")}</th><th className="text-end">{tText("Action", "እርምጃ")}</th></tr></thead>
           <tbody>
-            {items.length === 0 ? <tr><td colSpan={4} className="text-center py-4 text-muted">{t("documentsNoData")}</td></tr> : 
+            {items.length === 0 ? <tr><td colSpan={5} className="text-center py-4 text-muted">{t("documentsNoData")}</td></tr> :
               items.map(item => (
                 <tr key={item.id}>
                   <td>{item.title}</td>
-                  <td>{item.type}</td>
+                  <td><code className="doc-number">{item.docNumber || "—"}</code></td>
+                  <td>{item.type === "Other" ? item.typeOther || "Other" : item.type}</td>
                   <td>
                     {lang === "am"
                       ? formatEthiopianDate(item.uploadDate)

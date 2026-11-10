@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth";
 import { logAudit } from "../lib/audit";
 import { recomputeProjectProgress } from "../lib/progress";
 import { runAutomations } from "../lib/automation";
+import { sendNotification } from "../lib/notify";
 
 const router = Router();
 router.use(requireAuth);
@@ -29,6 +30,26 @@ function newActivityId(projectId: string) {
   const ts   = Date.now().toString(36).toUpperCase().slice(-4);
   const rand = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `${projectId}-A-${ts}-${rand}`;
+}
+
+async function resolveAssignee(projectId: string, username: string | undefined, addedBy: string) {
+  const handle = (username || "").trim();
+  if (!handle) return null;
+  const owner = await prisma.user.findUnique({
+    where: { username: handle },
+    select: { username: true, firstName: true, lastName: true, position: true },
+  });
+  if (!owner) {
+    const error: any = new Error(`No staff member found with username ${handle}.`);
+    error.status = 400;
+    throw error;
+  }
+  await prisma.projectMember.upsert({
+    where: { projectId_username: { projectId, username: owner.username } },
+    update: {},
+    create: { projectId, username: owner.username, role: "member", addedBy },
+  });
+  return owner;
 }
 
 async function pushDependentTasks(
@@ -75,6 +96,7 @@ router.post("/:projectId", async (req, res, next) => {
     const d = ActivityInput.parse(req.body);
     const activityId = newActivityId(req.params.projectId);
     const duration = Math.round((d.endDate.getTime() - d.startDate.getTime()) / 86_400_000);
+    const assignee = await resolveAssignee(req.params.projectId, d.assignedTo, req.user!.username);
 
     const created = await prisma.activity.create({
       data: {
@@ -90,7 +112,7 @@ router.post("/:projectId", async (req, res, next) => {
         duration,
         progress:          d.progress ?? 0,
         status:            d.status ?? "Not Started",
-        assignedTo:        d.assignedTo ?? null,
+        assignedTo:        assignee?.username ?? null,
         financialPlan:     d.financialPlan ?? 0,
         actualExpenditure: d.actualExpenditure ?? 0,
         createdBy:         req.user!.username,
@@ -103,6 +125,15 @@ router.post("/:projectId", async (req, res, next) => {
 
     await recomputeProjectProgress(req.params.projectId);
     await logAudit(req.params.projectId, "ACTIVITY_ADDED", req.user!.username, { activityId });
+    if (assignee) {
+      await sendNotification(
+        assignee.username,
+        "ASSIGNMENT",
+        `Activity assigned: ${created.title}`,
+        `${req.user!.username} assigned ${activityId} to you on project ${req.params.projectId}.`,
+        "/database/pms",
+      );
+    }
     res.json({ success: true, activityId, activity: created });
   } catch (e) { next(e); }
 });
@@ -114,6 +145,19 @@ router.put("/:activityId", async (req, res, next) => {
     if (!existing) return res.status(404).json({ message: "Activity not found" });
 
     const update: any = { ...d, lastModifiedBy: req.user!.username, lastModifiedDate: new Date() };
+    if (d.assignedTo !== undefined) {
+      const assignee = await resolveAssignee(existing.projectId, d.assignedTo, req.user!.username);
+      update.assignedTo = assignee?.username ?? null;
+      if (assignee && assignee.username !== existing.assignedTo) {
+        await sendNotification(
+          assignee.username,
+          "ASSIGNMENT",
+          `Activity assigned: ${existing.title}`,
+          `${req.user!.username} assigned ${existing.activityId} to you on project ${existing.projectId}.`,
+          "/database/pms",
+        );
+      }
+    }
     if (d.startDate && d.endDate)
       update.duration = Math.round((d.endDate.getTime() - d.startDate.getTime()) / 86_400_000);
 

@@ -166,7 +166,7 @@ body {
 }
 
 .brand-text small {
-  font-size: 0.66rem;
+  font-size: 0.8rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--white-70);
@@ -219,7 +219,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 0.74rem;
+  font-size: 0.80rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   line-height: 1;
@@ -278,7 +278,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.15rem 0.35rem 0.5rem;
-  font-size: 0.66rem;
+  font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -345,7 +345,7 @@ body {
   border-radius: 8px;
   background: #e8eef5;
   color: var(--navy-deep);
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.03em;
 }
@@ -361,7 +361,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.76rem;
+  font-size: 0.80rem;
   font-weight: 600;
 }
 
@@ -382,7 +382,7 @@ body {
 .btn-login {
   color: #fff;
   text-decoration: none;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -449,7 +449,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-weight: 600;
@@ -634,7 +634,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
@@ -840,7 +840,7 @@ body {
 
 .fact-label {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   line-height: 1.45;
   color: var(--ink-muted);
   max-width: 24ch;
@@ -848,7 +848,7 @@ body {
 
 .facts-note {
   padding: 0 0 1rem;
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   color: var(--ink-muted);
   letter-spacing: 0.02em;
 }
@@ -875,7 +875,7 @@ body {
 }
 
 .capability-index {
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   letter-spacing: 0.16em;
   color: var(--ink-muted);
 }
@@ -898,7 +898,7 @@ body {
 
 .capability-meta {
   margin: 1.1rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.80rem;
   letter-spacing: 0.04em;
   color: var(--gold-ink);
   font-weight: 600;
@@ -923,7 +923,7 @@ body {
 }
 
 .phase-years {
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   letter-spacing: 0.16em;
   color: var(--gold);
   font-weight: 600;
@@ -970,7 +970,7 @@ body {
 
 .campus-media figcaption {
   margin-top: 0.8rem;
-  font-size: 0.74rem;
+  font-size: 0.80rem;
   color: var(--ink-muted);
   letter-spacing: 0.02em;
 }
@@ -1028,7 +1028,7 @@ body {
 }
 
 .plan-card .plan-type {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold-ink);
@@ -1057,7 +1057,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--ink-soft);
 }
 
@@ -1151,7 +1151,7 @@ body {
 
 .footer-note {
   margin-top: 0.9rem !important;
-  font-size: 0.72rem !important;
+  font-size: 0.80rem !important;
   line-height: 1.55 !important;
   color: rgba(255, 255, 255, 0.45) !important;
   max-width: 36ch;
@@ -1194,7 +1194,7 @@ body {
 }
 
 .footer-col h2 {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1236,7 +1236,7 @@ body {
   /* Keep the credit in the far-right corner of the copyright line. */
   margin: 0 0 0 auto !important;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 0.72rem;
+  font-size: 0.80rem;
   letter-spacing: 0.02em;
   text-align: right;
   white-space: nowrap;
@@ -1255,7 +1255,7 @@ body {
 
 .footer-copyright {
   margin: 0 !important;
-  font-size: 0.72rem !important;
+  font-size: 0.80rem !important;
   line-height: 1.55 !important;
   color: rgba(255, 255, 255, 0.5) !important;
   letter-spacing: 0.02em;
@@ -1266,7 +1266,7 @@ body {
 }
 
 .footer-social-label {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1428,7 +1428,7 @@ body {
 
 @media (max-width: 575px) {
   .brand-text strong {
-    font-size: 0.72rem;
+    font-size: 0.80rem;
   }
 
   .capabilities {
@@ -1666,7 +1666,7 @@ body {
   }
 
   #root .public-site .site-footer .footer-brand-col p {
-    font-size: 0.78rem !important;
+    font-size: 0.82rem !important;
     line-height: 1.45 !important;
   }
 
@@ -1675,7 +1675,7 @@ body {
   }
 
   #root .public-site .site-footer .footer-copyright {
-    font-size: 0.7rem !important;
+    font-size: 0.8rem !important;
     line-height: 1.45 !important;
   }
 
@@ -1797,7 +1797,7 @@ body {
 
 #root .public-site .site-footer .footer-note,
 #root .public-site .site-footer .footer-copyright {
-  font-size: 0.72rem !important;
+  font-size: 0.80rem !important;
   line-height: 1.55 !important;
 }
 
@@ -1873,7 +1873,7 @@ body {
 .welcome-banner-mark {
   flex-shrink: 0;
   font-family: var(--font-display);
-  font-size: 0.64rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.18em;
   padding-right: 0.9rem;
@@ -1894,7 +1894,7 @@ body {
 
 .welcome-banner-link {
   flex-shrink: 0;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--navy-deep);
   text-decoration: none;
@@ -2013,7 +2013,7 @@ body {
 
 .visitor-title {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-weight: 600;
@@ -2022,7 +2022,7 @@ body {
 
 .visitor-source {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--ink-muted);
 }
 
@@ -2048,7 +2048,7 @@ body {
 
 .visitor-label {
   margin: 0.35rem 0 0;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-muted);
@@ -2080,7 +2080,7 @@ body {
   }
 
   .welcome-banner-text {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
   }
 
   .visitor-stats {
@@ -2111,7 +2111,7 @@ body {
     width: auto !important;
     flex: 0 0 auto !important;
     margin: 0 !important;
-    font-size: 0.72rem !important;
+    font-size: 0.80rem !important;
     white-space: nowrap;
   }
 }

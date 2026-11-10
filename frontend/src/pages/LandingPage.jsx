@@ -437,10 +437,18 @@ export default function LandingPage() {
     [slides, heroImages]
   );
   const isAmharic = lang === "am";
-  const slideTitle = slide ? (isAmharic ? localizeAmharic(slide.titleAm || slide.title) : slide.title) : "";
-  const slideSubtitle = slide ? (isAmharic ? localizeAmharic(slide.subtitleAm || slide.subtitle) : slide.subtitle) || "" : "";
-  const slideTagline = slide ? (isAmharic ? localizeAmharic(slide.taglineAm || slide.tagline) : slide.tagline) || "" : "";
-  const slideCtaLabel = slide ? (isAmharic ? localizeAmharic(slide.ctaLabelAm || slide.ctaLabel) : slide.ctaLabel) || "" : "";
+  // Hero copy is database content, so it follows the same translation path as
+  // the rest of the page. A slide saved without an Amharic line still resolves
+  // through Language Settings instead of disappearing from the translated view.
+  const slideText = (english, amharic) => {
+    if (!isAmharic) return english || amharic || "";
+    if (!english) return localizeAmharic(amharic || "");
+    return localizeAmharic(tText(english, amharic || english));
+  };
+  const slideTitle = slide ? slideText(slide.title, slide.titleAm) || copy.title : "";
+  const slideSubtitle = slide ? slideText(slide.subtitle, slide.subtitleAm) : "";
+  const slideTagline = slide ? slideText(slide.tagline, slide.taglineAm) : "";
+  const slideCtaLabel = slide ? slideText(slide.ctaLabel, slide.ctaLabelAm) : "";
   const slideshowRunning = autoPlay && !pageHidden;
 
   return (

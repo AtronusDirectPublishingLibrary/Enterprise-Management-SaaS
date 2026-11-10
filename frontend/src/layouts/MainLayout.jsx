@@ -1,6 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Database, LayoutDashboard, LogOut, Users as UsersIcon, Map, Target, CalendarDays, CalendarRange, Archive, Settings, ShieldAlert, TrendingUp, Globe, Newspaper, FileText, BellRing, CheckSquare, Film, Megaphone, Menu, X, ClipboardList, BarChart3, Wallet } from "lucide-react";
+import {
+  Archive,
+  BarChart3,
+  BellRing,
+  Briefcase,
+  CalendarDays,
+  CalendarRange,
+  Car,
+  CarFront,
+  CheckSquare,
+  ChevronDown,
+  ClipboardList,
+  Database,
+  FileText,
+  Film,
+  Globe,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Megaphone,
+  Menu,
+  Newspaper,
+  PlusCircle,
+  Settings,
+  ShieldAlert,
+  Target,
+  TrendingUp,
+  Truck,
+  Users as UsersIcon,
+  Wallet,
+  X,
+} from "lucide-react";
 import { useAuth } from "../lib/auth";
 import NotificationBell from "../components/NotificationBell";
 import Avatar from "../components/Avatar";
@@ -8,94 +39,179 @@ import GlobalSearch from "../components/GlobalSearch";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { canAccess, canAccessPath } from "../lib/access";
 
+const GROUP_STORAGE_KEY = "ebems.sidebar.groups";
+
+/**
+ * The sidebar is deliberately organised by the work people do, not by the
+ * database table a screen happens to use. Groups collapse, the active group
+ * opens automatically, and every original destination keeps its own route.
+ */
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const isAdmin = user?.role === "admin";
   const displayName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "";
 
-  const isArchive = location.pathname === "/database/archive";
-  const isSettings = location.pathname === "/database/hero-settings";
   const [navOpen, setNavOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "{}");
+      return { workspace: true, planning: true, hr: true, fleet: true, admin: true, ...stored };
+    } catch {
+      return { workspace: true, planning: true, hr: true, fleet: true, admin: true };
+    }
+  });
 
-  // Close the drawer whenever the person moves to another page.
   useEffect(() => {
     setNavOpen(false);
   }, [location.pathname]);
 
-  // Left Pane Tabs
-    const dbTabs = [
-    { key: "dashboard", path: "/dashboard", label: "Home", icon: <LayoutDashboard size={18} /> },
-    { key: "pms", path: "/database/pms", label: "PMS (Projects)", icon: <Database size={18} /> },
-    { key: "aop", path: "/database/aop", label: "Annual Plan", icon: <CalendarDays size={18} /> },
-    { key: "strategic", path: "/database/strategic-plan", label: "Strategic Plan", icon: <Target size={18} /> },
-    { key: "roadmap", path: "/database/roadmap", label: "Roadmap", icon: <Map size={18} /> },
-    { key: "progress", path: "/progress-updates", label: "Progress Updates", icon: <ClipboardList size={18} /> },
-    { key: "reports", path: "/reports", label: "Consolidated Reports", icon: <BarChart3 size={18} /> },
-    { key: "calendar", path: "/planning-calendar", label: "Planning Calendar", icon: <CalendarRange size={18} /> },
-    { key: "archive", path: "/database/archive", label: "Document Archive", icon: <Archive size={18} /> },
-  ].filter((tab) => canAccess(user, tab.key));
+  const groups = useMemo(
+    () => [
+      {
+        key: "workspace",
+        label: "Workspace",
+        icon: LayoutDashboard,
+        items: [
+          { key: "dashboard", path: "/dashboard", label: "Home", icon: LayoutDashboard },
+          { key: "pms", path: "/database/pms", label: "PMS (Projects)", icon: Database },
+          { key: "myhr", path: "/my-hr", label: "My Portal", icon: UsersIcon },
+          { key: "approvals", path: "/my-approvals", label: "My Approvals", icon: CheckSquare },
+          { key: null, path: "/team-tasks", label: "Team & Tasks", icon: ClipboardList },
+        ],
+      },
+      {
+        key: "planning",
+        label: "Planning & Reporting",
+        icon: Target,
+        items: [
+          { key: "aop", path: "/database/aop", label: "Annual Plan", icon: CalendarDays },
+          { key: "strategic", path: "/database/strategic-plan", label: "Strategic Plan", icon: Target },
+          { key: "roadmap", path: "/database/roadmap", label: "Roadmap", icon: Map },
+          { key: "progress", path: "/progress-updates", label: "Progress Updates", icon: ClipboardList },
+          { key: "reports", path: "/reports", label: "Consolidated Reports", icon: BarChart3 },
+          { key: "calendar", path: "/planning-calendar", label: "Planning Calendar", icon: CalendarRange },
+          { key: "alerts", path: "/plan-alerts", label: "Plan Alerts", icon: BellRing },
+          { key: "pms", path: "/goals", label: "Goals", icon: Target },
+          { key: "pms", path: "/portfolios", label: "Portfolios", icon: Briefcase },
+        ],
+      },
+      {
+        key: "hr",
+        label: "HR & Admin",
+        icon: ShieldAlert,
+        items: [
+          { key: "hr", path: "/hr", label: "HR Suite", icon: UsersIcon },
+          { key: "hrAnalytics", path: "/hr-analytics", label: "Executive HR", icon: TrendingUp },
+          { key: "recruitment", path: "/recruitment", label: "Recruitment", icon: UsersIcon },
+          { key: "hrOps", path: "/hr-operations", label: "Induction & Appraisals", icon: TrendingUp },
+          { key: "payroll", path: "/payroll", label: "Payroll & Payslips", icon: Wallet },
+        ],
+      },
+      {
+        key: "fleet",
+        label: "Fleet & Transport",
+        icon: Truck,
+        items: [
+          { key: "fleet", path: "/fleet", label: "Fleet Dashboard", icon: Truck },
+          { key: "fleet", path: "/fleet/requests", label: "Vehicle Requests", icon: ClipboardList },
+          { key: "fleet", path: "/fleet/new", label: "New Request", icon: PlusCircle },
+          { key: "fleet", path: "/fleet/approvals", label: "Fleet Approvals", icon: CheckSquare },
+          { key: "fleet", path: "/fleet/vehicles", label: "Vehicles", icon: Car },
+          { key: "fleet", path: "/fleet/drivers", label: "Drivers", icon: UsersIcon },
+          { key: "fleet", path: "/fleet/rides", label: "Ride Services", icon: CarFront },
+          { key: "fleet", path: "/fleet/analytics", label: "Fleet Analytics", icon: BarChart3 },
+          { key: "fleet", path: "/fleet/settings", label: "Fleet Settings", icon: Settings },
+        ],
+      },
+      {
+        key: "admin",
+        label: "Content & Administration",
+        icon: Settings,
+        items: [
+          { key: "settings", path: "/database/hero-settings", label: "Settings", icon: Settings },
+          { key: "users", path: "/users", label: "Users", icon: UsersIcon },
+          { key: "languages", path: "/language-settings", label: "Language Settings", icon: Globe },
+          { key: "publicSite", path: "/public-site", label: "Public Site", icon: Megaphone },
+          { key: "archive", path: "/database/archive", label: "Internal Archive", icon: Archive },
+          { key: "documents", path: "/manage-documents", label: "Public Library", icon: FileText },
+          { key: "news", path: "/manage-news", label: "Manage News", icon: Newspaper },
+          { key: "media", path: "/manage-media", label: "Manage Media", icon: Film },
+        ],
+      },
+    ],
+    [],
+  );
 
-    const hrTabs = [
-      { key: "settings", path: "/database/hero-settings", label: "Settings", icon: <Settings size={18} /> },
-      { key: "users", path: "/users", label: "Users", icon: <UsersIcon size={18} /> },
-      { key: "hr", path: "/hr", label: "HR Suite", icon: <UsersIcon size={18} /> },
-      { key: "hrAnalytics", path: "/hr-analytics", label: "Executive HR", icon: <TrendingUp size={18} /> },
-      { key: "recruitment", path: "/recruitment", label: "Recruitment", icon: <UsersIcon size={18} /> },
-      { key: "hrOps", path: "/hr-operations", label: "Induction & Appraisals", icon: <TrendingUp size={18} /> },
-      { key: "payroll", path: "/payroll", label: "Payroll & Payslips", icon: <Wallet size={18} /> },
-      { key: "languages", path: "/language-settings", label: "Language Settings", icon: <Globe size={18} /> },
-      { key: "alerts", path: "/plan-alerts", label: "Plan Alerts", icon: <BellRing size={18} /> },
-      { key: "news", path: "/manage-news", label: "Manage News", icon: <Newspaper size={18} /> },
-      { key: "documents", path: "/manage-documents", label: "Manage Documents", icon: <FileText size={18} /> },
-      { key: "publicSite", path: "/public-site", label: "Public Site", icon: <Megaphone size={18} /> },
-      { key: "media", path: "/manage-media", label: "Manage Media", icon: <Film size={18} /> },
-    ].filter((tab) => canAccess(user, tab.key));
+  const visibleGroups = useMemo(
+    () =>
+      groups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !item.key || canAccess(user, item.key)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [groups, user],
+  );
 
-    // A signed-in position may only open the tabs in its access proposal.
-    if (!canAccessPath(user, location.pathname)) {
-      return <Navigate to="/dashboard" replace />;
+  useEffect(() => {
+    const parent = visibleGroups.find((group) =>
+      group.items.some((item) => location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)),
+    );
+    if (parent) {
+      setOpenGroups((prev) => (prev[parent.key] ? prev : { ...prev, [parent.key]: true }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
-    // Left Pane Tabs - Grouped
-  
+  const toggleGroup = (key) => {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem(GROUP_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* private browsing: the menu still works for this session */
+      }
+      return next;
+    });
+  };
 
-  
+  if (!canAccessPath(user, location.pathname)) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
-  
+  const isActive = (path) => location.pathname === path;
 
   const renderTab = (tab) => {
-    const isTabActive = location.pathname === tab.path;
-
+    const Icon = tab.icon;
     return (
       <NavLink
-        key={tab.path}
+        key={`${tab.path}-${tab.label}`}
         to={tab.path}
-        className="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none rounded"
-        style={{
-          color: isTabActive ? "var(--brand-dark)" : "rgba(255,255,255,0.85)",
-          background: isTabActive ? "var(--brand-secondary)" : "transparent",
-          fontWeight: isTabActive ? 700 : 500,
-          fontSize: "0.9rem",
-          transition: "all 0.2s"
-        }}
+        className={`app-nav-item d-flex align-items-center gap-2 ${isActive(tab.path) ? "is-active" : ""}`}
+        title={tab.label}
       >
-        {tab.icon}
-        {tab.label}
+        <span className="app-nav-item__icon"><Icon size={16} /></span>
+        <span className="app-nav-item__label">{tab.label}</span>
       </NavLink>
     );
   };
 
   return (
     <div className="app-shell d-flex flex-column vh-100">
-      <header className="app-header d-flex align-items-center justify-content-between px-4 py-2" 
-              style={{ background: "var(--brand-primary)", color: "white", borderBottom: "3px solid var(--brand-secondary)", zIndex: 10 }}>
-        
-        <div className="d-flex align-items-center">
+      <header
+        className="app-header d-flex align-items-center justify-content-between px-4 py-2"
+        style={{
+          background: "var(--brand-primary)",
+          color: "white",
+          borderBottom: "3px solid var(--brand-secondary)",
+          zIndex: 10,
+        }}
+      >
+        <div className="d-flex align-items-center gap-3">
           <button
             type="button"
-            className="btn btn-sm d-lg-none me-2 p-1"
+            className="btn btn-sm d-lg-none p-1"
             style={{ background: "rgba(255,255,255,0.12)", color: "white", border: "none" }}
             onClick={() => setNavOpen((open) => !open)}
             aria-label="Toggle navigation"
@@ -103,34 +219,20 @@ export default function MainLayout() {
             {navOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
 
-          <div className="app-brand">
-            <h5 className="mb-0 fw-bold" style={{ color: "var(--brand-secondary)", letterSpacing: "1px" }}>
-              Ethio-Biopharma
-            </h5>
+          <div
+            className="app-brand"
+            aria-label="Ethio-Biopharma Enterprise Management System (EB-EMS)"
+          >
+            <span className="app-brand__org">Ethio-Biopharma</span>
+            <span className="app-brand__system">Enterprise Management System</span>
+            <span className="app-brand__badge">EB-EMS</span>
           </div>
-
-          {/* Contextual page links; the PMS workspace tabs live on the Projects page. */}
-          <nav className="d-none d-lg-flex gap-2 align-items-center">
-            {/* Show Archive when on Archive */}
-            {isArchive && (
-              <NavLink to="/database/archive" className="nav-item px-3 py-1 rounded text-decoration-none d-flex align-items-center gap-2"
-                style={{ color: "var(--brand-dark)", background: "var(--brand-secondary)", fontWeight: 700, fontSize: "0.85rem" }}>
-                <Archive size={16} /><span>Document Archive</span>
-              </NavLink>
-            )}
-
-            {/* Show Settings when on Settings */}
-            {isSettings && (
-              <NavLink to="/database/hero-settings" className="nav-item px-3 py-1 rounded text-decoration-none d-flex align-items-center gap-2"
-                style={{ color: "var(--brand-dark)", background: "var(--brand-secondary)", fontWeight: 700, fontSize: "0.85rem" }}>
-                <Settings size={16} /><span>Settings</span>
-              </NavLink>
-            )}
-          </nav>
         </div>
 
         <div className="d-flex align-items-center gap-3 text-white">
-          <div className="d-none d-md-block"><GlobalSearch /></div>
+          <div className="d-none d-md-block">
+            <GlobalSearch />
+          </div>
           <NotificationBell style={{ color: "white" }} />
           <NavLink
             to="/my-hr"
@@ -143,38 +245,54 @@ export default function MainLayout() {
               <small>{user?.position || user?.role || "Staff"}</small>
             </span>
           </NavLink>
-          <button className="btn btn-sm d-flex align-items-center gap-1" style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "none" }} onClick={logout}>
-            <LogOut size={14} /><span className="d-none d-sm-inline">Logout</span>
+          <button
+            className="btn btn-sm d-flex align-items-center gap-1"
+            style={{ background: "rgba(255,255,255,0.1)", color: "white", border: "none" }}
+            onClick={logout}
+          >
+            <LogOut size={14} />
+            <span className="d-none d-sm-inline">Logout</span>
           </button>
         </div>
-      
       </header>
-
-
 
       <div className="app-body d-flex flex-grow-1 overflow-hidden">
         {navOpen ? <div className="app-nav-backdrop d-lg-none" onClick={() => setNavOpen(false)} /> : null}
         <aside className={`app-sidebar ${navOpen ? "is-open" : ""}`}>
-          
-          <div className="d-flex flex-column gap-2 mb-4">
-            {dbTabs.map(renderTab)}
-            {canAccess(user, "myhr") && renderTab({ path: "/my-hr", label: "My Portal", icon: <UsersIcon size={18} /> })}
-            {canAccess(user, "approvals") && renderTab({ path: "/my-approvals", label: "My Approvals", icon: <CheckSquare size={18} /> })}
+          <div className="app-sidebar__intro">
+            <span className="app-sidebar__eyebrow">Workspace</span>
+            <span className="app-sidebar__title">EB-EMS</span>
           </div>
 
-          {hrTabs.length > 0 && (
-            <div className="mt-2">
-              <div className="text-white px-3 mb-2 d-flex align-items-center gap-2" style={{ opacity: 0.6, fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700, letterSpacing: "1px" }}>
-                <ShieldAlert size={14} /> HR & Admin
-              </div>
-              <div className="d-flex flex-column gap-2">
-                {hrTabs.map(renderTab)}
-              </div>
-            </div>
-          )}
+          {visibleGroups.map((group) => {
+            const open = Boolean(openGroups[group.key]);
+            const GroupIcon = group.icon;
+            return (
+              <nav className="app-nav-group" key={group.key} aria-label={group.label}>
+                <button
+                  type="button"
+                  className={`app-nav-group__toggle ${open ? "is-open" : ""}`}
+                  onClick={() => toggleGroup(group.key)}
+                  aria-expanded={open}
+                >
+                  <GroupIcon size={15} />
+                  <span>{group.label}</span>
+                  <ChevronDown size={15} className="app-nav-group__chevron" />
+                </button>
+                {open ? (
+                  <div className="app-nav-group__items">
+                    {group.items.map(renderTab)}
+                  </div>
+                ) : null}
+              </nav>
+            );
+          })}
         </aside>
 
-        <main className="app-main flex-grow-1 p-4" style={{ background: "var(--brand-bg)", overflowY: "auto", overflowX: "auto", minWidth: 0 }}>
+        <main
+          className="app-main flex-grow-1 p-4"
+          style={{ background: "var(--brand-bg)", overflowY: "auto", overflowX: "auto", minWidth: 0 }}
+        >
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

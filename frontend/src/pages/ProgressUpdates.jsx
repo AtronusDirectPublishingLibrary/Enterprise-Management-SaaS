@@ -147,16 +147,16 @@ export default function ProgressUpdates() {
             feed the consolidated annual, strategic and roadmap reports automatically.
           </div>
         </div>
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          <select className="form-select form-select-sm" style={{ width: "auto" }} value={type} onChange={(e) => setType(e.target.value)}>
+        <div className="progress-filters">
+          <select className="form-select form-select-sm" style={{ width: "auto" }} value={type} onChange={(e) => setType(e.target.value)} aria-label="Plan level">
             <option value="">All plan levels</option>
             <option value="AOP">Annual Plan</option>
             <option value="STRATEGIC">Strategic Plan</option>
             <option value="ROADMAP">Roadmap</option>
           </select>
-          <div className="form-check form-switch mb-0">
+          <div className="form-check form-switch mb-0 progress-filters__switch">
             <input className="form-check-input" type="checkbox" id="mine-only" checked={mine} onChange={(e) => setMine(e.target.checked)} />
-            <label className="form-check-label small" htmlFor="mine-only">My assignments</label>
+            <label className="form-check-label" htmlFor="mine-only">My assignments only</label>
           </div>
           <button className="btn btn-outline-primary btn-sm" onClick={load}><RefreshCw size={14} /> Refresh</button>
         </div>
@@ -284,44 +284,95 @@ export default function ProgressUpdates() {
 
       {selected && (
         <div className="modal show d-block" style={{ background: "rgba(11,37,69,0.55)", zIndex: 1050 }} role="dialog" aria-modal="true">
-          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content">
               <div className="modal-header">
                 <div>
                   <h5 className="modal-title mb-0">Submit progress update</h5>
                   <div className="small text-muted">{selected.title} · {selected.plan?.title}</div>
+                  <div className="report-form__chips mt-2">
+                    <span>{selected.kind}</span>
+                    {selected.code ? <span>{selected.code}</span> : null}
+                    <span>Owner · {selected.owner || "Unassigned"}</span>
+                    <span className={`status-pill ${statusClass(selected.latest?.status)}`}>{selected.latest?.status || "No update yet"}</span>
+                  </div>
                 </div>
                 <button type="button" className="btn-close" onClick={() => setSelected(null)} aria-label="Close" />
               </div>
               <form onSubmit={submit}>
                 <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-5">
-                      <label className="form-label small fw-bold">Reporting period</label>
-                      <input className="form-control" value={form.periodLabel} onChange={(e) => setForm({ ...form, periodLabel: e.target.value })} placeholder="e.g., Oct 2026" required />
+                  <div className="report-form">
+                    <div className="report-form__main">
+                      <section className="report-form__section">
+                        <div className="report-form__section-head">
+                          <div>
+                            <h6>Reporting window</h6>
+                            <p>Every update is tied to one plan period. Use the period named in the approved plan.</p>
+                          </div>
+                        </div>
+                        <div className="row g-3 align-items-end">
+                          <div className="col-md-5">
+                            <label className="form-label" htmlFor="period-label">Reporting period</label>
+                            <input id="period-label" className="form-control" value={form.periodLabel} onChange={(e) => setForm({ ...form, periodLabel: e.target.value })} placeholder="e.g., Oct 2026" required />
+                          </div>
+                          <div className="col-md-7">
+                            <label className="form-label d-flex justify-content-between" htmlFor="progress-range">
+                              <span>Progress against target</span>
+                              <strong className="report-form__percent">{form.progress}%</strong>
+                            </label>
+                            <input id="progress-range" type="range" className="form-range" min="0" max="100" step="1" value={form.progress} onChange={(e) => setForm({ ...form, progress: Number(e.target.value) })} />
+                            <div className="report-form__scale"><span>0%</span><span>50%</span><span>100%</span></div>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className="report-form__section">
+                        <div className="report-form__section-head">
+                          <div>
+                            <h6>Narrative</h6>
+                            <p>Write for the consolidated report: outcome first, then evidence. One topic per line makes the report easier to assemble.</p>
+                          </div>
+                        </div>
+                        <div className="row g-3">
+                          <div className="col-12">
+                            <label className="form-label" htmlFor="summary">Summary of progress <span className="text-danger">*</span></label>
+                            <textarea id="summary" className="form-control" rows="4" required value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="What was delivered this period? Include the main result, milestone or decision." />
+                            <div className="form-text">Required. This is the text that appears in verified reports.</div>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label" htmlFor="achievements">Achievements</label>
+                            <textarea id="achievements" className="form-control" rows="4" value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} placeholder="One achievement per line" />
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label" htmlFor="challenges">Challenges / risks</label>
+                            <textarea id="challenges" className="form-control" rows="4" value={form.challenges} onChange={(e) => setForm({ ...form, challenges: e.target.value })} placeholder="One challenge or risk per line" />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label" htmlFor="next-steps">Next steps</label>
+                            <textarea id="next-steps" className="form-control" rows="3" value={form.nextSteps} onChange={(e) => setForm({ ...form, nextSteps: e.target.value })} placeholder="What happens next period, and who owns it?" />
+                          </div>
+                        </div>
+                      </section>
                     </div>
-                    <div className="col-md-7">
-                      <label className="form-label small fw-bold d-flex justify-content-between">
-                        <span>Progress</span><span>{form.progress}%</span>
-                      </label>
-                      <input type="range" className="form-range" min="0" max="100" step="1" value={form.progress} onChange={(e) => setForm({ ...form, progress: Number(e.target.value) })} />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label small fw-bold">Summary of progress *</label>
-                      <textarea className="form-control" rows="3" required value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="What was delivered this period?" />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold">Achievements</label>
-                      <textarea className="form-control" rows="3" value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} placeholder="One achievement per line" />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-bold">Challenges / risks</label>
-                      <textarea className="form-control" rows="3" value={form.challenges} onChange={(e) => setForm({ ...form, challenges: e.target.value })} placeholder="One challenge per line" />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label small fw-bold">Next steps</label>
-                      <textarea className="form-control" rows="2" value={form.nextSteps} onChange={(e) => setForm({ ...form, nextSteps: e.target.value })} placeholder="What happens next period?" />
-                    </div>
+
+                    <aside className="report-form__aside">
+                      <div className="report-form__aside-card">
+                        <h6>What happens after you submit</h6>
+                        <ol className="report-form__steps">
+                          <li><span>1</span> The update is saved as <strong>Submitted</strong> and indexed automatically.</li>
+                          <li><span>2</span> The Strategy and Planning Officer reviews the evidence.</li>
+                          <li><span>3</span> Once verified, the plan item progress and consolidated reports update.</li>
+                        </ol>
+                      </div>
+                      <div className="report-form__aside-card report-form__aside-card--muted">
+                        <h6>Before you submit</h6>
+                        <ul>
+                          <li>Figures match the approved plan period.</li>
+                          <li>Blockers are stated plainly, with the decision needed.</li>
+                          <li>No personal or confidential information is included.</li>
+                        </ul>
+                      </div>
+                    </aside>
                   </div>
                 </div>
                 <div className="modal-footer">

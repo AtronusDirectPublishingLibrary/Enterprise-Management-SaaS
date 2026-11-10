@@ -370,7 +370,10 @@ export default function HeroSettingsAdmin() {
                       }}
                     />
                     <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                      <div className="fw-bold text-truncate" style={{ color: "var(--brand-primary)" }}>{slide.title}</div>
+                      <div className="fw-bold text-truncate" style={{ color: "var(--brand-primary)" }}>
+                        {slide.title}
+                        {!slide.titleAm ? <span className="badge bg-warning text-dark ms-2" style={{ fontSize: "0.6rem" }}>Amharic missing</span> : null}
+                      </div>
                       <div className="text-muted text-truncate" style={{ fontSize: 12 }}>
                         {slide.tagline ? `${slide.tagline} · ` : ""}{slide.subtitle || "No subtitle"}
                       </div>

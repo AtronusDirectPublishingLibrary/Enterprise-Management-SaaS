@@ -2,7 +2,7 @@
 import { useSearchParams } from "react-router-dom";
 import { api, buildQuery, API_BASE } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { FileText, MessageSquare, List, LayoutDashboard, Calendar as CalIcon, Copy, Plus, Edit2, ArrowLeft, Calendar, Filter, Flag, ChevronRight, ChevronDown, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { FileText, MessageSquare, List, LayoutDashboard, Calendar as CalIcon, Copy, Plus, Edit2, ArrowLeft, Calendar, Filter, Flag, ChevronRight, ChevronDown, Upload, Download, FileSpreadsheet, Users, UserPlus, UserMinus } from "lucide-react";
 import KanbanView from "../components/KanbanView";
 import TimeTracker from "../components/TimeTracker";
 import { Clock } from "lucide-react";
@@ -23,6 +23,14 @@ const FUNDS = ["All", "Treasury", "Competitive Grants", "Grand Challenges Eth.",
 
 const slug = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, "-");
 const fmt = (n) => Math.round(Number(n) || 0).toLocaleString();
+const ROLE_LABELS = {
+  member: "Member",
+  lead: "Work-package lead",
+  viewer: "Viewer",
+  manager: "Project manager",
+  pi: "Principal investigator",
+};
+const roleLabel = (role) => ROLE_LABELS[role] || role || "Member";
 
 export default function Projects() {
   const [searchParams] = useSearchParams();
@@ -438,9 +446,16 @@ export default function Projects() {
 }
 
 function ProjectDetail({ project, onBack }) {
+  const { user } = useAuth();
   const [wps, setWps] = useState([]);
   const [activities, setActivities] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [candidates, setCandidates] = useState([]);
+  const [teamPick, setTeamPick] = useState("");
+  const [teamRole, setTeamRole] = useState("member");
+  const [teamBusy, setTeamBusy] = useState(false);
+  const [teamError, setTeamError] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [expandedWp, setExpandedWp] = useState(null);
@@ -454,14 +469,22 @@ function ProjectDetail({ project, onBack }) {
   const loadData = useCallback(async () => {
     setLoading(true); setErr("");
     try {
-      const [wpsData, actsData, msData] = await Promise.all([
+      const [wpsData, actsData, msData, teamData] = await Promise.all([
         api.get("/workpackages/" + project.projectId).catch(() => []),
         api.get("/activities/" + project.projectId).catch(() => []),
-        api.get("/milestones/" + project.projectId).catch(() => [])
+        api.get("/milestones/" + project.projectId).catch(() => []),
+        api.get("/members/candidates/" + project.projectId).catch(() => null)
       ]);
       setWps(Array.isArray(wpsData) ? wpsData : []);
       setActivities(Array.isArray(actsData) ? actsData : []);
       setMilestones(Array.isArray(msData) ? msData : []);
+      if (teamData) {
+        setMembers(Array.isArray(teamData.members) ? teamData.members : []);
+        setCandidates(Array.isArray(teamData.candidates) ? teamData.candidates : []);
+      } else {
+        const onlyMembers = await api.get("/members/" + project.projectId).catch(() => []);
+        setMembers(Array.isArray(onlyMembers) ? onlyMembers : []);
+      }
     } catch (e) { setErr(e.message); } finally { setLoading(false); }
   }, [project.projectId]);
 
@@ -474,11 +497,61 @@ function ProjectDetail({ project, onBack }) {
       if (!newTitle) return;
       
       const res = await api.post(`/templates/clone/${project.projectId}`, { title: newTitle });
-      alert(`ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Project cloned successfully! New ID: ${res.newProjectId}`);
+      alert(`Project cloned successfully! New ID: ${res.newProjectId}`);
       onBack(); // Go back to the list to see the new project
       loadProjects();
     } catch (e) {
       alert("Failed to clone project: " + e.message);
+    }
+  };
+
+  const canManageTeam =
+    ["admin", "executive", "project_manager"].includes(user?.role) ||
+    [user?.username, [user?.firstName, user?.lastName].filter(Boolean).join(" ")].filter(Boolean).includes(project?.projectManager || "");
+
+  const memberName = (username) =>
+    candidates.find((candidate) => candidate.username === username)?.name || username;
+
+  const teamMembers = members.map((member) => {
+    const person = candidates.find((candidate) => candidate.username === member.username);
+    return {
+      ...member,
+      firstName: person?.firstName,
+      lastName: person?.lastName,
+      name: person?.name,
+      position: person?.position,
+      department: person?.department,
+      roleLabel: roleLabel(member.role),
+    };
+  });
+
+  const addMember = async () => {
+    if (!teamPick) return;
+    setTeamBusy(true);
+    setTeamError("");
+    try {
+      await api.post(`/members/${project.projectId}`, { username: teamPick, role: teamRole });
+      setTeamPick("");
+      setTeamRole("member");
+      await loadData();
+    } catch (e) {
+      setTeamError(e.message || "Could not add that team member.");
+    } finally {
+      setTeamBusy(false);
+    }
+  };
+
+  const removeMember = async (username) => {
+    if (!window.confirm(`Remove ${memberName(username)} from this project team? Their existing assignments stay visible but unassigned work should be reassigned.`)) return;
+    setTeamBusy(true);
+    setTeamError("");
+    try {
+      await api.del(`/members/${project.projectId}/${encodeURIComponent(username)}`);
+      await loadData();
+    } catch (e) {
+      setTeamError(e.message || "Could not remove that team member.");
+    } finally {
+      setTeamBusy(false);
     }
   };
 
@@ -549,8 +622,8 @@ function ProjectDetail({ project, onBack }) {
       </div>
 
       {msForm && <MilestoneForm initialData={msForm.milestoneId ? msForm : null} onSave={handleSaveMs} onClose={() => setMsForm(null)} />}
-      {wpForm && <ItemForm title={wpForm.workPackageId ? "Edit WP" : "New WP"} initialData={wpForm.workPackageId ? wpForm : null} isWp={true} onSave={handleSaveWp} onClose={() => setWpForm(null)} />}
-      {actForm && <ItemForm title={actForm.activityId ? "Edit Activity" : "New Activity"} initialData={actForm.activityId ? actForm : {startDate: project?.startDate, endDate: project?.endDate}} isWp={false} onSave={handleSaveAct} onClose={() => setActForm(null)} availableActivities={activities.filter(a => a.activityId !== actForm.activityId)} />}
+      {wpForm && <ItemForm title={wpForm.workPackageId ? "Edit Work Package" : "New Work Package"} initialData={wpForm.workPackageId ? wpForm : null} isWp={true} members={teamMembers} onSave={handleSaveWp} onClose={() => setWpForm(null)} />}
+      {actForm && <ItemForm title={actForm.activityId ? "Edit Activity" : "New Activity"} initialData={actForm.activityId ? actForm : {startDate: project?.startDate, endDate: project?.endDate}} isWp={false} members={teamMembers} onSave={handleSaveAct} onClose={() => setActForm(null)} availableActivities={activities.filter(a => a.activityId !== actForm.activityId)} />}
 
             {/* Collaboration Tabs */}
       <ul className="nav nav-tabs mb-3 mt-2">
@@ -577,6 +650,10 @@ function ProjectDetail({ project, onBack }) {
         <li className="nav-item">
           <button className={"nav-link " + (activeTab === 'comments' ? "active" : "")} onClick={() => setActiveTab('comments')}>
             <MessageSquare size={14} className="me-1"/> Comments</button>
+        </li>
+        <li className="nav-item">
+          <button className={"nav-link " + (activeTab === 'team' ? "active" : "")} onClick={() => setActiveTab('team')}>
+            <Users size={14} className="me-1"/> Team & Workload</button>
         </li>
         <li className="nav-item">
           <button className={"nav-link " + (activeTab === 'time' ? "active" : "")} onClick={() => setActiveTab('time')}>
@@ -610,7 +687,7 @@ function ProjectDetail({ project, onBack }) {
           <div className="app-table mt-2" style={{ display: viewMode === 'list' ? 'block' : 'none' }}>
             <table className="table mb-0">
               <thead>
-                <tr><th style={{ width: 40 }}></th><th>Work Package / Activity</th><th>Status</th><th>Progress</th><th className="text-end">Plan (ETB)</th><th className="text-end">Actual (ETB)</th><th style={{ width: 60 }}>Actions</th></tr>
+                <tr><th style={{ width: 40 }}></th><th>Work Package / Activity</th><th>Owner</th><th>Status</th><th>Progress</th><th className="text-end">Plan (ETB)</th><th className="text-end">Actual (ETB)</th><th style={{ width: 60 }}>Actions</th></tr>
               </thead>
               <tbody>
                 {wps.map(wp => {
@@ -623,7 +700,9 @@ function ProjectDetail({ project, onBack }) {
                     <React.Fragment key={wp.workPackageId}>
                       <tr className="table-light">
                         <td className="text-center" onClick={() => setExpandedWp(isOpen ? null : wp.workPackageId)} style={{ cursor: "pointer" }}>{isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</td>
-                        <td colSpan={2} style={{ cursor: "pointer" }} onClick={() => setExpandedWp(isOpen ? null : wp.workPackageId)}><strong>{wp.workPackageId}</strong>: {wp.title}</td>
+                        <td style={{ cursor: "pointer" }} onClick={() => setExpandedWp(isOpen ? null : wp.workPackageId)}><strong>{wp.workPackageId}</strong>: {wp.title}</td>
+                        <td className="small">{wp.ownerName || (wp.ownerUsername ? memberName(wp.ownerUsername) : <span className="text-muted">Unassigned</span>)}</td>
+                        <td><span className={"badge-status " + slug(wp.status)}>{wp.status || "Not Started"}</span></td>
                         <td>{wp.progress || 0}%</td>
                         <td className="text-end fw-semibold">{fmt(wpPlan)}</td>
                         <td className="text-end fw-semibold">{fmt(wpActual)}</td>
@@ -638,6 +717,7 @@ function ProjectDetail({ project, onBack }) {
                             <tr>
                               <td className="text-center" onClick={() => hasKids && setExpandedAct(prev => { const n = new Set(prev); n.has(a?.activityId) ? n.delete(a?.activityId) : n.add(a?.activityId); return n; })} style={{ cursor: hasKids ? "pointer" : "default" }}>{hasKids ? (isActOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />) : null}</td>
                               <td style={{ paddingLeft: "2rem" }}>{a?.title}</td>
+                              <td className="small">{a?.assignedTo ? memberName(a.assignedTo) : <span className="text-muted">Unassigned</span>}</td>
                               <td><span className={"badge-status " + slug(a?.status)}>{a?.status || "Unknown"}</span></td>
                               <td>{a?.progress || 0}%</td>
                               <td className="text-end">{fmt(a?.financialPlan)}</td>
@@ -647,7 +727,7 @@ function ProjectDetail({ project, onBack }) {
                             
                             {isActOpen && childrenOf(a?.activityId).map(k => (
                               <tr key={k?.activityId}>
-                                <td></td><td className="subactivity">{k?.title}</td><td><span className={"badge-status " + slug(k?.status)}>{k?.status || "Unknown"}</span></td><td>{k?.progress || 0}%</td><td className="text-end">{fmt(k?.financialPlan)}</td><td className="text-end">{fmt(k?.actualExpenditure)}</td><td></td>
+                                <td></td><td className="subactivity">{k?.title}</td><td className="small">{k?.assignedTo ? memberName(k.assignedTo) : <span className="text-muted">Unassigned</span>}</td><td><span className={"badge-status " + slug(k?.status)}>{k?.status || "Unknown"}</span></td><td>{k?.progress || 0}%</td><td className="text-end">{fmt(k?.financialPlan)}</td><td className="text-end">{fmt(k?.actualExpenditure)}</td><td></td>
                               </tr>
                             ))}
                           </React.Fragment>
@@ -657,7 +737,7 @@ function ProjectDetail({ project, onBack }) {
                   )
                 })}
                 
-                {wps.length === 0 && <tr><td colSpan={7} className="text-muted text-center py-4">No Work Packages. Add one to start.</td></tr>}
+                {wps.length === 0 && <tr><td colSpan={8} className="text-muted text-center py-4">No Work Packages. Add one to start.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -677,8 +757,166 @@ function ProjectDetail({ project, onBack }) {
         </div>
       )}
 
+      {activeTab === 'team' && (
+        <TeamPanel
+          project={project}
+          members={teamMembers}
+          candidates={candidates}
+          workPackages={wps}
+          activities={activities}
+          canManage={canManageTeam}
+          teamPick={teamPick}
+          setTeamPick={setTeamPick}
+          teamRole={teamRole}
+          setTeamRole={setTeamRole}
+          teamBusy={teamBusy}
+          teamError={teamError}
+          addMember={addMember}
+          removeMember={removeMember}
+        />
+      )}
+
       {activeTab === 'time' && <TimeTracker projectId={project.projectId} />}
       
+    </div>
+  );
+}
+
+function TeamPanel({
+  project,
+  members,
+  candidates,
+  workPackages,
+  activities,
+  canManage,
+  teamPick,
+  setTeamPick,
+  teamRole,
+  setTeamRole,
+  teamBusy,
+  teamError,
+  addMember,
+  removeMember,
+}) {
+  const memberSet = new Set(members.map((member) => member.username));
+  const available = candidates.filter((candidate) => !memberSet.has(candidate.username));
+  const nameOf = (username) =>
+    candidates.find((candidate) => candidate.username === username)?.name || username;
+
+  const workload = (username) => {
+    const ownedWps = workPackages.filter((wp) => wp.ownerUsername === username);
+    const ownedActs = activities.filter((activity) => activity.assignedTo === username);
+    const rows = [...ownedWps, ...ownedActs];
+    const progress = rows.length
+      ? Math.round(rows.reduce((sum, row) => sum + Number(row.progress || 0), 0) / rows.length)
+      : 0;
+    const overdue = rows.filter(
+      (row) => row.endDate && new Date(row.endDate) < new Date() && row.status !== "Completed",
+    ).length;
+    return { workPackages: ownedWps.length, activities: ownedActs.length, total: rows.length, progress, overdue };
+  };
+
+  const unassignedWps = workPackages.filter((wp) => !wp.ownerUsername).length;
+  const unassignedActs = activities.filter((activity) => !activity.assignedTo).length;
+
+  return (
+    <div className="project-team mt-3">
+      <div className="project-team__header card border-0 shadow-sm p-3 mb-3">
+        <div>
+          <h5 className="fw-bold mb-1 d-flex align-items-center gap-2"><Users size={18} /> Project team & workload</h5>
+          <p className="small text-muted mb-0">
+            The project manager assigns work packages and activities to this roster. Each assignment notifies the
+            team member and appears in their Team &amp; Tasks workspace.
+          </p>
+        </div>
+        <div className="project-team__counts">
+          <span className="badge bg-light text-dark">{members.length} members</span>
+          <span className={`badge ${unassignedWps + unassignedActs ? "bg-warning text-dark" : "bg-light text-dark"}`}>
+            {unassignedWps + unassignedActs} unassigned
+          </span>
+        </div>
+      </div>
+
+      {teamError ? <div className="alert alert-danger py-2 small">{teamError}</div> : null}
+
+      {canManage ? (
+        <div className="card border-0 shadow-sm p-3 mb-3 project-team__add">
+          <div className="row g-2 align-items-end">
+            <div className="col-md-6">
+              <label className="form-label small fw-bold">Add a staff member</label>
+              <select className="form-select form-select-sm" value={teamPick} onChange={(event) => setTeamPick(event.target.value)}>
+                <option value="">{available.length ? "Choose a staff member…" : "Every staff member is already on this project"}</option>
+                {available.map((candidate) => (
+                  <option key={candidate.username} value={candidate.username}>
+                    {candidate.name}{candidate.position ? ` · ${candidate.position}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label small fw-bold">Project role</label>
+              <select className="form-select form-select-sm" value={teamRole} onChange={(event) => setTeamRole(event.target.value)}>
+                <option value="member">Member</option>
+                <option value="lead">Work-package lead</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+            <div className="col-md-3">
+              <button type="button" className="btn btn-brand btn-sm w-100 d-flex align-items-center justify-content-center gap-1" disabled={!teamPick || teamBusy} onClick={addMember}>
+                <UserPlus size={14} /> {teamBusy ? "Adding…" : "Add to team"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="row g-3">
+        {members.map((member) => {
+          const person = candidates.find((candidate) => candidate.username === member.username);
+          const load = workload(member.username);
+          return (
+            <div className="col-xl-4 col-md-6" key={member.username}>
+              <div className="project-member-card h-100">
+                <div className="project-member-card__top">
+                  <span className="project-member-card__avatar">
+                    {[person?.firstName, person?.lastName].filter(Boolean).map((part) => part[0]).join("").slice(0, 2) || member.username.slice(0, 2).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="fw-bold text-truncate">{nameOf(member.username)}</div>
+                    <div className="small text-muted text-truncate">{person?.position || person?.department || "Project team"}</div>
+                  </div>
+                  {canManage ? (
+                    <button type="button" className="btn btn-sm btn-link text-danger ms-auto p-0" title="Remove from team" onClick={() => removeMember(member.username)}>
+                      <UserMinus size={14} />
+                    </button>
+                  ) : null}
+                </div>
+                <div className="project-member-card__role">{member.roleLabel || roleLabel(member.role)}</div>
+                <div className="project-member-card__metrics">
+                  <div><strong>{load.workPackages}</strong><span>Work packages</span></div>
+                  <div><strong>{load.activities}</strong><span>Activities</span></div>
+                  <div><strong>{load.progress}%</strong><span>Avg. progress</span></div>
+                </div>
+                {load.overdue ? <div className="project-member-card__warn"><AlertTriangle size={13} /> {load.overdue} overdue item{load.overdue > 1 ? "s" : ""}</div> : null}
+                {load.total === 0 ? <div className="project-member-card__empty">No work assigned yet.</div> : null}
+              </div>
+            </div>
+          );
+        })}
+        {members.length === 0 ? (
+          <div className="col-12"><div className="text-muted small p-4 text-center border rounded bg-white">No team members yet. Add the first person above.</div></div>
+        ) : null}
+      </div>
+
+      {unassignedWps + unassignedActs > 0 ? (
+        <div className="alert alert-warning border-0 mt-3 mb-0 d-flex align-items-start gap-2">
+          <AlertTriangle size={17} className="mt-1" />
+          <div>
+            <strong>{unassignedWps + unassignedActs} delivery item{unassignedWps + unassignedActs > 1 ? "s are" : " is"} unassigned.</strong>
+            <div className="small">Open a work package or activity and choose an accountable team member so progress has a clear owner.</div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

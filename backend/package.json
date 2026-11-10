@@ -25,6 +25,7 @@
     "seed:hr-suite": "ts-node prisma/seed-hr-suite.ts",
     "seed:pms-demo": "ts-node prisma/seed-pms-demo.ts",
     "seed:holidays": "ts-node prisma/seed-holidays.ts",
+    "seed:fleet": "ts-node prisma/seed-fleet-demo.ts",
     "seed:public-translations": "node prisma/seed-public-translations.js",
     "backup": "ts-node scripts/backup-db.ts",
     "audit:prune": "ts-node scripts/prune-audit.ts"
@@ -43,6 +44,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.5.0",
     "nodemailer": "^6.10.1",
+    "qrcode": "^1.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -54,6 +56,7 @@
     "@types/multer": "^2.3.0",
     "@types/node": "^20.14.10",
     "@types/nodemailer": "^6.4.24",
+    "@types/qrcode": "^1.5.6",
     "exceljs": "^4.4.0",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
