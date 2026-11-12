@@ -25,6 +25,12 @@ import fleetDriverRoutes from './routes/fleetDrivers';
 import fleetRequestRoutes from './routes/fleetRequests';
 import fleetSettingsRoutes from './routes/fleetSettings';
 import fleetAnalyticsRoutes from './routes/fleetAnalytics';
+import qmsDocumentRoutes from "./routes/qmsDocuments";
+import qmsDeviationRoutes from "./routes/qmsDeviations";
+import qmsCapaRoutes from "./routes/qmsCapa";
+import qmsChangeRoutes from "./routes/qmsChanges";
+import qmsOverviewRoutes from "./routes/qmsOverview";
+import { runQmsReminders } from "./lib/qmsReminders";
 import rideProviderRoutes from './routes/rideProviders';
 import rideRequestRoutes from './routes/rideRequests';
 import trainingAlertRoutes from './routes/trainingAlerts';
@@ -150,6 +156,11 @@ app.use("/api/fleet/ride-providers", requireAuth, rideProviderRoutes);
 app.use("/api/fleet/rides", requireAuth, rideRequestRoutes);
 app.use("/api/fleet/settings", requireAuth, fleetSettingsRoutes);
 app.use("/api/fleet/analytics", requireAuth, requireAccess("fleet"), fleetAnalyticsRoutes);
+app.use("/api/qms/documents", requireAuth, requireAccess("qms"), qmsDocumentRoutes);
+app.use("/api/qms/deviations", requireAuth, requireAccess("qms"), qmsDeviationRoutes);
+app.use("/api/qms/capa", requireAuth, requireAccess("qms"), qmsCapaRoutes);
+app.use("/api/qms/changes", requireAuth, requireAccess("qms"), qmsChangeRoutes);
+app.use("/api/qms/overview", requireAuth, requireAccess("qms"), qmsOverviewRoutes);
 app.use("/api/training-alerts", requireAuth, requireRole(["admin", "executive"]), trainingAlertRoutes);
 app.use("/api/hr-self",       hrSelfRoutes);
 app.use("/api/induction",     requireAuth, inductionRoutes);
@@ -282,3 +293,14 @@ if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
   setTimeout(tick, 60_000);
   setInterval(tick, 24 * 60 * 60 * 1000).unref();
 }
+// QMS review-due reminders: notify owners of approved documents whose periodic
+// review falls inside the next 30 days. Runs daily, matching the fleet pattern.
+const runQmsRemindersSafely = () =>
+  runQmsReminders()
+    .then((result) => {
+      if (result.sent) console.log(`[qms-reminders] sent ${result.sent}`);
+    })
+    .catch((error) => console.error("[qms-reminders] failed", error));
+
+setTimeout(runQmsRemindersSafely, 45_000);
+setInterval(runQmsRemindersSafely, 24 * 60 * 60 * 1000).unref();

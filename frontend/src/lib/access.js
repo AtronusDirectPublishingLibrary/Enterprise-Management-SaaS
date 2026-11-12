@@ -52,6 +52,7 @@ export const TAB_KEYS = [
   "users",
   "settings",
   "fleet",
+  "qms",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -64,25 +65,25 @@ export const POSITION_ACCESS = {
     "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "alerts",
-    "news", "documents",
+    "news", "documents", "qms",
   ],
-  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents"],
+  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents", "qms"],
   "Strategy and Planning Officer": [
     "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "alerts", "news", "documents", "languages", "users", "publicSite", "settings",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "media",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "media", "qms",
   ],
   "Legal Counsel": [...PLANS_READ, "progress", "documents"],
-  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts"],
-  Engineer: ["pms", "aop", "progress", "archive", "myhr", "approvals"],
+  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts", "qms"],
+  Engineer: ["pms", "aop", "progress", "archive", "myhr", "approvals", "qms"],
   "IT Officer": [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "languages", "documents", "media",
+    "myhr", "approvals", "languages", "documents", "media", "qms",
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -113,7 +114,7 @@ export function canApprovePayroll(user) {
 const ROLE_ACCESS = {
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -140,6 +141,24 @@ export function canGovernPlans(user) {
   if (!user) return false;
   if (user.role === "admin") return true;
   return PLAN_GOVERNANCE_POSITIONS.includes((user.position || "").trim());
+}
+
+/** Mirror of the server-side QMS approval authority. */
+export function isQmsApprover(user) {
+  if (!user) return false;
+  if (isSystemAdmin(user)) return true;
+  return ["Chief Executive Officer", "QA and regulatory Affairs Officer"].includes(
+    (user.position || "").trim(),
+  );
+}
+
+/** Create rights follow the WHO access matrix; Engineer/IT/Executive are read-only. */
+export function canCreateQmsDocument(user) {
+  if (!user) return false;
+  if (isQmsApprover(user)) return true;
+  return ["Human Resource and Administration Manager", "Operation Manager"].includes(
+    (user.position || "").trim(),
+  );
 }
 
 export function canAccess(user, key) {
@@ -185,6 +204,7 @@ export const PATH_ACCESS = [
   { prefix: "/payroll", key: "payroll" },
   { prefix: "/payslips", key: "payroll" },
   { prefix: "/fleet", key: "fleet" },
+  { prefix: "/qms", key: "qms" },
   { prefix: "/language-settings", key: "languages" },
   { prefix: "/plan-alerts", key: "alerts" },
   { prefix: "/manage-news", key: "news" },

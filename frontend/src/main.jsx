@@ -11,6 +11,7 @@ import "./styles/theme.css";
 import "./styles/public.css";
 import "./styles/hr.css";
 import "./styles/app.css";
+import "./styles/qms.css";
 import App from "./App";
 import { AuthProvider } from "./lib/auth";
 import { NotificationProvider } from "./lib/notifications";

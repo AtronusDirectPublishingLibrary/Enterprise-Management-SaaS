@@ -57,6 +57,12 @@ import FleetSettings from "./pages/fleet/FleetSettings";
 import FleetAnalytics from "./pages/fleet/FleetAnalytics";
 import GatePassVerifyPage from "./pages/fleet/GatePassVerifyPage";
 import GatePassPage from "./pages/fleet/GatePassPage";
+import QmsDocuments from "./pages/qms/QmsDocuments";
+import QmsDocumentEditor from "./pages/qms/QmsDocumentEditor";
+import QmsOverview from "./pages/qms/QmsOverview";
+import QmsDeviations from "./pages/qms/QmsDeviations";
+import QmsCapa from "./pages/qms/QmsCapa";
+import QmsChanges from "./pages/qms/QmsChanges";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const PlansPage = lazy(() => import("./pages/PlansPage"));
@@ -161,6 +167,14 @@ export default function App() {
         <Route path="/fleet/rides" element={<RideServices />} />
         <Route path="/fleet/settings" element={<FleetSettings />} />
         <Route path="/fleet/analytics" element={<FleetAnalytics />} />
+        <Route path="/qms" element={<Navigate to="/qms/overview" replace />} />
+        <Route path="/qms/overview" element={<QmsOverview />} />
+        <Route path="/qms/documents" element={<QmsDocuments />} />
+        <Route path="/qms/documents/new" element={<QmsDocumentEditor />} />
+        <Route path="/qms/documents/:id" element={<QmsDocumentEditor />} />
+        <Route path="/qms/deviations" element={<QmsDeviations />} />
+        <Route path="/qms/capa" element={<QmsCapa />} />
+        <Route path="/qms/changes" element={<QmsChanges />} />
         <Route path="/recruitment" element={<RoleRoute allowedRoles={["admin", "executive"]}><Recruitment /></RoleRoute>} />
         <Route path="/hr-operations" element={<RoleRoute allowedRoles={["admin", "executive"]}><HrOperations /></RoleRoute>} />
         <Route path="/hr-analytics" element={<RoleRoute allowedRoles={["admin", "executive"]}><HRAnalytics /></RoleRoute>} />

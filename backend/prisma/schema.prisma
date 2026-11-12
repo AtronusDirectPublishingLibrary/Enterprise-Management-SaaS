@@ -220,6 +220,20 @@ model User {
   rideRequestsApproved         RideRequest[]    @relation("RideApprover")
   driverProfile                Driver?          @relation("DriverUser")
 
+  // QMS document control
+  qmsDocumentsOwned    QmsDocument[] @relation("QmsDocumentOwner")
+  qmsDocumentsReviewed QmsDocument[] @relation("QmsDocumentReviewer")
+  qmsDocumentsApproved QmsDocument[] @relation("QmsDocumentApprover")
+
+  // QMS quality events and improvements
+  qmsDeviationsReported QmsDeviation[]     @relation("QmsDeviationReporter")
+  qmsDeviationsOwned    QmsDeviation[]     @relation("QmsDeviationOwner")
+  qmsDeviationsClosed   QmsDeviation[]     @relation("QmsDeviationCloser")
+  qmsCapasOwned         QmsCapa[]          @relation("QmsCapaOwner")
+  qmsCapasVerified      QmsCapa[]          @relation("QmsCapaVerifier")
+  qmsChangesOwned       QmsChangeControl[] @relation("QmsChangeOwner")
+  qmsChangesApproved    QmsChangeControl[] @relation("QmsChangeApprover")
+
   @@map("users")
 }
 
@@ -1589,4 +1603,152 @@ model FleetSetting {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("fleet_setting")
+}
+
+// ============================================================
+// QMS — QUALITY MANAGEMENT SYSTEM
+// WHO-aligned document control module.
+// ============================================================
+
+model QmsDocument {
+  id              String        @id @default(cuid())
+  code            String // "SOP-QA-001" (document family; unique per version)
+  title           String
+  titleAm         String?       @map("title_am")
+  description     String?
+  category        String // SOP | Specification | Protocol | Record | Policy | Work Instruction | Form
+  department      String? // QA | Production | QC | Warehouse | Engineering | Regulatory | HR | IT
+  version         String        @default("1.0") // "1.0", "2.1"
+  status          String        @default("DRAFT") // DRAFT | IN_REVIEW | APPROVED | SUPERSEDED | OBSOLETE
+  ownerId         String        @map("owner_id")
+  owner           User          @relation("QmsDocumentOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewerId      String?       @map("reviewer_id")
+  reviewer        User?         @relation("QmsDocumentReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  approverId      String?       @map("approver_id")
+  approver        User?         @relation("QmsDocumentApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  fileUrl         String?       @map("file_url")
+  fileName        String?       @map("file_name")
+  fileSize        Int?          @map("file_size")
+  effectiveDate   DateTime?     @map("effective_date")
+  reviewDueAt     DateTime?     @map("review_due_at")
+  approvedAt      DateTime?     @map("approved_at")
+  supersededAt    DateTime?     @map("superseded_at")
+  supersededById  String?       @map("superseded_by_id")
+  supersededBy    QmsDocument?  @relation("QmsSupersession", fields: [supersededById], references: [id], onDelete: SetNull)
+  supersedes      QmsDocument[] @relation("QmsSupersession")
+  changeSummary   String?       @map("change_summary")
+  rejectionReason String?       @map("rejection_reason")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@unique([code, version])
+  @@index([code])
+  @@index([status, category])
+  @@index([department])
+  @@index([ownerId])
+  @@index([effectiveDate])
+  @@map("qms_document")
+}
+
+// ============================================================
+// QMS — DEVIATIONS, CAPA AND CHANGE CONTROL
+// Completes the WHO quality-event lifecycle beyond document control.
+// ============================================================
+
+model QmsDeviation {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  title           String
+  description     String
+  category        String    @default("Process") // Product | Process | Equipment | Document | Supplier | Other
+  severity        String    @default("Minor") // Critical | Major | Minor
+  source          String    @default("Internal") // Internal | Audit | Complaint | Supplier | Regulatory | Customer
+  department      String?
+  detectedAt      DateTime  @default(now()) @map("detected_at")
+  reportedById    String    @map("reported_by_id")
+  reportedBy      User      @relation("QmsDeviationReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  ownerId         String    @map("owner_id")
+  owner           User      @relation("QmsDeviationOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  status          String    @default("OPEN") // OPEN | UNDER_INVESTIGATION | CLOSED
+  immediateAction String?   @map("immediate_action")
+  rootCause       String?   @map("root_cause")
+  investigation   String?
+  closureNotes    String?   @map("closure_notes")
+  dueAt           DateTime? @map("due_at")
+  closedAt        DateTime? @map("closed_at")
+  closedById      String?   @map("closed_by_id")
+  closedBy        User?     @relation("QmsDeviationCloser", fields: [closedById], references: [id], onDelete: SetNull)
+  capas           QmsCapa[] @relation("QmsCapaDeviation")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, severity])
+  @@index([department])
+  @@index([ownerId])
+  @@index([detectedAt])
+  @@map("qms_deviation")
+}
+
+model QmsCapa {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  title              String
+  type               String        @default("Corrective") // Corrective | Preventive
+  sourceType         String        @default("Deviation") // Deviation | Change | Audit | Complaint | Other
+  sourceRef          String?       @map("source_ref")
+  description        String
+  rootCause          String?       @map("root_cause")
+  actionPlan         String?       @map("action_plan")
+  department         String?
+  ownerId            String        @map("owner_id")
+  owner              User          @relation("QmsCapaOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  status             String        @default("OPEN") // OPEN | IN_PROGRESS | PENDING_VERIFICATION | CLOSED
+  dueAt              DateTime?     @map("due_at")
+  effectivenessCheck String?       @map("effectiveness_check")
+  verifiedById       String?       @map("verified_by_id")
+  verifiedBy         User?         @relation("QmsCapaVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt         DateTime?     @map("verified_at")
+  closedAt           DateTime?     @map("closed_at")
+  deviationId        String?       @map("deviation_id")
+  deviation          QmsDeviation? @relation("QmsCapaDeviation", fields: [deviationId], references: [id], onDelete: SetNull)
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  @@index([status, dueAt])
+  @@index([ownerId])
+  @@index([deviationId])
+  @@map("qms_capa")
+}
+
+model QmsChangeControl {
+  id                 String    @id @default(cuid())
+  code               String    @unique
+  title              String
+  description        String
+  reason             String
+  category           String    @default("Process") // Document | Process | Equipment | Facility | System | Supplier
+  riskLevel          String    @default("Medium") // High | Medium | Low
+  department         String?
+  ownerId            String    @map("owner_id")
+  owner              User      @relation("QmsChangeOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  status             String    @default("DRAFT") // DRAFT | IN_REVIEW | APPROVED | IMPLEMENTED | CLOSED | REJECTED
+  impactAssessment   String?   @map("impact_assessment")
+  implementationPlan String?   @map("implementation_plan")
+  effectiveDate      DateTime? @map("effective_date")
+  relatedDocument    String?   @map("related_document")
+  approvedById       String?   @map("approved_by_id")
+  approvedBy         User?     @relation("QmsChangeApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt         DateTime? @map("approved_at")
+  implementedAt      DateTime? @map("implemented_at")
+  closedAt           DateTime? @map("closed_at")
+  closureNotes       String?   @map("closure_notes")
+  rejectionReason    String?   @map("rejection_reason")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, riskLevel])
+  @@index([department])
+  @@index([ownerId])
+  @@index([effectiveDate])
+  @@map("qms_change_control")
 }

@@ -173,6 +173,7 @@ function greeting(date) {
 export default function HomePage() {
   const { user } = useAuth();
   const [briefing, setBriefing] = useState(null);
+  const [qmsDue, setQmsDue] = useState(null);
   const now = new Date();
   const profile = profileFor(user);
   // Address people by first name on their home page; full names stay for
@@ -186,6 +187,16 @@ export default function HomePage() {
   useEffect(() => {
     api.get("/home/briefing").then(setBriefing).catch(() => setBriefing(null));
   }, []);
+
+  useEffect(() => {
+    if (!canAccess(user, "qms")) {
+      setQmsDue(null);
+      return;
+    }
+    api.get("/qms/documents/due-for-review?days=30")
+      .then((data) => setQmsDue((data?.items || []).length))
+      .catch(() => setQmsDue(null));
+  }, [user]);
 
   return (
     <div className="container-fluid py-4 home-page">
@@ -222,6 +233,37 @@ export default function HomePage() {
           ))}
         </section>
       )}
+
+      {canAccess(user, "qms") && qmsDue !== null ? (
+        <section className="home-section pt-0" aria-label="QMS review reminders">
+          <Link
+            to="/qms/documents?filter=due"
+            className="home-card d-flex align-items-center justify-content-between flex-wrap gap-3 text-decoration-none text-reset"
+          >
+            <div className="d-flex align-items-center gap-3">
+              <span
+                className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                style={{ width: 52, height: 52, background: "rgba(201,162,39,0.14)", color: "var(--brand-secondary)" }}
+              >
+                <ShieldCheck size={24} />
+              </span>
+              <div>
+                <div className="home-eyebrow">Quality (QMS)</div>
+                <h2 className="h6 mb-1">QMS Documents Due for Review</h2>
+                <p className="small text-muted mb-0">
+                  Approved documents with a periodic review in the next 30 days.
+                </p>
+              </div>
+            </div>
+            <div className="d-flex align-items-center gap-3">
+              <span className="display-6 fw-semibold" style={{ color: "var(--brand-primary)" }}>{qmsDue}</span>
+              <span className="btn btn-brand btn-sm d-inline-flex align-items-center gap-1">
+                Open register <ArrowRight size={14} />
+              </span>
+            </div>
+          </Link>
+        </section>
+      ) : null}
 
       <div className="row g-4 mt-1">
         <div className="col-xl-7">

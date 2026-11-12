@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
+  AlertTriangle,
   Archive,
   BarChart3,
   BellRing,
@@ -15,6 +16,7 @@ import {
   Database,
   FileText,
   Film,
+  GitPullRequest,
   Globe,
   LayoutDashboard,
   LogOut,
@@ -25,11 +27,13 @@ import {
   PlusCircle,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   Target,
   TrendingUp,
   Truck,
   Users as UsersIcon,
   Wallet,
+  Wrench,
   X,
 } from "lucide-react";
 import { useAuth } from "../lib/auth";
@@ -56,9 +60,9 @@ export default function MainLayout() {
   const [openGroups, setOpenGroups] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(GROUP_STORAGE_KEY) || "{}");
-      return { workspace: true, planning: true, hr: true, fleet: true, admin: true, ...stored };
+      return { workspace: true, planning: true, hr: true, fleet: true, qms: true, admin: true, ...stored };
     } catch {
-      return { workspace: true, planning: true, hr: true, fleet: true, admin: true };
+      return { workspace: true, planning: true, hr: true, fleet: true, qms: true, admin: true };
     }
   });
 
@@ -122,6 +126,18 @@ export default function MainLayout() {
           { key: "fleet", path: "/fleet/rides", label: "Ride Services", icon: CarFront },
           { key: "fleet", path: "/fleet/analytics", label: "Fleet Analytics", icon: BarChart3 },
           { key: "fleet", path: "/fleet/settings", label: "Fleet Settings", icon: Settings },
+        ],
+      },
+      {
+        key: "qms",
+        label: "Quality (QMS)",
+        icon: ShieldCheck,
+        items: [
+          { key: "qms", path: "/qms/overview", label: "QMS Overview", icon: LayoutDashboard },
+          { key: "qms", path: "/qms/documents", label: "Document Register", icon: FileText },
+          { key: "qms", path: "/qms/deviations", label: "Deviations", icon: AlertTriangle },
+          { key: "qms", path: "/qms/capa", label: "CAPA", icon: Wrench },
+          { key: "qms", path: "/qms/changes", label: "Change Control", icon: GitPullRequest },
         ],
       },
       {

@@ -6,7 +6,7 @@
 export const TAB_KEYS = [
   "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
   "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll",
-  "languages", "alerts", "news", "documents", "media", "publicSite", "users", "settings", "fleet",
+  "languages", "alerts",   "news", "documents", "media", "publicSite", "users", "settings", "fleet", "qms",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -18,23 +18,23 @@ export const POSITION_ACCESS: Record<string, string[]> = {
   "Chief Executive Officer": [
     "*", "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "alerts",
-    "news", "documents",
+    "news", "documents", "qms",
   ],
-  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents"],
+  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents", "qms"],
   "Strategy and Planning Officer": [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "alerts", "news", "documents",
+    "myhr", "approvals", "alerts", "news", "documents", "qms",
   ],
   "Legal Counsel": [...PLANS_READ, "progress", "documents"],
-  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts"],
-  Engineer: ["pms", "aop", "progress", "archive", "myhr", "approvals"],
+  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts", "qms"],
+  Engineer: ["pms", "aop", "progress", "archive", "myhr", "approvals", "qms"],
   "IT Officer": [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "languages", "documents", "media",
+    "myhr", "approvals", "languages", "documents", "media", "qms",
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -46,7 +46,7 @@ const ROLE_ACCESS: Record<string, string[]> = {
   admin: ["*"],
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -102,4 +102,17 @@ export function isFleetManager(user: { role: string; position?: string | null } 
   if (!user) return false;
   if (isAdminUser(user)) return true;
   return (user.position || "").trim() === "Human Resource and Administration Manager";
+}
+
+/**
+ * QMS approval authority. Admins (including the Strategy and Planning Officer)
+ * keep the emergency override; the CEO and the QA & Regulatory Affairs Officer
+ * are the two offices that may approve controlled documents.
+ */
+export function isQmsApprover(user: { role: string; position?: string | null } | undefined) {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  return ["Chief Executive Officer", "QA and regulatory Affairs Officer"].includes(
+    (user.position || "").trim()
+  );
 }
