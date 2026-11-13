@@ -177,14 +177,14 @@ def chapter_executive(doc):
         doc,
         "PMS → Executive is the portfolio command centre. It reads the same project, plan and financial evidence as the PMS dashboard and consolidated reports, then adds cross-filtering, portfolio health, risk ranking and an AI decision brief. The filters apply to every chart and to the exported dataset.",
     )
-    figure(doc, "19-executive-bi.jpg", "PMS → Executive — cross-filtered portfolio intelligence, AI decision brief, health, delivery and spend and directorate performance.", 16.2)
+    figure(doc, "19-executive-bi.jpg", "PMS → Executive — cross-filtered portfolio intelligence, AI decision brief, health, delivery and spend and department performance.", 16.2)
 
     h2(doc, "Slice the portfolio")
     numbered(doc, "Open **PMS → Executive**.")
-    numbered(doc, "Choose a **Directorate**, **Status**, **Fund** or **Manager** filter. Each selection re-queries the whole page.")
+    numbered(doc, "Choose a **Department**, **Status**, **Fund** or **Manager** filter. Each selection re-queries the whole page.")
     numbered(doc, "Use **Clear filters** to return to the full portfolio.")
     numbered(doc, "Read the four headline metrics first: overall delivery, budget under delivery, budget variance and at-risk count.")
-    numbered(doc, "Move to the AI brief, then the health chart, delivery and spend trend, directorate performance and the project attention table.")
+    numbered(doc, "Move to the AI brief, then the health chart, delivery and spend trend, department performance and the project attention table.")
     bullet(doc, "**Overall delivery** is the average progress of projects in the current slice.")
     bullet(doc, "**Budget under delivery** compares the approved plan with actual spend; **variance** is plan minus actual.")
     bullet(doc, "**At risk** counts projects whose schedule-adjusted health is At Risk or Overdue.")
@@ -217,7 +217,7 @@ def chapter_executive(doc):
     h2(doc, "Power BI-ready dataset")
     numbered(doc, "Apply the filters you want the dataset to reflect.")
     numbered(doc, "Choose **Power BI dataset** in the hero.")
-    numbered(doc, "The CSV downloads with one row per project and columns for status, priority, directorate, division, manager, fund, dates, progress, plan, actual, variance, utilisation, health, days to due, activity count and milestone count.")
+    numbered(doc, "The CSV downloads with one row per project and columns for status, priority, department, division, manager, fund, dates, progress, plan, actual, variance, utilisation, health, days to due, activity count and milestone count.")
     numbered(doc, "Import the CSV into Power BI Desktop or refresh it from the same endpoint. Keep the filtered view and the dashboard view on the same date.")
     bullet(doc, "The dataset is a flat extract, not a live embedded Power BI tenant. It is deliberately portable and contains no credentials.")
     bullet(doc, "Do not edit the downloaded CSV and present it as the system record. If the data is wrong, correct the project or plan and export again.")

@@ -23,7 +23,7 @@ async function main() {
       priority: "Critical",
       progress: 35,
       projectCategory: "Translational",
-      leadDirectorate: "LMD",
+      leadDepartment: "LMD",
       leadDivision: "Biobank",
       piName: "Dr. Aster Kebede",
       piEmail: "aster@ethiobiopharma.et",

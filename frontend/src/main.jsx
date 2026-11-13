@@ -11,11 +11,15 @@ import "./styles/theme.css";
 import "./styles/public.css";
 import "./styles/hr.css";
 import "./styles/app.css";
+import "./styles/fleet.css";
+import "./styles/executive-bi.css";
+import "./styles/news-social.css";
 import "./styles/qms.css";
 import App from "./App";
 import { AuthProvider } from "./lib/auth";
 import { NotificationProvider } from "./lib/notifications";
 import { LanguageProvider } from "./lib/language";
+import { ThemeProvider } from "./lib/theme";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -23,6 +27,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <ErrorBoundary>
       <HelmetProvider>
         <BrowserRouter>
+          <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
               <NotificationProvider>
@@ -30,6 +35,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               </NotificationProvider>
             </AuthProvider>
           </LanguageProvider>
+          </ThemeProvider>
         </BrowserRouter>
       </HelmetProvider>
     </ErrorBoundary>

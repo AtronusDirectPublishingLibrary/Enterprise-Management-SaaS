@@ -49,12 +49,50 @@ export type ContactSettings = {
   phone: string;
 };
 
+/**
+ * The single source of truth for the platform palette. Keys are stored, the
+ * CSS variable names are applied by the front end. A colour must be a 6-digit
+ * hex value; anything else falls back to the approved default so a bad value
+ * can never leave the UI unstyled.
+ */
+export const THEME_COLORS = {
+  primary: "#0B2545",
+  primaryDark: "#081a30",
+  secondary: "#C9A227",
+  secondaryDeep: "#8a6a12",
+  secondarySoft: "#e8c766",
+  accent: "#6B2D2D",
+  accentDeep: "#8a3a3a",
+  background: "#F5F2EA",
+  surface: "#FFFFFF",
+  text: "#1A1A1A",
+  muted: "#6c757d",
+  success: "#2ecc71",
+  warning: "#f39c12",
+  danger: "#e74c3c",
+  info: "#3498db",
+  canvas: "#418acf",
+} as const;
+
+export type ThemeColorKey = keyof typeof THEME_COLORS;
+export type ThemeColors = Record<ThemeColorKey, string>;
+
+export type ThemeSettings = {
+  /** Working palette edited in Settings. */
+  colors: ThemeColors;
+  /** Palette currently served to the website and the workspace. */
+  published: ThemeColors;
+  updatedAt: string;
+  publishedAt: string;
+};
+
 export type PublicSiteSettings = {
   brand: BrandSettings;
   contact: ContactSettings;
   banner: BannerSettings;
   social: SocialSettings;
   visitors: VisitorSettings;
+  theme: ThemeSettings;
 };
 
 export const SOCIAL_PLATFORMS: SocialPlatform[] = ["facebook", "x", "linkedin", "telegram", "youtube"];
@@ -85,6 +123,12 @@ export const DEFAULT_SETTINGS: PublicSiteSettings = {
     measurementId: "",
     propertyId: "",
   },
+  theme: {
+    colors: { ...THEME_COLORS },
+    published: { ...THEME_COLORS },
+    updatedAt: "",
+    publishedAt: "",
+  },
 };
 
 const KEYS = {
@@ -93,6 +137,7 @@ const KEYS = {
   banner: "public.banner",
   social: "public.social",
   visitors: "public.visitors",
+  theme: "public.theme",
 } as const;
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -162,10 +207,34 @@ function normaliseVisitors(value: unknown): VisitorSettings {
   };
 }
 
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+function normaliseColors(value: unknown): ThemeColors {
+  const raw = isObject(value) ? value : {};
+  const colors = { ...THEME_COLORS } as ThemeColors;
+  for (const key of Object.keys(THEME_COLORS) as ThemeColorKey[]) {
+    const candidate = asString(raw[key]).trim();
+    if (HEX.test(candidate)) colors[key] = candidate.toUpperCase();
+  }
+  return colors;
+}
+
+function normaliseTheme(value: unknown): ThemeSettings {
+  const raw = isObject(value) ? value : {};
+  return {
+    colors: normaliseColors(raw.colors),
+    published: normaliseColors(raw.published),
+    updatedAt: asString(raw.updatedAt),
+    publishedAt: asString(raw.publishedAt),
+  };
+}
+
 /** Reads every public-site block, falling back to defaults for missing keys. */
 export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
   const rows = await prisma.appSetting.findMany({
-    where: { key: { in: [KEYS.brand, KEYS.contact, KEYS.banner, KEYS.social, KEYS.visitors] } },
+    where: {
+      key: { in: [KEYS.brand, KEYS.contact, KEYS.banner, KEYS.social, KEYS.visitors, KEYS.theme] },
+    },
   });
   const byKey = new Map(rows.map((row) => [row.key, row.value]));
 
@@ -175,6 +244,7 @@ export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
     banner: normaliseBanner(byKey.get(KEYS.banner)),
     social: normaliseSocial(byKey.get(KEYS.social)),
     visitors: normaliseVisitors(byKey.get(KEYS.visitors)),
+    theme: normaliseTheme(byKey.get(KEYS.theme)),
   };
 }
 
@@ -193,6 +263,7 @@ export async function savePublicSiteSettings(
     banner: unknown;
     social: unknown;
     visitors: unknown;
+    theme: unknown;
   }>,
   updatedBy?: string
 ): Promise<PublicSiteSettings> {
@@ -212,6 +283,23 @@ export async function savePublicSiteSettings(
   }
   if (patch.visitors !== undefined) {
     writes.push(saveSetting(KEYS.visitors, normaliseVisitors(patch.visitors), updatedBy));
+  }
+  if (patch.theme !== undefined) {
+    const incoming = isObject(patch.theme) ? patch.theme : {};
+    writes.push(
+      saveSetting(
+        KEYS.theme,
+        normaliseTheme({
+          ...current.theme,
+          ...incoming,
+          // Only the draft palette can be edited here; publishing is explicit.
+          published: current.theme.published,
+          publishedAt: current.theme.publishedAt,
+          updatedAt: new Date().toISOString(),
+        }),
+        updatedBy
+      )
+    );
   }
   await Promise.all(writes);
   return getPublicSiteSettings();
@@ -233,5 +321,22 @@ export function toPublicPayload(settings: PublicSiteSettings) {
       measurementId,
       ga4Configured: Boolean(measurementId),
     },
+    // Only the published palette reaches the website and the workspace.
+    theme: {
+      colors: settings.theme.published,
+      publishedAt: settings.theme.publishedAt,
+    },
   };
+}
+
+/** Copy the working palette to the live palette and return the fresh settings. */
+export async function publishTheme(updatedBy?: string) {
+  const current = await getPublicSiteSettings();
+  const publishedAt = new Date().toISOString();
+  await saveSetting(
+    KEYS.theme,
+    { ...current.theme, published: current.theme.colors, publishedAt, updatedAt: publishedAt },
+    updatedBy
+  );
+  return getPublicSiteSettings();
 }

@@ -16,8 +16,13 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(username, password, token) {
-    const res = await api.post("/auth/login", { username, password, ...(token ? { token } : {}) });
+  async function login(username, password, token, turnstileToken) {
+    const res = await api.post("/auth/login", {
+      username,
+      password,
+      ...(token ? { token } : {}),
+      ...(turnstileToken ? { turnstileToken } : {}),
+    });
     const userData = {
       username: res.username,
       firstName: res.firstName,

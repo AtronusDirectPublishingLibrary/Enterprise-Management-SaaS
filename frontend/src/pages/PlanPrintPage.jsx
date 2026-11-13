@@ -89,7 +89,7 @@ export default function PlanPrintPage() {
         .board-pack td { padding: 5px 6px; border-bottom: 1px solid #eceff1; vertical-align: top; }
         .board-pack .num { text-align: right; }
         .board-pack .muted { color: #6c757d; }
-        .board-pack .cover { border-left: 6px solid #0B2545; padding-left: 16px; }
+        .board-pack .cover { border-left: 6px solid var(--brand-primary); padding-left: 16px; }
         .board-pack .meta { font-size: 12px; color: #495057; }
         .board-pack .pill { display: inline-block; border: 1px solid #cfd8d1; border-radius: 999px; padding: 2px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
         .board-pack .toolbar { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 18px; }
@@ -115,7 +115,7 @@ export default function PlanPrintPage() {
       <div className="cover mb-3">
         <div className="d-flex justify-content-between align-items-start">
           <div>
-            <div className="text-uppercase" style={{ fontSize: 11, letterSpacing: ".12em", color: "#0B2545", fontWeight: 700 }}>
+            <div className="text-uppercase" style={{ fontSize: 11, letterSpacing: ".12em", color: "var(--brand-primary)", fontWeight: 700 }}>
               Ethio-Biopharma · {TYPE_LABELS[plan.type] || plan.type}
             </div>
             <h1>{plan.title}</h1>

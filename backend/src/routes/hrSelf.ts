@@ -465,7 +465,7 @@ router.get("/overview", async (req, res, next) => {
           (row) => row.expiresAt && row.expiresAt >= now && row.expiresAt <= new Date(now.getTime() + 30 * DAY)
         ).length;
         const pendingTimesheets =
-          reportTimesheets.find((row) => row.userId === report.id && row.status === "SUBMITTED")?._count._all || 0;
+          reportTimesheets.find((row) => row.userId === report.id && row.status === "FORWARDED")?._count._all || 0;
         const pendingLeave =
           reportLeave.find((row) => row.userId === report.id && row.status === "PENDING")?._count._all || 0;
         return { ...report, overdue, expiring, pendingTimesheets, pendingLeave };

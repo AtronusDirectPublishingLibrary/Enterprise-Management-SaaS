@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAccess, requireAuth } from "../middleware/auth";
 import { allows } from "../lib/access";
-import { upload } from "../middleware/upload";
+import { uploadDocument } from "../middleware/upload";
 import { nextDocumentNumber } from "../lib/numbering";
 
 const router = Router();
@@ -148,7 +148,7 @@ router.post(
   "/",
   requireAuth,
   canManageDocuments,
-  upload.single("file"),
+  uploadDocument.single("file"),
   async (req, res, next) => {
     try {
       const input = DocumentInput.parse(req.body);
@@ -192,7 +192,7 @@ router.post(
           isPublic,
           publishedAt: isPublic ? new Date() : null,
           projectId: clean(input.projectId),
-          fileUrl: `/uploads/${req.file.filename}`,
+          fileUrl: `/uploads/documents/${req.file.filename}`,
           fileName: req.file.originalname,
           uploadedBy: uploaderName || uploader?.username || req.user!.username,
         },
@@ -212,7 +212,7 @@ router.put(
   "/:id",
   requireAuth,
   canManageDocuments,
-  upload.single("file"),
+  uploadDocument.single("file"),
   async (req, res, next) => {
     try {
       const input = DocumentInput.partial().parse(req.body);

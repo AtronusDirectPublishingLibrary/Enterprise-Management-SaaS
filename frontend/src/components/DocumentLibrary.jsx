@@ -7,6 +7,7 @@ import {
   EyeOff,
   FileText,
   Globe2,
+  UploadCloud,
   Lock,
   Plus,
   RefreshCw,
@@ -383,6 +384,8 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
       : { isPublic: defaultPublic }),
   }));
   const fileRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const [fileDragging, setFileDragging] = useState(false);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -391,7 +394,7 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
   const submit = async (event) => {
     event.preventDefault();
     setFormError("");
-    if (!doc && !fileRef.current?.files?.[0]) {
+    if (!doc && !file) {
       setFormError("Choose the document file to upload.");
       return;
     }
@@ -400,7 +403,8 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
       if (key === "isPublic") fd.append(key, value ? "true" : "false");
       else fd.append(key, value ?? "");
     });
-    if (fileRef.current?.files?.[0]) fd.append("file", fileRef.current.files[0]);
+    const chosen = file || fileRef.current?.files?.[0];
+    if (chosen) fd.append("file", chosen);
     setSaving(true);
     try {
       await onSave(fd);
@@ -422,7 +426,7 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
             </div>
             <button type="button" className="btn-close" onClick={onClose} aria-label="Close" />
           </div>
-          <form onSubmit={submit}>
+          <form className="document-form" onSubmit={submit}>
             <div className="modal-body">
               {formError ? <div className="alert alert-danger py-2 small">{formError}</div> : null}
               <div className="row g-3">
@@ -491,14 +495,46 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label small fw-bold">File {doc ? "(leave blank to keep the current file)" : "*"}</label>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    className="form-control"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                    required={!doc}
-                  />
+                  <label className="form-label small fw-bold">Document file *</label>
+                  <div className="form-text mt-0 mb-2">
+                    {doc
+                      ? "Choose a new file only if you are replacing the current one."
+                      : "A file is required. Choose the document you want to file in the internal archive."}
+                  </div>
+                  <div
+                    className={`document-file-pick ${fileDragging ? "is-dragging" : ""} ${file ? "has-file" : ""}`}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setFileDragging(true);
+                    }}
+                    onDragLeave={() => setFileDragging(false)}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      setFileDragging(false);
+                      const dropped = event.dataTransfer?.files?.[0];
+                      if (dropped) setFile(dropped);
+                    }}
+                  >
+                    <UploadCloud size={18} />
+                    <div className="document-file-pick__copy">
+                      <strong>{file ? file.name : "Drop a file here or choose one"}</strong>
+                      <span>
+                        {file
+                          ? `${Math.max(1, Math.round(file.size / 1024))} KB · ready to upload`
+                          : "PDF, Word, Excel, PowerPoint or text. Maximum 25 MB."}
+                      </span>
+                    </div>
+                    <label className="btn btn-sm btn-outline-secondary mb-0">
+                      {file ? "Replace" : "Browse"}
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        className="visually-hidden"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        onChange={(event) => setFile(event.target.files?.[0] || null)}
+                      />
+                    </label>
+                  </div>
                   {doc?.fileName ? <div className="form-text">Current file: {doc.fileName}</div> : null}
                 </div>
 
@@ -530,7 +566,7 @@ function DocumentForm({ doc, defaultPublic, onSave, onClose }) {
                 Cancel
               </button>
               <button type="submit" className="btn btn-brand" disabled={saving}>
-                {saving ? "Saving…" : doc ? "Save changes" : "File document"}
+                {saving ? "Saving…" : doc ? "Save changes" : "Save document"}
               </button>
             </div>
           </form>

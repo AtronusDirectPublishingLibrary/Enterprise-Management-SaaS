@@ -19,6 +19,19 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/** Attaches a valid session when present, but lets public endpoints continue. */
+export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const token = req.cookies?.[COOKIE_NAME] || req.headers.authorization?.replace("Bearer ", "");
+  if (token) {
+    try {
+      req.user = verifyToken(token);
+    } catch {
+      // Public files remain public; private files will reject the request.
+    }
+  }
+  next();
+}
+
 export function requireAccess(key: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) return res.status(401).json({ message: "Not authenticated" });

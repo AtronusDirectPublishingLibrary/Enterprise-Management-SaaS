@@ -6,16 +6,18 @@
 
 :root {
   /* Core palette */
-  --ink: #0b1f33;
-  --ink-soft: #33455a;
-  --ink-muted: #56626f;
-  --ivory: #f7f4ec;
-  --ivory-2: #efe9dc;
-  --navy: #0b2545;
-  --navy-deep: #071a31;
-  --shell-bg: #071a31;
-  --gold: #c9a227;
-  --gold-ink: #7a5c10; /* AA on ivory (5.9:1) */
+  /* The website reads the same published brand tokens as the workspace, so a
+     palette published in Settings repaints the public pages too. */
+  --ink: var(--brand-primary);
+  --ink-soft: color-mix(in srgb, var(--brand-primary) 72%, #ffffff);
+  --ink-muted: var(--brand-muted);
+  --ivory: var(--brand-bg);
+  --ivory-2: color-mix(in srgb, var(--brand-bg) 86%, #d9d0bb);
+  --navy: var(--brand-primary);
+  --navy-deep: var(--brand-primary-dark);
+  --shell-bg: var(--brand-primary-dark);
+  --gold: var(--brand-secondary);
+  --gold-ink: var(--brand-secondary-deep); /* AA on ivory */
   --line: rgba(11, 37, 69, 0.14);
   --line-strong: rgba(11, 37, 69, 0.28);
   --white-70: rgba(255, 255, 255, 0.72);
@@ -1221,6 +1223,60 @@ body {
   color: #fff;
 }
 
+.footer-qr {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin: 2.2rem 0 0 auto;
+  padding: 0.9rem 1.15rem 0.9rem 0.9rem;
+  max-width: 610px;
+  border: 1px solid rgba(201, 162, 39, 0.45);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(201, 162, 39, 0.16), transparent 55%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+.footer-qr__frame {
+  display: block;
+  flex: 0 0 auto;
+  padding: 0.38rem;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.footer-qr__frame:hover { transform: translateY(-2px) rotate(-0.6deg); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32); }
+.footer-qr__frame img { display: block; width: 100px; height: auto; }
+.footer-qr__copy { min-width: 0; }
+.footer-qr__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  color: var(--gold);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.28rem;
+}
+.footer-qr__copy strong { display: block; color: #fff; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.01em; }
+.footer-qr__copy p { margin: 0.2rem 0 0.5rem !important; color: rgba(255, 255, 255, 0.64) !important; font-size: 0.72rem !important; line-height: 1.45 !important; max-width: 42ch; }
+.footer-qr__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  border-radius: 999px;
+  padding: 0.26rem 0.6rem;
+  color: #f4dfa2;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(201, 162, 39, 0.08);
+}
+.footer-qr__download:hover { color: var(--brand-primary); background: var(--gold); border-color: var(--gold); }
+
 .footer-bottom {
   display: flex;
   flex-wrap: wrap;
@@ -1243,7 +1299,7 @@ body {
 }
 
 .footer-credit a {
-  color: var(--brand-gold, #c9a227);
+  color: var(--brand-gold, var(--brand-secondary));
   font-weight: 700;
   text-decoration: none;
 }
@@ -1734,9 +1790,10 @@ body {
   display: block !important;
   flex: none !important;
   padding: 0 !important;
+  background: transparent !important;
 }
 
-/* Every footer block inherits `background-color: #0b2545` and 4rem of top
+/* Every footer block inherits `background-color: var(--brand-primary)` and 4rem of top
    padding from `[class*="footer"]` in the legacy sheet, which painted the
    footer in two blues and pushed the columns down. */
 #root .public-site .site-footer .footer-grid,
@@ -1781,9 +1838,13 @@ body {
 }
 
 #root .public-site .site-footer .footer-contact-link {
-  display: inline-flex !important;
+  display: block !important;
   flex: none !important;
-  padding: 0 0 2px !important;
+  width: auto !important;
+  margin: 0.15rem 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
 }
 
 #root .public-site .site-footer p,
@@ -2187,4 +2248,122 @@ body {
   #root .public-site .site-footer .footer-bottom .footer-copyright {
     max-width: 100% !important;
   }
+}
+
+@media (max-width: 640px) {
+  .footer-qr { align-items: flex-start; padding: 0.8rem; gap: 0.8rem; }
+  .footer-qr__frame img { width: 82px; }
+  .footer-qr__copy strong { font-size: 0.82rem; }
+  .footer-qr__copy p { font-size: 0.68rem !important; }
+}
+
+/* The legacy public sheet targets `[class*="footer"]` and turns every such
+   block into a full-width flex column. Restore the QR card at ID specificity. */
+#root .public-site .site-footer .footer-qr {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  flex: none !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: auto !important;
+  max-width: 610px !important;
+  margin: 2.2rem 0 0 auto !important;
+  padding: 0.9rem 1.15rem 0.9rem 0.9rem !important;
+  gap: 1.1rem !important;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(201, 162, 39, 0.16), transparent 55%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)) !important;
+  border: 1px solid rgba(201, 162, 39, 0.45) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 30px rgba(0, 0, 0, 0.16) !important;
+}
+#root .public-site .site-footer .footer-qr__frame {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0.38rem !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24) !important;
+}
+#root .public-site .site-footer .footer-qr__frame img {
+  display: block !important;
+  width: 100px !important;
+  max-width: 100px !important;
+  height: auto !important;
+}
+#root .public-site .site-footer .footer-qr__copy {
+  display: block !important;
+  flex: 0 1 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  text-align: left !important;
+}
+#root .public-site .site-footer .footer-qr__eyebrow {
+  display: inline-flex !important;
+  flex: none !important;
+  align-items: center !important;
+  gap: 0.32rem !important;
+  width: auto !important;
+  margin: 0 0 0.28rem !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--gold) !important;
+  font-size: 0.6rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+}
+#root .public-site .site-footer .footer-qr__copy strong {
+  display: block !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #fff !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+#root .public-site .site-footer .footer-qr__copy p {
+  max-width: 42ch !important;
+  margin: 0.2rem 0 0.5rem !important;
+  padding: 0 !important;
+  color: rgba(255, 255, 255, 0.64) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.45 !important;
+}
+#root .public-site .site-footer .footer-qr__download {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  gap: 0.34rem !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0.26rem 0.6rem !important;
+  color: #f4dfa2 !important;
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+  background: rgba(201, 162, 39, 0.08) !important;
+  border: 1px solid rgba(201, 162, 39, 0.55) !important;
+  border-radius: 999px !important;
+}
+#root .public-site .site-footer .footer-qr__download:hover {
+  color: var(--brand-primary) !important;
+  background: var(--gold) !important;
+  border-color: var(--gold) !important;
+}
+
+@media (max-width: 640px) {
+  #root .public-site .site-footer .footer-qr { align-items: flex-start !important; gap: 0.8rem !important; padding: 0.8rem !important; }
+  #root .public-site .site-footer .footer-qr__frame img { width: 82px !important; max-width: 82px !important; }
+  #root .public-site .site-footer .footer-qr__copy strong { font-size: 0.82rem !important; }
 }

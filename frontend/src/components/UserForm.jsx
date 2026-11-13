@@ -9,7 +9,7 @@ export default function UserForm({ user, onSave, onClose }) {
     password: "",
     role: user?.role || "viewer",
     email: user?.email || "",
-    department: user?.department || user?.assignedDirectorate || "",
+    department: user?.department || "",
     position: user?.position || "",
   });
 

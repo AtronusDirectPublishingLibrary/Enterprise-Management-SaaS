@@ -143,7 +143,7 @@ def chapter_planning(doc):
     p(doc, "Each project has a workspace for work packages, activities, milestones, goals, risks, team, briefs, announcements, comments, timesheets and **documents**. The project workspace is the only place for project-specific files; those files never appear in the public library.")
     bullet(doc, "Use **Project → Documents** to attach contracts, approvals, reports and supporting files.")
     bullet(doc, "Use **Team** and **Comments** for collaboration. Critical decisions should also be recorded in the project brief or a formal document.")
-    bullet(doc, "Use **Portfolios** for cross-project investment and delivery views; the project record remains the source of truth.")
+    bullet(doc, "Use **Corporate Portfolios** for cross-project investment and delivery views, and **Project Portfolio** for PMS delivery; the project record remains the source of truth.")
 
 
 def chapter_myhr(doc):

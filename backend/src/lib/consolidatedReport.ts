@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { computePlanProgress } from "./planProgress";
 import { currentPlanFor, currentPlans } from "./currentPlans";
+import { buildReportAiBrief, type AiBrief } from "./executiveAnalytics";
 
 export const REPORT_TYPE_LABELS: Record<string, string> = {
   AOP: "Annual Operational Plan",
@@ -92,6 +93,7 @@ export interface ConsolidatedReport {
       lastUpdate?: string | null;
     };
   };
+  ai: AiBrief;
   narrative: {
     overview: string;
     achievements: string[];
@@ -384,6 +386,22 @@ export async function buildConsolidatedReport(input: {
 
   const slug = `${type.toLowerCase()}-${plan.periodLabel.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "")}`;
   const generatedAt = new Date();
+  const ai = await buildReportAiBrief({
+    title: `Consolidated ${typeLabel} Performance Report`,
+    periodLabel: plan.periodLabel,
+    completion,
+    budget,
+    kpis: kpiCounts,
+    milestones: milestoneCounts,
+    activities: activityCounts,
+    updates: {
+      verified: reviewed.length,
+      pending: progressUpdates.length - reviewed.length,
+      owners: new Set(verifiedUpdates.map((update) => update.authorId)).size,
+    },
+    topChallenges: challenges,
+    topAchievements: achievements,
+  });
 
   return {
     meta: {
@@ -423,6 +441,7 @@ export async function buildConsolidatedReport(input: {
         lastUpdate: lastUpdate ? lastUpdate.toISOString() : null,
       },
     },
+    ai,
     narrative: { overview, achievements, challenges, nextSteps, outlook, kpiStory, milestoneStory, ownerNotes },
     matrices: { kpis: kpiRows, milestones: milestoneRows, activities: activityRows, owners: ownerRows },
     reports: reportRows.map((report) => ({
@@ -465,6 +484,15 @@ function csvCell(value: unknown) {
 export function reportToCsv(report: ConsolidatedReport, section?: ReportSection | "all") {
   const rows: string[][] = [];
   const add = (cells: (string | number | null | undefined)[]) => rows.push(cells.map((cell) => csvCell(cell)));
+
+  if (!section || section === "all") {
+    add(["AI DECISION BRIEF"]);
+    add(["Summary", report.ai.summary]);
+    report.ai.findings.forEach((finding, index) => add([`Finding ${index + 1}`, finding]));
+    report.ai.actions.forEach((action, index) => add([`Action ${index + 1}`, action]));
+    add(["Confidence", `${report.ai.confidence}%`, "Engine", report.ai.engine]);
+    add([]);
+  }
 
   if (!section || section === "all" || section === "kpis") {
     add(["KPI MATRIX"]);
@@ -574,35 +602,41 @@ export function reportToWordHtml(report: ConsolidatedReport) {
   <p>${esc(report.narrative.kpiStory)}</p>
   <p>${esc(report.narrative.milestoneStory)}</p>
 
-  <h2>2. Achievements</h2>
+  <h2>2. AI decision brief</h2>
+  <p><strong>${esc(report.ai.summary)}</strong></p>
+  <p class="meta">${esc(report.ai.engine)} · confidence ${report.ai.confidence}% · generated ${esc(new Date(report.ai.generatedAt).toLocaleString("en-GB"))}</p>
+  <p><strong>What the data says</strong></p>${list(report.ai.findings)}
+  <p><strong>Recommended actions</strong></p>${list(report.ai.actions)}
+
+  <h2>3. Achievements</h2>
   ${list(report.narrative.achievements)}
-  <h2>3. Challenges and risks</h2>
+  <h2>4. Challenges and risks</h2>
   ${list(report.narrative.challenges)}
-  <h2>4. Next steps</h2>
+  <h2>5. Next steps</h2>
   ${list(report.narrative.nextSteps)}
-  <h2>5. Outlook</h2>
+  <h2>6. Outlook</h2>
   <p>${esc(report.narrative.outlook)}</p>
 
-  <h2>6. KPI performance matrix</h2>
+  <h2>7. KPI performance matrix</h2>
   <table class="matrix"><thead><tr><th>Code</th><th>KPI</th><th>Owner</th><th>Target</th><th>Latest actual</th><th>Progress</th><th>Status</th></tr></thead><tbody>${kpiRows || '<tr><td colspan="7">No KPIs recorded.</td></tr>'}</tbody></table>
 
-  <h2>7. Milestone matrix</h2>
+  <h2>8. Milestone matrix</h2>
   <table class="matrix"><thead><tr><th>Milestone</th><th>Owner</th><th>Due</th><th>Progress</th><th>Status</th></tr></thead><tbody>${milestoneRows || '<tr><td colspan="5">No milestones recorded.</td></tr>'}</tbody></table>
 
-  <h2>8. Activity matrix</h2>
+  <h2>9. Activity matrix</h2>
   <table class="matrix"><thead><tr><th>Activity</th><th>Owner</th><th>Due</th><th>Budget</th><th>Progress</th><th>Status</th></tr></thead><tbody>${activityRows || '<tr><td colspan="6">No activities recorded.</td></tr>'}</tbody></table>
 
-  <h2>9. Accountability by task owner</h2>
+  <h2>10. Accountability by task owner</h2>
   <table class="matrix"><thead><tr><th>Owner</th><th>Items</th><th>Completed</th><th>At risk</th><th>Avg. progress</th><th>Updates</th></tr></thead><tbody>${ownerRows || '<tr><td colspan="6">No owners assigned.</td></tr>'}</tbody></table>
 
-  <h2>10. Task-owner progress notes</h2>
+  <h2>11. Task-owner progress notes</h2>
   ${report.narrative.ownerNotes.length
     ? report.narrative.ownerNotes
         .map((note) => `<p><strong>${esc(note.owner)}</strong> <span class="gold">(${note.progress}% · ${esc(note.status)})</span><br/>${esc(note.text)}</p>`)
         .join("")
     : "<p>No submitted progress updates in this window.</p>"}
 
-  <h2>11. Reporting obligations</h2>
+  <h2>12. Reporting obligations</h2>
   <table class="matrix"><thead><tr><th>Report</th><th>Period</th><th>Due</th><th>Status</th></tr></thead><tbody>${
     report.reports.map((row) => `<tr><td>${esc(row.title)}</td><td>${esc(row.periodLabel)}</td><td>${esc(row.dueDate)}</td><td>${esc(row.status)}</td></tr>`).join("") ||
     '<tr><td colspan="4">No reporting deadlines.</td></tr>'
@@ -668,6 +702,13 @@ export function reportToExcel(report: ConsolidatedReport): string {
     ["Milestones total", report.headline.milestones.total],
     ["Activities tracked", report.headline.activities.total],
     ["Budget under delivery (ETB)", report.headline.budget],
+    [],
+    ["AI decision brief"],
+    ["Headline", report.ai.summary],
+    ...report.ai.findings.map((finding, index) => [`Finding ${index + 1}`, finding]),
+    ...report.ai.actions.map((action, index) => [`Action ${index + 1}`, action]),
+    ["Engine", report.ai.engine],
+    ["Confidence (%)", report.ai.confidence],
   ];
 
   const kpis: unknown[][] = [
@@ -703,6 +744,20 @@ export function reportToExcel(report: ConsolidatedReport): string {
     ...report.narrative.ownerNotes.map((note) => [note.owner, note.progress, note.status, note.text]),
   ];
 
+  const aiSheet: unknown[][] = [
+    ["AI decision brief"],
+    ["Summary", report.ai.summary],
+    ["Engine", report.ai.engine],
+    ["Confidence (%)", report.ai.confidence],
+    ["Generated at", new Date(report.ai.generatedAt).toLocaleString("en-GB")],
+    [],
+    ["Findings"],
+    ...report.ai.findings.map((finding) => [finding]),
+    [],
+    ["Recommended actions"],
+    ...report.ai.actions.map((action) => [action]),
+  ];
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -723,5 +778,6 @@ export function reportToExcel(report: ConsolidatedReport): string {
   ${excelSheet("Activities", activities)}
   ${excelSheet("Owners", owners)}
   ${excelSheet("Owner notes", notes)}
+  ${excelSheet("AI brief", aiSheet)}
 </Workbook>`;
 }

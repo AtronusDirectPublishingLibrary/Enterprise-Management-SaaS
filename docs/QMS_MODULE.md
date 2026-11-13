@@ -310,8 +310,9 @@ as the register.
 
 - Allowed extensions: `.pdf`, `.docx`, `.doc`, `.xlsx`, `.xls`
 - Maximum size: **50 MB**
-- Storage: `backend/uploads/`, using a unique timestamp-random prefix
-- Stored path: `/uploads/<generated-name>`
+- Storage: `backend/uploads/qms/`, using a unique timestamp-random prefix
+- Stored path: `/uploads/qms/<generated-name>`; delivery is authorized through
+  `GET /api/files/qms/<generated-name>` or the QMS download route.
 - Download requires authentication and the `qms` grant
 
 The QMS router owns a dedicated multer instance. The shared uploader in

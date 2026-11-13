@@ -88,10 +88,12 @@ export default function PrintTimesheet() {
   }
 
   const employee = fullName(ts.user);
-  const supervisor = fullName(ts.supervisor) || "Supervisor";
+  const hrSigner = fullName(ts.hrAdmin) || "Human Resource & Administration";
   const monthLabel = `${MONTHS[grid.month - 1]} ${grid.year}`;
   const periodLabel = `${String(grid.month).padStart(2, "0")}/${grid.year}`;
   const statusTone = ts.status === "APPROVED" ? "approved" : ts.status === "REJECTED" ? "rejected" : "pending";
+  const statusLabel =
+    ts.status === "SUBMITTED" ? "With HR & Admin" : ts.status === "FORWARDED" ? "With supervisor" : ts.status;
 
   return (
     <div className="timesheet-print-page">
@@ -125,7 +127,7 @@ export default function PrintTimesheet() {
           </div>
           <div className={`timesheet-sheet__status timesheet-sheet__status--${statusTone}`}>
             <span>Status</span>
-            <strong>{ts.status}</strong>
+            <strong>{statusLabel}</strong>
             <small>Period {periodLabel}</small>
           </div>
         </header>
@@ -135,7 +137,7 @@ export default function PrintTimesheet() {
           <div><span>Employee No.</span><strong>{ts.user.employeeNo || "—"}</strong></div>
           <div><span>Position</span><strong>{ts.user.position || "—"}</strong></div>
           <div><span>Department</span><strong>{ts.user.department || "—"}</strong></div>
-          <div><span>Supervisor</span><strong>{supervisor}</strong></div>
+          <div><span>HR &amp; Admin signatory</span><strong>{hrSigner}</strong></div>
           <div><span>Reporting month</span><strong>{monthLabel}</strong></div>
         </section>
 
@@ -204,12 +206,14 @@ export default function PrintTimesheet() {
             <div className="timesheet-sheet__signature-date">Date: ____________________</div>
           </div>
           <div className="timesheet-sheet__signature">
-            <div className="timesheet-sheet__signature-label">Supervisor approval</div>
+            <div className="timesheet-sheet__signature-label">HR &amp; Admin approval</div>
             <div className="timesheet-sheet__signature-space">
-              {ts.supervisor?.signatureUrl ? <img src={assetUrl(ts.supervisor.signatureUrl)} alt="" /> : null}
+              {ts.hrAdmin?.signatureUrl || ts.hrAdmin?.initialsUrl ? (
+                <img src={assetUrl(ts.hrAdmin.signatureUrl || ts.hrAdmin.initialsUrl)} alt="" />
+              ) : null}
             </div>
             <div className="timesheet-sheet__signature-line" />
-            <div className="timesheet-sheet__signature-name">{supervisor}</div>
+            <div className="timesheet-sheet__signature-name">{hrSigner}</div>
             <div className="timesheet-sheet__signature-date">Date: ____________________</div>
           </div>
         </section>

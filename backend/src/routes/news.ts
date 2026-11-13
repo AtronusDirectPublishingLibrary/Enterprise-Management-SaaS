@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { uploadImage } from "../middleware/upload";
+import { enqueueNews, runSocialQueue } from "../lib/socialPublisher";
 
 const router = Router();
 
@@ -23,9 +24,14 @@ router.post("/", requireAuth, requireRole("admin", "project_manager"), uploadIma
       titleAm: z.string().optional(),
       contentAm: z.string().optional(),
       videoUrl: z.string().optional(),
+      autoShare: z.preprocess(
+        (value) => (value === undefined ? undefined : value === true || value === "true" || value === "on" || value === "1"),
+        z.boolean().optional()
+      ),
+      socialCaption: z.string().max(2000).optional(),
     }).parse(req.body);
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrl = req.file ? `/uploads/news/${req.file.filename}` : null;
 
     const created = await prisma.news.create({
       data: {
@@ -33,8 +39,16 @@ router.post("/", requireAuth, requireRole("admin", "project_manager"), uploadIma
         videoUrl: d.videoUrl?.trim() || null,
         imageUrl,
         author: req.user!.username,
+        autoShare: d.autoShare ?? true,
+        socialCaption: d.socialCaption?.trim() || null,
       },
     });
+    if (created.autoShare) {
+      await enqueueNews(created);
+      // Give configured channels a chance to go out immediately; the periodic
+      // worker retries anything that the platform temporarily rejects.
+      runSocialQueue(10).catch((error) => console.error("[social] immediate run failed", error));
+    }
     res.json(created);
   } catch (e) { next(e); }
 });
@@ -48,15 +62,28 @@ router.put("/:id", requireAuth, requireRole("admin", "project_manager"), uploadI
       titleAm: z.string().optional(),
       contentAm: z.string().optional(),
       videoUrl: z.string().optional(),
+      autoShare: z.preprocess(
+        (value) => (value === undefined ? undefined : value === true || value === "true" || value === "on" || value === "1"),
+        z.boolean().optional()
+      ),
+      socialCaption: z.string().max(2000).optional(),
     }).parse(req.body);
 
-    const data: any = { ...d, videoUrl: d.videoUrl?.trim() || null };
-    if (req.file) data.imageUrl = `/uploads/${req.file.filename}`;
+    const data: any = {
+      ...d,
+      videoUrl: d.videoUrl?.trim() || null,
+      socialCaption: d.socialCaption?.trim() || null,
+    };
+    if (req.file) data.imageUrl = `/uploads/news/${req.file.filename}`;
 
     const updated = await prisma.news.update({
       where: { id: req.params.id },
       data,
     });
+    if (updated.autoShare) {
+      await enqueueNews(updated);
+      runSocialQueue(10).catch((error) => console.error("[social] immediate run failed", error));
+    }
     res.json(updated);
   } catch (e) { next(e); }
 });

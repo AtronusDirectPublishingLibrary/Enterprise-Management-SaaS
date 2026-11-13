@@ -1,43 +1,93 @@
 export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const BASE = API_BASE;
+const CSRF_COOKIE = "ep_csrf";
 
-async function request(method, path, body) {
-  const opts = {
-    method,
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-  };
-  if (body !== undefined) opts.body = JSON.stringify(body);
+function readCookie(name) {
+  if (typeof document === "undefined") return "";
+  const prefix = `${name}=`;
+  const match = document.cookie.split("; ").find((part) => part.startsWith(prefix));
+  return match ? decodeURIComponent(match.slice(prefix.length)) : "";
+}
 
-  const res = await fetch(BASE + path, opts);
-  const text = await res.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
+let csrfRequest = null;
 
-  if (!res.ok) {
-    const msg = data?.message || `HTTP ${res.status} ${res.statusText}`;
-    const err = new Error(msg);
-    err.status = res.status;
-    err.data = data;
-    throw err;
+async function refreshCsrf() {
+  if (!csrfRequest) {
+    csrfRequest = fetch(`${BASE}/auth/csrf`, { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) return "";
+        const data = await res.json().catch(() => null);
+        return data?.token || readCookie(CSRF_COOKIE);
+      })
+      .catch(() => "")
+      .finally(() => {
+        csrfRequest = null;
+      });
   }
+  return csrfRequest;
+}
+
+async function csrfToken() {
+  return readCookie(CSRF_COOKIE) || (await refreshCsrf());
+}
+
+function isMutation(method) {
+  return !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
+}
+
+async function parseResponse(res) {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return { message: text };
+  }
+}
+
+function toError(res, data) {
+  const msg = data?.message || data?.error || `HTTP ${res.status} ${res.statusText}`;
+  const err = new Error(msg);
+  err.status = res.status;
+  err.data = data;
+  return err;
+}
+
+async function send(method, path, body, formData) {
+  const opts = { method, credentials: "include", headers: {} };
+  const mutate = isMutation(method);
+  if (mutate && path !== "/auth/login") {
+    const token = await csrfToken();
+    if (token) opts.headers["X-CSRF-Token"] = token;
+  }
+  if (formData) {
+    // Never set Content-Type for FormData: the browser must add its own
+    // multipart boundary or the upload arrives empty on the server.
+    opts.body = formData;
+  } else {
+    opts.headers["Content-Type"] = "application/json";
+    if (body !== undefined) opts.body = JSON.stringify(body);
+  }
+  return fetch(BASE + path, opts);
+}
+
+async function request(method, path, body, formData) {
+  let res = await send(method, path, body, formData);
+  let data = await parseResponse(res);
+
+  // A session may predate the CSRF cookie, or another tab may have rotated it.
+  // Fetch a fresh double-submit token and retry once.
+  if (res.status === 403 && data?.code === "CSRF_INVALID" && isMutation(method)) {
+    await refreshCsrf();
+    res = await send(method, path, body, formData);
+    data = await parseResponse(res);
+  }
+
+  if (!res.ok) throw toError(res, data);
   return data;
 }
 
 async function uploadRequest(method, path, formData) {
-  // Never set Content-Type for FormData: the browser must add its own
-  // multipart boundary or the upload arrives empty on the server.
-  const res = await fetch(BASE + path, { method, credentials: "include", body: formData });
-  const text = await res.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
-  if (!res.ok) {
-    const err = new Error(data?.message || `HTTP ${res.status} ${res.statusText}`);
-    err.status = res.status;
-    err.data = data;
-    throw err;
-  }
-  return data;
+  return request(method, path, undefined, formData);
 }
 
 export const api = {
@@ -53,7 +103,12 @@ export const api = {
 export function assetUrl(url) {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  return `${BASE.replace(/\/api$/, "")}${url.startsWith("/") ? "" : "/"}${url}`;
+  const publicPrefixes = ["avatars/", "brand/", "hero/", "media/", "news/"];
+  const relative = url.replace(/^\/?uploads\//, "");
+  if (publicPrefixes.some((prefix) => relative.startsWith(prefix))) {
+    return `${BASE.replace(/\/api$/, "")}/uploads/${relative}`;
+  }
+  return `${BASE}/files/${relative}`;
 }
 
 export function buildQuery(params) {

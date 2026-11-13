@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -31,6 +32,7 @@ import qmsCapaRoutes from "./routes/qmsCapa";
 import qmsChangeRoutes from "./routes/qmsChanges";
 import qmsOverviewRoutes from "./routes/qmsOverview";
 import { runQmsReminders } from "./lib/qmsReminders";
+import fleetCostControlRoutes from './routes/fleetCostControl';
 import rideProviderRoutes from './routes/rideProviders';
 import rideRequestRoutes from './routes/rideRequests';
 import trainingAlertRoutes from './routes/trainingAlerts';
@@ -59,10 +61,13 @@ import teamTaskRoutes   from "./routes/teamTasks";
 import notificationRoutes from "./routes/notifications";
 import translationRoutes from "./routes/translations";
 import publicStatsRoutes from "./routes/publicStats";
+import publicQrRoutes from "./routes/publicQr";
 import siteSettingsRoutes from "./routes/siteSettings";
 import mediaVideoRoutes from "./routes/mediaVideos";
 import timelineRoutes from "./routes/timeline";
 import newsRoutes from "./routes/news";
+import socialRoutes from "./routes/social";
+import { runSocialQueue } from "./lib/socialPublisher";
 import automationRoutes from "./routes/automation";
 import reportingRoutes from "./routes/reporting";
 import portfolioRoutes from "./routes/portfolios";
@@ -79,19 +84,63 @@ import payslipRoutes from "./routes/payslips";
 import homeRoutes from "./routes/home";
 import searchRoutes from "./routes/search";
 import reportScheduleRoutes from "./routes/reportSchedules";
+import fileRoutes from "./routes/files";
 import { runDueReportSchedules } from "./lib/reportSchedules";
 import { pruneAuditLog } from "./lib/auditRetention";
+import { runAuditVerification } from "./lib/auditChain";
 import { runPlanAlerts } from "./lib/planAlerts";
 import { runPeriodLifecycle } from "./lib/periodLifecycle";
 import { errorHandler } from "./middleware/errorHandler";
-import { requireAccess, requireAuth } from './middleware/auth';
+import { requestId } from "./middleware/requestId";
+import { csrfProtection } from "./middleware/csrf";
+import { optionalAuth, requireAccess, requireAuth } from './middleware/auth';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.disable("x-powered-by");
+// A reverse proxy must be trusted explicitly; trusting every forwarded header
+// would let a client spoof its IP for rate limits and audit trails.
+if (process.env.TRUST_PROXY === "true") app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        objectSrc: ["'none'"],
+        scriptSrc: ["'self'", "https://challenges.cloudflare.com"],
+        frameSrc: ["https://challenges.cloudflare.com"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https:"],
+        connectSrc: ["'self'", "https://res.cloudinary.com"],
+      },
+    },
+    strictTransportSecurity: IS_PRODUCTION
+      ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
+      : false,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    crossOriginResourcePolicy: { policy: "same-site" },
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 const ALLOWED_ORIGINS = CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean);
+
+if (IS_PRODUCTION) {
+  if (!process.env.CORS_ORIGIN) {
+    throw new Error("CORS_ORIGIN must be set explicitly in production");
+  }
+  if (ALLOWED_ORIGINS.includes("*")) {
+    throw new Error("CORS_ORIGIN cannot contain '*' in production");
+  }
+  const insecure = ALLOWED_ORIGINS.filter((origin) => origin.startsWith("http://"));
+  if (insecure.length) {
+    throw new Error(`CORS_ORIGIN must use HTTPS in production: ${insecure.join(", ")}`);
+  }
+}
 
 /**
  * Vite moves to the next free port when 5173 is occupied (for example 5174).
@@ -112,16 +161,22 @@ function isLocalDevelopmentOrigin(origin: string) {
 
 app.use(
   cors({
-    origin: (origin, callback) =>
-      !origin || ALLOWED_ORIGINS.includes(origin) || isLocalDevelopmentOrigin(origin)
-        ? callback(null, true)
-        : callback(new Error(`Origin ${origin} is not allowed by CORS`)),
+    origin: (origin, callback) => {
+      if (!origin || ALLOWED_ORIGINS.includes(origin) || isLocalDevelopmentOrigin(origin)) {
+        return callback(null, true);
+      }
+      const error: any = new Error(`Origin ${origin} is not allowed by CORS`);
+      error.status = 403;
+      return callback(error);
+    },
     credentials: true,
   })
 );
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
+app.use(requestId);
 app.use(rateLimit({ windowMs: 60_000, max: 200 }));
+app.use(csrfProtection);
 
 app.get("/api/health", (_req, res) =>
   res.json({ ok: true, version: "1.0.0", timestamp: new Date().toISOString() })
@@ -142,7 +197,7 @@ app.use("/api/annual-plans", requireAuth, annualPlanRoutes);
 app.use("/api/approvals", requireAuth, approvalRoutes);
 app.use("/api/hr-analytics", requireAuth, requireAccess("hrAnalytics"), analyticsRoutes);
 app.use("/api/hr-reports", requireAuth, requireAccess("hr"), reportRoutes);
-app.use("/api/audit", requireAuth, requireRole(["admin", "executive"]), auditRoutes);
+app.use("/api/audit", requireAuth, requireAccess("audit"), auditRoutes);
 app.use("/api/timesheets", requireAuth, timesheetRoutes);
 app.use("/api/recruitment", requireAuth, requireAccess("recruitment"), recruitmentRoutes);
 app.use("/api/job-descriptions", jobDescriptionRoutes);
@@ -161,6 +216,7 @@ app.use("/api/qms/deviations", requireAuth, requireAccess("qms"), qmsDeviationRo
 app.use("/api/qms/capa", requireAuth, requireAccess("qms"), qmsCapaRoutes);
 app.use("/api/qms/changes", requireAuth, requireAccess("qms"), qmsChangeRoutes);
 app.use("/api/qms/overview", requireAuth, requireAccess("qms"), qmsOverviewRoutes);
+app.use("/api/fleet/cost-control", requireAuth, fleetCostControlRoutes);
 app.use("/api/training-alerts", requireAuth, requireRole(["admin", "executive"]), trainingAlertRoutes);
 app.use("/api/hr-self",       hrSelfRoutes);
 app.use("/api/induction",     requireAuth, inductionRoutes);
@@ -186,6 +242,7 @@ app.use("/api/home", homeRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/timeline", timelineRoutes);
 app.use("/api/news", newsRoutes);
+app.use("/api/social", socialRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/reporting", reportingRoutes);
 app.use("/api/portfolios", requireAuth, requireRole(["admin", "executive", "project_manager"]), portfolioRoutes);
@@ -195,11 +252,45 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/time", timeRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/holidays", holidayRoutes);
+app.use("/api/public/qr", publicQrRoutes);
 app.use("/api/public", publicStatsRoutes);
 app.use("/api/site-settings", siteSettingsRoutes);
 app.use("/api/media", mediaVideoRoutes);
 
-app.use("/uploads", express.static("uploads"));
+// Social distribution worker. Posts are queued when a news item is saved and
+// retried here; disabled with SOCIAL_AUTORUN=false.
+if (process.env.SOCIAL_AUTORUN !== "false") {
+  const tick = () => {
+    runSocialQueue(20)
+      .then((summary) => {
+        if (summary.evaluated) {
+          console.log(
+            `[social] evaluated=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
+          );
+        }
+      })
+      .catch((error) => console.error("[social] queue run failed", error));
+  };
+  setTimeout(tick, 25_000);
+  setInterval(tick, 5 * 60 * 1000).unref();
+}
+
+// Only editorial/brand assets are public. HR documents, signatures, CVs,
+// QMS records and the internal archive are delivered through /api/files with
+// record-level authorization.
+const publicUploadDirs = ["avatars", "brand", "hero", "media", "news"];
+for (const dir of publicUploadDirs) {
+  app.use(
+    `/uploads/${dir}`,
+    express.static(path.join(process.cwd(), "uploads", dir), {
+      index: false,
+      dotfiles: "deny",
+      maxAge: "1h",
+    }),
+  );
+}
+
+app.use("/api/files", optionalAuth, fileRoutes);
 
 app.use(errorHandler);
 
@@ -291,6 +382,25 @@ if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
       .catch((error) => console.error("[audit-retention] prune failed", error));
   };
   setTimeout(tick, 60_000);
+  setInterval(tick, 24 * 60 * 60 * 1000).unref();
+}
+
+// Daily audit-chain verification. The result is stored in audit_verification;
+// it is deliberately not appended to audit_log, so checking the chain never
+// changes the evidence it is checking.
+if (process.env.AUDIT_VERIFY_AUTORUN !== "false") {
+  const tick = () => {
+    runAuditVerification("system")
+      .then((result) => {
+        if (!result.valid || result.legacyCount || result.truncated) {
+          console.log(
+            `[audit-chain] valid=${result.valid} checked=${result.checkedCount} legacy=${result.legacyCount} truncated=${result.truncated} brokenAt=${result.brokenAt || "none"}`,
+          );
+        }
+      })
+      .catch((error) => console.error("[audit-chain] verification run failed", error));
+  };
+  setTimeout(tick, 90_000);
   setInterval(tick, 24 * 60 * 60 * 1000).unref();
 }
 // QMS review-due reminders: notify owners of approved documents whose periodic

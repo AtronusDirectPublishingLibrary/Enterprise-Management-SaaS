@@ -5,6 +5,7 @@ import { api } from "../../lib/api";
 import {
   Truck, CheckCircle2, Clock, Car, PlusCircle, ClipboardList,
   AlertCircle, TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { Doughnut } from "react-chartjs-2";
 import {
@@ -187,6 +188,16 @@ export default function FleetDashboard() {
                   <Link to="/fleet/approvals" className="btn btn-outline-warning w-100 text-start">
                     <AlertCircle size={16} className="me-2" /> Approvals
                     {pendingCount > 0 && <span className="badge bg-danger ms-2">{pendingCount}</span>}
+                  </Link>
+                </div>
+                <div className="col-md-6">
+                  <Link to="/fleet/cost-control" className="btn btn-outline-primary w-100 text-start">
+                    <Wallet size={16} className="me-2" /> Fuel, workshop &amp; tyre costs
+                  </Link>
+                </div>
+                <div className="col-md-6">
+                  <Link to="/fleet/analytics" className="btn btn-outline-secondary w-100 text-start">
+                    <TrendingUp size={16} className="me-2" /> Fleet analytics
                   </Link>
                 </div>
               </div>

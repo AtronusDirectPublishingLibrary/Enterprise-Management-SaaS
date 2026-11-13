@@ -143,7 +143,66 @@ configured, alerts are still generated in the app and email sends are marked as 
 - `AnimatedNumber` counts KPI/figures up when they scroll into view, and `FlyInObserver` fades the
   home and inner page cards and text blocks in.
 
+## Fleet cost control
+
+- **Fleet → Cost control** (`/fleet/cost-control`) is the workshop and total-cost-of-ownership ledger.
+  It records fuel, scheduled and corrective maintenance, spare parts and tyre replacement with quantity,
+  unit cost, total cost, odometer, supplier/vendor, invoice and notes.
+- The overview reconciles spend by category, monthly trend and vehicle, with cost per kilometre,
+  km per litre, next maintenance exposure and tyre positions. The analytics API is
+  `GET /api/fleet/cost-control/analytics?year=YYYY`; CRUD lives under the same path for `fuel`,
+  `maintenance`, `parts` and `tyres`.
+- Logging an odometer reading above the vehicle's current value advances the vehicle odometer, so
+  utilisation and cost-per-km stay current. No external credentials are required.
+
+## Social distribution of news
+
+- **News studio** saves an article first, then queues one post per enabled destination: Facebook Page,
+  LinkedIn, X, Telegram or a generic automation webhook.
+- Enable distribution and auto-posting in the Social distribution panel. Credentials are read from
+  `backend/.env`; a missing credential is recorded as `SKIPPED` with a clear reason instead of retrying
+  forever. Failed posts retry three times, with a 15-minute backoff, and can be retried manually.
+- Delivery receipts are available at `/api/social/queue`; manual runs use `POST /api/social/run`.
+
+## Timesheet reporting gate and appraisals
+
+- Before a timesheet can be signed and submitted, `GET /api/timesheets/compliance` checks the staff
+  member's pending reports past their due date and overdue plan activities/milestones without a
+  verified progress update. `POST /api/timesheets/:id/submit` returns HTTP 409 with the exact blockers
+  and deep links when the gate is not clear.
+- Reminders go out at 5 days, 2 days, on the due date and after the due date, including the prior
+  month's outstanding sheet. The gate card in **My HR** shows the same reasons to each staff member.
+- **HR Suite → Induction / Appraisals → Framework** manages evaluation criteria dynamically: title,
+  description, category, weight, scoring scale, evaluator guidance, department and active state. New and
+  draft appraisals take the current framework; signed historical appraisals keep their snapshot.
+- **HR Suite → Training** is a per-staff training history with category, provider, completion and expiry
+  dates, hours, result, certificate link, notes, filtering, edit and delete.
+
+## Executive BI, AI brief and QR
+
+- **Executive Dashboard** and **Consolidated reports** share one analytics model. The dashboard supports
+  cross-filtering by department, status, fund and manager, a 12-month trend, portfolio health, risk
+  tables and a filtered CSV dataset for Power BI import (`/api/reporting/executive-bi/export`).
+- The AI decision brief is deterministic by default. Set `AI_PROVIDER=openai`, `OPENAI_API_KEY` and
+  optionally `AI_MODEL` to refine the wording; no planning data is sent to a third party unless you opt
+  in. The same brief appears on the dashboard and in each consolidated report and its exports.
+- The public footer shows a branded QR with the EBPE mark in the centre, linking to `PUBLIC_SITE_URL`.
+  `GET /api/public/qr` returns the SVG; add `?download=1` for a print-ready attachment.
+
+## Documents
+
+- Corporate documents use one registry table. The internal archive lists every corporate record; the
+  public library lists the same records only when `isPublic` is true and the status is `Active`. The
+  visibility switch in the internal archive is the single source of truth, so publishing never creates
+  a duplicate record.
+- Project files are attached to `projectId` and listed from the same `Document` table under
+  **PMS → Project → Documents**; they never appear in the public website library.
+
 ## Development notes
 - The frontend Vite dev server proxies /api/* to http://localhost:5000 (see frontend/vite.config.js).
-- Uploads land in backend/uploads/ (gitignored).
-- Auth uses HttpOnly cookies; JWT secret must be set in backend/.env.
+- Uploads land in backend/uploads/ (gitignored). Public assets live under `avatars/`,
+  `brand/`, `hero/`, `media/` and `news/`; archive, QMS, HR, CV and signature files are
+  delivered through authenticated `/api/files/...` routes. See `docs/AUDIT_READINESS.md`.
+- Auth uses HttpOnly cookies; JWT secret must be set in backend/.env. Authenticated
+  mutations also use the double-submit `ep_csrf` cookie, and login supports optional
+  Cloudflare Turnstile plus account lockout. See `docs/AUDIT_READINESS.md`.

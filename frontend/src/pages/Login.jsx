@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -14,19 +14,72 @@ export default function Login() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  const turnstileBox = useRef(null);
+  const turnstileWidget = useRef(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  useEffect(() => {
+    if (!siteKey) return undefined;
+    let cancelled = false;
+
+    const renderWidget = () => {
+      if (cancelled || !window.turnstile || !turnstileBox.current) return;
+      turnstileBox.current.innerHTML = "";
+      turnstileWidget.current = window.turnstile.render(turnstileBox.current, {
+        sitekey: siteKey,
+        callback: (token) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+      });
+    };
+
+    const existing = document.querySelector('script[data-eb-turnstile]');
+    if (window.turnstile) {
+      renderWidget();
+    } else if (existing) {
+      existing.addEventListener("load", renderWidget);
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.dataset.ebTurnstile = "true";
+      script.addEventListener("load", renderWidget);
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      cancelled = true;
+      existing?.removeEventListener("load", renderWidget);
+      if (turnstileWidget.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidget.current);
+      }
+      turnstileWidget.current = null;
+    };
+  }, [siteKey]);
+
+  const resetTurnstile = () => {
+    setTurnstileToken("");
+    if (turnstileWidget.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidget.current);
+    }
+  };
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
     setBusy(true);
     try {
-      await login(username.trim(), password, mfaRequired ? code.trim() : undefined);
+      await login(username.trim(), password, mfaRequired ? code.trim() : undefined, turnstileToken);
       navigate("/dashboard");
     } catch (e2) {
       console.error("Login error:", e2);
       if (e2.data?.mfaRequired) {
         setMfaRequired(true);
         setCode("");
+      } else {
+        resetTurnstile();
       }
       setErr(e2.message || "Login failed");
     } finally {
@@ -104,7 +157,20 @@ export default function Login() {
           </div>
         )}
 
-        <button type="submit" className="btn-brand w-100 py-2 fs-5" disabled={busy}>
+        {siteKey && !mfaRequired ? (
+          <div className="mb-3">
+            <div ref={turnstileBox} />
+            <div className="form-text">
+              Confirm you are human to continue. The check is provided by Cloudflare Turnstile.
+            </div>
+          </div>
+        ) : null}
+
+        <button
+          type="submit"
+          className="btn-brand w-100 py-2 fs-5"
+          disabled={busy || Boolean(siteKey && !mfaRequired && !turnstileToken)}
+        >
           {busy ? "Signing in..." : mfaRequired ? "Verify and sign in" : "Sign in"}
         </button>
 

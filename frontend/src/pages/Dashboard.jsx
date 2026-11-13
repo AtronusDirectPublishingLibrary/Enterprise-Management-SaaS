@@ -7,14 +7,17 @@ import {
 import { Doughnut, Bar, Line } from "react-chartjs-2";
 import PmsTabs from "../components/PmsTabs";
 import AutoFitNumber from "../components/AutoFitNumber";
+import { useTheme } from "../lib/theme";
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, LineElement, PointElement, Tooltip, Legend, Filler);
-
-const PALETTE = ["#0B2545", "#C9A227", "#6B2D2D", "#3498db", "#2ecc71", "#f39c12", "#e74c3c"];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [err, setErr] = useState("");
+  // Chart.js paints to a canvas and cannot resolve CSS variables, so series
+  // colours are read from the active palette as real hex values.
+  const { colors } = useTheme();
+  const PALETTE = [colors.primary, colors.secondary, colors.accent, colors.info, colors.success, colors.warning, colors.danger];
 
   useEffect(() => {
     api.get("/dashboard/stats")
@@ -25,13 +28,13 @@ export default function Dashboard() {
   if (err) return <div className="alert alert-danger">{err}</div>;
   if (!stats) return <div className="spinner-border text-success" />;
 
-  const { kpi, statusDistribution, directorateProgress, divisionProgress,
+  const { kpi, statusDistribution, departmentProgress, divisionProgress,
           planActualData, milestoneTimeline, sourceOfFundsDistribution } = stats;
 
   const statusLabels = Object.keys(statusDistribution);
   const statusData   = Object.values(statusDistribution);
-  const dirLabels    = directorateProgress.map((d) => d.directorate);
-  const dirData      = directorateProgress.map((d) => d.avgProgress);
+  const deptLabels   = departmentProgress.map((d) => d.department);
+  const deptData     = departmentProgress.map((d) => d.avgProgress);
   const divLabels    = divisionProgress.map((d) => d.division);
   const divData      = divisionProgress.map((d) => d.avgProgress);
   const paLabels     = planActualData.map((d) => d.title.length > 20 ? d.title.slice(0, 20) + "…" : d.title);
@@ -70,7 +73,7 @@ export default function Dashboard() {
           <div className="chart-card h-100">
             <h6>Avg Progress by Department</h6>
             <div style={{ height: 200 }}>
-              <Bar data={{ labels: dirLabels, datasets: [{ label: "% Complete", data: dirData, backgroundColor: PALETTE[0], borderRadius: 4 }] }}
+              <Bar data={{ labels: deptLabels, datasets: [{ label: "% Complete", data: deptData, backgroundColor: PALETTE[0], borderRadius: 4 }] }}
                 options={{ indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100, grid:{display:false} }, y:{grid:{display:false}} } }} />
             </div>
           </div>
@@ -105,7 +108,7 @@ export default function Dashboard() {
             <h6>Milestone Completions (12m)</h6>
             <div style={{ height: 220 }}>
               <Line data={{ labels: milestoneTimeline.labels, datasets: [{
-                label: "Completed", data: milestoneTimeline.data, borderColor: PALETTE[0], backgroundColor: "rgba(30, 86, 49, 0.15)", fill: true, tension: 0.3, pointBackgroundColor: PALETTE[1]
+                label: "Completed", data: milestoneTimeline.data, borderColor: PALETTE[0], backgroundColor: `${PALETTE[0]}26`, fill: true, tension: 0.3, pointBackgroundColor: PALETTE[1]
               }] }}
                 options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid:{color:"#f0f0f0"} }, x:{grid:{display:false}} } }} />
             </div>

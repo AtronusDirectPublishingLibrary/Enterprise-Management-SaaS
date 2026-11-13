@@ -1,8 +1,74 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/prisma";
+import { verifyAuditChain } from "../lib/auditChain";
+import { buildAuditExport } from "../lib/auditExport";
+import { logAudit } from "../lib/audit";
 
 const router = Router();
-const prisma = new PrismaClient();
+
+// GET /api/audit/verify - recalculate the chain and record the result.
+router.get("/verify", async (req: any, res) => {
+  try {
+    const last = await prisma.auditLog.findFirst({ orderBy: { id: "desc" }, select: { id: true } });
+    const result = await verifyAuditChain(0n, last?.id ?? 0n, {
+      persist: true,
+      checkedBy: req.user?.username || "system",
+    });
+    res.set("Cache-Control", "no-store").json(result);
+  } catch (error) {
+    console.error("[audit] verification failed", error);
+    res.status(500).json({ error: "Failed to verify the audit chain" });
+  }
+});
+
+// GET /api/audit/export?from=...&to=...&limit=... - signed evidence export.
+router.get("/export", async (req: any, res) => {
+  try {
+    const from = req.query.from ? new Date(String(req.query.from)) : undefined;
+    const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+    if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime()))) {
+      return res.status(400).json({ error: "from and to must be valid ISO dates" });
+    }
+    if (from && to && from > to) {
+      return res.status(400).json({ error: "from must be before to" });
+    }
+    const payload = await buildAuditExport({
+      from,
+      to,
+      limit: Number(req.query.limit) || undefined,
+      generatedBy: req.user?.username || "system",
+    });
+    await logAudit("AUDIT", "AUDIT_EXPORTED", req.user?.username || "system", {
+      from: payload.range.from,
+      to: payload.range.to,
+      count: payload.count,
+    });
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.set("Cache-Control", "no-store");
+    res.set("Content-Type", "application/json; charset=utf-8");
+    res.set("Content-Disposition", `attachment; filename="audit-export-${stamp}.json"`);
+    res.send(JSON.stringify(payload, null, 2));
+  } catch (error: any) {
+    if (error?.status) return res.status(error.status).json({ error: error.message });
+    console.error("[audit] export failed", error);
+    res.status(500).json({ error: "Failed to export audit records" });
+  }
+});
+
+// GET /api/audit/history/:entityType/:entityId - field-level change history.
+router.get("/history/:entityType/:entityId", async (req, res) => {
+  try {
+    const changes = await prisma.fieldChange.findMany({
+      where: { entityType: req.params.entityType, entityId: req.params.entityId },
+      orderBy: { changedAt: "asc" },
+      take: 500,
+    });
+    res.set("Cache-Control", "no-store").json(changes);
+  } catch (error) {
+    console.error("[audit] field history failed", error);
+    res.status(500).json({ error: "Failed to load field history" });
+  }
+});
 
 // GET /api/audit - Fetch audit logs
 router.get("/", async (req, res) => {

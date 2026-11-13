@@ -47,7 +47,9 @@ export default function HRDashboard() {
   const [balanceUploadStatus, setBalanceUploadStatus] = useState("");
 
   const [showTrainingForm, setShowTrainingForm] = useState(false);
-  const [trainingForm, setTrainingForm] = useState({ userId: "", title: "", provider: "", completedAt: "", expiresAt: "" });
+  const [trainingForm, setTrainingForm] = useState({ userId: "", title: "", provider: "", completedAt: "", expiresAt: "", category: "Technical", hours: "", result: "Complete", certificateUrl: "", notes: "" });
+  const [editingTraining, setEditingTraining] = useState(null);
+  const [trainingFilter, setTrainingFilter] = useState("");
 
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [leaveForm, setLeaveForm] = useState({ type: "ANNUAL", startDate: "", endDate: "", reason: "" });
@@ -150,11 +152,39 @@ export default function HRDashboard() {
   const handleTrainingSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/hr/training", trainingForm);
+      if (editingTraining) await api.put(`/hr/training/${editingTraining.id}`, trainingForm);
+      else await api.post("/hr/training", trainingForm);
       setShowTrainingForm(false);
-      setTrainingForm({ userId: "", title: "", provider: "", completedAt: "", expiresAt: "" });
+      setEditingTraining(null);
+      setTrainingForm({ userId: "", title: "", provider: "", completedAt: "", expiresAt: "", category: "Technical", hours: "", result: "Complete", certificateUrl: "", notes: "" });
       loadData();
-    } catch (err) { alert("Failed to save training"); }
+    } catch (err) { alert(err.message || "Failed to save training"); }
+  };
+
+  const editTraining = (record) => {
+    setEditingTraining(record);
+    setTrainingForm({
+      userId: record.userId,
+      title: record.title,
+      provider: record.provider,
+      completedAt: record.completedAt ? String(record.completedAt).slice(0, 10) : "",
+      expiresAt: record.expiresAt ? String(record.expiresAt).slice(0, 10) : "",
+      category: record.category || "Technical",
+      hours: record.hours ?? "",
+      result: record.result || "Complete",
+      certificateUrl: record.certificateUrl || "",
+      notes: record.notes || "",
+    });
+    setShowTrainingForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteTraining = async (record) => {
+    if (!window.confirm(`Delete the training record “${record.title}” for ${record.user?.firstName || "this staff member"}?`)) return;
+    try {
+      await api.del(`/hr/training/${record.id}`);
+      loadData();
+    } catch (err) { alert(err.message || "Failed to delete training record"); }
   };
 
   const handleLeaveSubmit = async (e) => {
@@ -472,44 +502,68 @@ export default function HRDashboard() {
       {/* TRAINING */}
       {activeTab === "training" && (
         <div>
-          <div className="d-flex justify-content-end mb-3">
-            <button className="btn-brand btn-sm" onClick={() => setShowTrainingForm(!showTrainingForm)}>
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div className="d-flex align-items-center gap-2">
+              <div className="position-relative">
+                <Search size={14} className="position-absolute" style={{ left: 10, top: 10, color: "#8b8272" }} />
+                <input className="form-control form-control-sm ps-4" style={{ minWidth: 260 }} placeholder="Filter by staff, course or provider…" value={trainingFilter} onChange={(e) => setTrainingFilter(e.target.value)} />
+              </div>
+              <span className="small text-muted">{trainings.length} history record{trainings.length === 1 ? "" : "s"}</span>
+            </div>
+            <button className="btn-brand btn-sm" onClick={() => { setEditingTraining(null); setShowTrainingForm(!showTrainingForm); setTrainingForm({ userId: "", title: "", provider: "", completedAt: "", expiresAt: "", category: "Technical", hours: "", result: "Complete", certificateUrl: "", notes: "" }); }}>
               {showTrainingForm ? "Cancel" : "+ Add Training Record"}
             </button>
           </div>
           {showTrainingForm && (
             <div className="card shadow-sm border-0 mb-4 hr-form-card">
               <div className="card-body p-4">
-                <h5 className="fw-bold mb-3">Add Training Record</h5>
+                <h5 className="fw-bold mb-3">{editingTraining ? "Edit training record" : "Add training record"}</h5>
                 <form onSubmit={handleTrainingSubmit} className="row g-3">
-                  <div className="col-md-4"><label className="form-label small fw-bold">Staff</label>
-                    <select className="form-select" required value={trainingForm.userId} onChange={e => setTrainingForm({...trainingForm, userId: e.target.value})}>
+                  <div className="col-md-4"><label className="form-label small fw-bold">Staff *</label>
+                    <select className="form-select" required disabled={Boolean(editingTraining)} value={trainingForm.userId} onChange={e => setTrainingForm({...trainingForm, userId: e.target.value})}>
                       <option value="">Select Staff...</option>
                       {staff.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
                     </select>
                   </div>
-                  <div className="col-md-4"><label className="form-label small fw-bold">Title</label><input type="text" className="form-control" required value={trainingForm.title} onChange={e => setTrainingForm({...trainingForm, title: e.target.value})} /></div>
+                  <div className="col-md-5"><label className="form-label small fw-bold">Course / certification *</label><input type="text" className="form-control" required value={trainingForm.title} onChange={e => setTrainingForm({...trainingForm, title: e.target.value})} /></div>
                   <div className="col-md-4"><label className="form-label small fw-bold">Provider</label><input type="text" className="form-control" required value={trainingForm.provider} onChange={e => setTrainingForm({...trainingForm, provider: e.target.value})} /></div>
-                  <div className="col-md-4"><label className="form-label small fw-bold">Completed</label><input type="date" className="form-control" required value={trainingForm.completedAt} onChange={e => setTrainingForm({...trainingForm, completedAt: e.target.value})} /></div>
-                  <div className="col-md-4"><label className="form-label small fw-bold">Expires</label><input type="date" className="form-control" value={trainingForm.expiresAt} onChange={e => setTrainingForm({...trainingForm, expiresAt: e.target.value})} /></div>
-                  <div className="col-md-4 d-flex align-items-end"><button type="submit" className="btn-brand btn-sm w-100">Save training record</button></div>
+                  <div className="col-md-3"><label className="form-label small fw-bold">Category</label><select className="form-select" value={trainingForm.category} onChange={e => setTrainingForm({...trainingForm, category: e.target.value})}>{["GMP", "Compliance", "Safety", "Technical", "Leadership", "Soft skills", "Other"].map(category => <option key={category}>{category}</option>)}</select></div>
+                  <div className="col-md-3"><label className="form-label small fw-bold">Completed *</label><input type="date" className="form-control" required value={trainingForm.completedAt} onChange={e => setTrainingForm({...trainingForm, completedAt: e.target.value})} /></div>
+                  <div className="col-md-3"><label className="form-label small fw-bold">Expires</label><input type="date" className="form-control" value={trainingForm.expiresAt} onChange={e => setTrainingForm({...trainingForm, expiresAt: e.target.value})} /></div>
+                  <div className="col-md-3"><label className="form-label small fw-bold">Hours</label><input type="number" min="0" step="0.5" className="form-control" value={trainingForm.hours} onChange={e => setTrainingForm({...trainingForm, hours: e.target.value})} /></div>
+                  <div className="col-md-3"><label className="form-label small fw-bold">Result</label><select className="form-select" value={trainingForm.result} onChange={e => setTrainingForm({...trainingForm, result: e.target.value})}>{["Complete", "Pass", "Distinction", "Attended", "In progress"].map(result => <option key={result}>{result}</option>)}</select></div>
+                  <div className="col-md-5"><label className="form-label small fw-bold">Certificate link</label><input type="url" className="form-control" placeholder="https://…" value={trainingForm.certificateUrl} onChange={e => setTrainingForm({...trainingForm, certificateUrl: e.target.value})} /></div>
+                  <div className="col-md-4"><label className="form-label small fw-bold">Notes</label><input className="form-control" value={trainingForm.notes} onChange={e => setTrainingForm({...trainingForm, notes: e.target.value})} /></div>
+                  <div className="col-12 d-flex justify-content-end"><button type="submit" className="btn-brand btn-sm px-4">{editingTraining ? "Save changes" : "Save training record"}</button></div>
                 </form>
               </div>
             </div>
           )}
           <div className="card shadow-sm border-0">
             <div className="card-body p-0 table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light"><tr><th>Staff</th><th>Title</th><th>Provider</th><th>Completed</th><th>Expires</th></tr></thead>
+              <table className="table table-hover align-middle mb-0">
+                <thead className="table-light"><tr><th>Staff</th><th>Course</th><th>Provider</th><th>Category</th><th>Completed</th><th>Expires</th><th>Result</th><th>Certificate</th><th className="text-end">Actions</th></tr></thead>
                 <tbody>
-                  {trainings.length === 0 ? <tr><td colSpan="5" className="text-center py-4 text-muted">No training records yet.</td></tr> :
-                    trainings.map(t => (
+                  {trainings.filter((record) => {
+                    const needle = trainingFilter.trim().toLowerCase();
+                    if (!needle) return true;
+                    return [record.user?.firstName, record.user?.lastName, record.title, record.provider, record.category].filter(Boolean).some((value) => String(value).toLowerCase().includes(needle));
+                  }).length === 0 ? <tr><td colSpan="9" className="text-center py-4 text-muted">No training records match this view.</td></tr> :
+                    trainings.filter((record) => {
+                      const needle = trainingFilter.trim().toLowerCase();
+                      if (!needle) return true;
+                      return [record.user?.firstName, record.user?.lastName, record.title, record.provider, record.category].filter(Boolean).some((value) => String(value).toLowerCase().includes(needle));
+                    }).map(t => (
                       <tr key={t.id}>
-                        <td>{t.user?.firstName} {t.user?.lastName}</td>
-                        <td>{t.title}</td>
-                        <td>{t.provider}</td>
-                        <td>{new Date(t.completedAt).toLocaleDateString()}</td>
-                        <td>{t.expiresAt ? new Date(t.expiresAt).toLocaleDateString() : "—"}</td>
+                        <td><div className="fw-semibold small">{t.user?.firstName} {t.user?.lastName}</div><div className="small text-muted">{t.user?.department || t.user?.username}</div></td>
+                        <td><div className="fw-semibold small">{t.title}</div>{t.notes ? <div className="small text-muted">{t.notes}</div> : null}</td>
+                        <td className="small">{t.provider}</td>
+                        <td className="small">{t.category || "—"}</td>
+                        <td className="small">{new Date(t.completedAt).toLocaleDateString("en-GB")}</td>
+                        <td className="small">{t.expiresAt ? <span className={new Date(t.expiresAt) < new Date() ? "text-danger fw-semibold" : ""}>{new Date(t.expiresAt).toLocaleDateString("en-GB")}</span> : "—"}</td>
+                        <td className="small">{t.result || "—"}{t.hours ? <div className="text-muted">{t.hours} h</div> : null}</td>
+                        <td>{t.certificateUrl ? <a className="btn btn-sm btn-outline-success py-0 px-2" href={t.certificateUrl} target="_blank" rel="noreferrer">Open</a> : <span className="text-muted small">—</span>}</td>
+                        <td className="text-end"><div className="d-flex gap-1 justify-content-end"><button className="btn btn-sm btn-light border" onClick={() => editTraining(t)} title="Edit"><Edit size={13} /></button><button className="btn btn-sm btn-light border text-danger" onClick={() => deleteTraining(t)} title="Delete"><Trash2 size={13} /></button></div></td>
                       </tr>
                     ))
                   }

@@ -88,15 +88,15 @@ export default function GatePassPage() {
       <div className="card shadow-lg border-0 mx-auto" style={{ maxWidth: "500px" }} ref={printRef}>
         <div
           style={{
-            background: "linear-gradient(135deg, #0B2545 0%, #0F3460 100%)",
+            background: "linear-gradient(135deg, var(--brand-primary) 0%, #0F3460 100%)",
             padding: "16px 18px",
             textAlign: "center",
-            borderBottom: "4px solid #C9A227",
+            borderBottom: "4px solid var(--brand-secondary)",
             color: "#fff",
           }}
         >
           <div style={{ fontSize: "16px", fontWeight: 700, letterSpacing: "1px" }}>Ethio-Biopharma</div>
-          <div style={{ color: "#C9A227", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", marginTop: "4px" }}>
+          <div style={{ color: "var(--brand-secondary)", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", marginTop: "4px" }}>
             Vehicle Gate Pass
           </div>
           <div style={{ display: "inline-block", background: valid ? "#10B981" : "#EF4444", color: "#fff", padding: "2px 14px", borderRadius: "12px", fontSize: "10px", fontWeight: 700, marginTop: "8px" }}>
@@ -106,7 +106,7 @@ export default function GatePassPage() {
 
         <div className="p-3">
           <div className="text-center small text-muted pb-2 mb-2 border-bottom">
-            📌 <strong style={{ color: "#0B2545" }}>{request.gatePassNo}</strong> &nbsp;•&nbsp; 📅 {new Date().toLocaleDateString("en-GB")}
+            📌 <strong style={{ color: "var(--brand-primary)" }}>{request.gatePassNo}</strong> &nbsp;•&nbsp; 📅 {new Date().toLocaleDateString("en-GB")}
           </div>
 
           <div className="row g-2">
@@ -148,8 +148,8 @@ export default function GatePassPage() {
             </div>
           </div>
 
-          <div className="mt-3 p-2 rounded" style={{ background: "#F9FAFB", borderLeft: "3px solid #C9A227" }}>
-            <div className="small fw-bold" style={{ color: "#0B2545", textTransform: "uppercase", fontSize: "10px" }}>🔒 Security Check</div>
+          <div className="mt-3 p-2 rounded" style={{ background: "#F9FAFB", borderLeft: "3px solid var(--brand-secondary)" }}>
+            <div className="small fw-bold" style={{ color: "var(--brand-primary)", textTransform: "uppercase", fontSize: "10px" }}>🔒 Security Check</div>
             <div className="d-flex flex-wrap gap-1 mt-1">
               <span className="badge bg-white text-dark border small">⬜ Driver ID</span>
               <span className="badge bg-white text-dark border small">⬜ Plate No.</span>
@@ -166,7 +166,7 @@ export default function GatePassPage() {
           )}
         </div>
 
-        <div style={{ background: "linear-gradient(90deg, #0B2545 0%, #C9A227 100%)", padding: "12px", textAlign: "center", color: "#fff" }}>
+        <div style={{ background: "linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-secondary) 100%)", padding: "12px", textAlign: "center", color: "#fff" }}>
           <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "1px" }}>🟦🟨 ETHIO-BIOPHARMA 🟨🟦</div>
           <div style={{ fontSize: "9px", opacity: 0.85, marginTop: "2px" }}>Enterprise Management System — Fleet &amp; Transport</div>
         </div>

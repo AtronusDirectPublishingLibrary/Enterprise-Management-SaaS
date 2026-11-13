@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Download, Menu, QrCode, X } from "lucide-react";
+import { API_BASE } from "../lib/api";
 import { useLanguage } from "../lib/language";
 import { localiseCopy } from "../lib/localiseCopy";
 import { useSiteSettings, useVisitorSummary } from "../lib/siteSettings";
@@ -337,6 +338,19 @@ export default function PublicLayout() {
                   <SocialLinks links={socialLinks} />
                 </div>
               ) : null}
+            </div>
+          </div>
+          <div className="footer-qr" aria-label={tText("Scan or download our homepage QR code", "የመነሻ ገፃችንን QR ኮድ ይቃኙ ወይም ያውርዱ")}>
+            <a className="footer-qr__frame" href="/" aria-label={tText("EBPE homepage", "የEBPE መነሻ ገፅ")}>
+              <img src={`${API_BASE}/public/qr`} width="112" height="137" loading="lazy" alt={tText("QR code linking to the EBPE homepage", "ወደ EBPE መነሻ ገፅ የሚያገናኝ QR ኮድ")} />
+            </a>
+            <div className="footer-qr__copy">
+              <span className="footer-qr__eyebrow"><QrCode size={13} /> {tText("Take EBPE with you", "EBPEን አንድዎት")}</span>
+              <strong>{tText("Scan to visit our homepage", "ወደ መነሻ ገፃችን ለመግባት ይቃኙ")}</strong>
+              <p>{tText("Point any phone camera at the code. The EBPE mark is built into the centre.", "የስልክ ካሜራዎን ኮዱ ላይ ያንጠቁ። የEBPE አርማ በመሃሉ ተካቷል።")}</p>
+              <a className="footer-qr__download" href={`${API_BASE}/public/qr?download=1`} download="EBPE-homepage-qr.svg">
+                <Download size={13} /> {tText("Download print-ready QR", "ለህትመት የተዘጋጀ QR ያውርዱ")}
+              </a>
             </div>
           </div>
           <div className="footer-bottom">

@@ -30,7 +30,7 @@ const TYPE_META = {
   AOP: {
     label: "Annual Plan",
     path: "/database/aop",
-    accent: "#0B2545",
+    accent: "var(--brand-primary)",
     subtitle: "Fiscal-year plan (July–June), labelled by EFY and Ethiopian calendar year.",
   },
 };

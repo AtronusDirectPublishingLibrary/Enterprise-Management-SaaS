@@ -17,7 +17,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { api, API_BASE } from "../lib/api";
+import { api, API_BASE, assetUrl } from "../lib/api";
 import HrProfileCard from "../components/HrProfileCard";
 import HrJourneyCards from "../components/HrJourneyCards";
 import SignatureSettingsCard from "../components/SignatureSettingsCard";
@@ -89,6 +89,7 @@ const EMPTY_DOC = { title: "", category: "CERTIFICATE", expiresAt: "", reference
 
 export default function MyHRPortal() {
   const [data, setData] = useState(null);
+  const [compliance, setCompliance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -106,8 +107,15 @@ export default function MyHRPortal() {
 
   const load = useCallback(async () => {
     try {
-      const overview = await api.get("/hr-self/overview");
+      const now = new Date();
+      const [overview, gate] = await Promise.all([
+        api.get("/hr-self/overview"),
+        api
+          .get(`/timesheets/compliance?month=${now.getMonth() + 1}&year=${now.getFullYear()}`)
+          .catch(() => null),
+      ]);
       setData(overview);
+      setCompliance(gate);
       setError("");
     } catch (err) {
       setError(err.message || "Could not load your workspace");
@@ -285,7 +293,14 @@ export default function MyHRPortal() {
       await api.post("/timesheets/save", { month: month + 1, year, entries });
       if (submit) {
         const sheet = await api.get(`/timesheets/my-timesheet?month=${month + 1}&year=${year}`);
-        if (sheet?.id) await api.post(`/timesheets/${sheet.id}/submit`, { signedName });
+        if (sheet?.id) {
+          try {
+            await api.post(`/timesheets/${sheet.id}/submit`, { signedName });
+          } catch (submitError) {
+            if (submitError?.data?.blockers) setCompliance((current) => ({ ...(current || {}), blockers: submitError.data.blockers, canSubmit: false, message: submitError.message }));
+            throw submitError;
+          }
+        }
       }
       await load();
     } catch (err) {
@@ -351,7 +366,8 @@ export default function MyHRPortal() {
   const openTasks = tasks.filter((task) => task.status === "OPEN");
   const doneTasks = tasks.filter((task) => task.status === "DONE");
   const assignedTasks = openTasks.filter((task) => task.assignedById);
-  const sheetLocked = timesheet && (timesheet.status === "SUBMITTED" || timesheet.status === "APPROVED");
+  const sheetLocked = timesheet && ["SUBMITTED", "FORWARDED", "APPROVED"].includes(timesheet.status);
+  const gateBlocked = Boolean(compliance && !compliance.submitted && !compliance.canSubmit);
   const planLocked = plan && ["SUBMITTED", "APPROVED", "VERIFIED"].includes(plan.status);
 
   const today = formatDate(new Date().toISOString());
@@ -370,7 +386,7 @@ export default function MyHRPortal() {
 
   const tiles = [
     { label: "Overdue", value: counters.overdue, icon: AlertTriangle, accent: counters.overdue ? "#c0392b" : "#9fb3c2" },
-    { label: "Next 7 days", value: counters.dueSoon, icon: CalendarClock, accent: "#c9a227" },
+    { label: "Next 7 days", value: counters.dueSoon, icon: CalendarClock, accent: "var(--brand-secondary)" },
     { label: "Open tasks", value: counters.openTasks, icon: ClipboardList, accent: "#0d3357" },
     { label: "Awaiting approval", value: counters.approvals, icon: BadgeCheck, accent: "#2e6f9e" },
     { label: "Annual leave left", value: counters.leaveDaysLeft ?? "—", icon: CalendarDays, accent: "#2f8f6b", suffix: "days" },
@@ -683,7 +699,7 @@ export default function MyHRPortal() {
                             {document.fileUrl ? (
                               <a
                                 className="ms-2 text-decoration-none"
-                                href={`${API_BASE.replace(/\/api$/, "")}${document.fileUrl}`}
+                                href={assetUrl(document.fileUrl)}
                                 target="_blank"
                                 rel="noreferrer"
                                 aria-label={`Open scan of ${document.title}`}
@@ -799,6 +815,56 @@ export default function MyHRPortal() {
         </div>
       </div>
 
+      {/* Reporting gate */}
+      <div className={`card border-0 shadow-sm mb-4 timesheet-gate ${compliance?.canSubmit ? "is-clear" : gateBlocked ? "is-blocked" : ""}`}>
+        <div className="card-body">
+          <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div className="d-flex gap-3">
+              <span className={`timesheet-gate__mark ${compliance?.canSubmit ? "is-clear" : gateBlocked ? "is-blocked" : ""}`}>
+                {compliance?.canSubmit || compliance?.submitted ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
+              </span>
+              <div>
+                <div className="hrx-eyebrow mb-1">Timesheet reporting gate</div>
+                <h2 className="h6 fw-bold mb-1">
+                  {compliance?.submitted
+                    ? "Your timesheet is already submitted"
+                    : gateBlocked
+                      ? `${compliance.blockers.length} reporting obligation${compliance.blockers.length === 1 ? "" : "s"} must be cleared`
+                      : "Reports and updates are clear"}
+                </h2>
+                <p className="small text-muted mb-0">
+                  {compliance?.message || "Checking your overdue reports and progress updates…"}
+                  {compliance?.deadline ? ` The current deadline is ${formatDate(compliance.deadline)}.` : ""}
+                </p>
+              </div>
+            </div>
+            <span className={`badge ${compliance?.submitted ? "bg-success" : gateBlocked ? "bg-danger" : "bg-success"}`}>
+              {!compliance ? "Checking" : compliance.submitted ? "Submitted" : gateBlocked ? "Action required" : "Ready to submit"}
+            </span>
+          </div>
+
+          {gateBlocked ? (
+            <div className="timesheet-gate__blockers mt-3">
+              {compliance.blockers.map((blocker) => (
+                <div className="timesheet-gate__item" key={blocker.id}>
+                  <span className="timesheet-gate__type">{blocker.type === "REPORT" ? "Report" : "Update"}</span>
+                  <div className="flex-grow-1 min-w-0">
+                    <div className="fw-semibold small">{blocker.title}</div>
+                    <div className="small text-muted">{blocker.reason}{blocker.plan ? ` · ${blocker.plan}` : ""}</div>
+                  </div>
+                  <Link className="btn btn-sm btn-outline-danger" to={blocker.link}>Resolve</Link>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="timesheet-gate__note mt-3">
+            <span><Clock size={13} /> Reminders are sent 5 days and 2 days before the deadline, on the due date and if the sheet becomes overdue.</span>
+            <span><PenLine size={13} /> A signed timesheet is accepted only after every overdue report and progress update is complete.</span>
+          </div>
+        </div>
+      </div>
+
       {/* Timesheet */}
       <div className="card border-0 shadow-sm mb-4">
         <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
@@ -807,8 +873,12 @@ export default function MyHRPortal() {
           </h2>
           <div className="d-flex align-items-center gap-2">
             {timesheet ? (
-              <span className={`badge bg-${timesheet.status === "APPROVED" ? "success" : timesheet.status === "SUBMITTED" ? "warning" : timesheet.status === "REJECTED" ? "danger" : "secondary"}`}>
-                {timesheet.status}
+              <span className={`badge bg-${timesheet.status === "APPROVED" ? "success" : ["SUBMITTED", "FORWARDED"].includes(timesheet.status) ? "warning" : timesheet.status === "REJECTED" ? "danger" : "secondary"}`}>
+                {timesheet.status === "SUBMITTED"
+                  ? "With HR & Admin"
+                  : timesheet.status === "FORWARDED"
+                    ? "With supervisor"
+                    : timesheet.status}
               </span>
             ) : null}
             <span className="small text-muted">Submit by the {data.submissionDay}th</span>
@@ -895,7 +965,13 @@ export default function MyHRPortal() {
               <button type="button" className="btn btn-sm btn-primary ms-auto" onClick={() => saveTimesheet(false)} disabled={busy}>
                 Save draft
               </button>
-              <button type="button" className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("timesheet")} disabled={busy}>
+              <button
+                type="button"
+                className="btn btn-sm btn-success d-inline-flex align-items-center gap-1"
+                onClick={() => requestSignature("timesheet")}
+                disabled={busy || gateBlocked}
+                title={gateBlocked ? "Clear the overdue reports and progress updates above before submitting." : "Sign and submit this timesheet"}
+              >
                 <PenLine size={14} /> Sign & submit
               </button>
             </div>

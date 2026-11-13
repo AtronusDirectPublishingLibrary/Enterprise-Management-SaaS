@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { Helmet } from "react-helmet-async";
-import { BarChart3, Download, FileSpreadsheet, FileText, Printer, RefreshCw } from "lucide-react";
+import { BarChart3, Download, FileSpreadsheet, FileText, Printer, RefreshCw, Sparkles } from "lucide-react";
 import ReportSchedules from "../components/ReportSchedules";
 import AutoFitNumber from "../components/AutoFitNumber";
 
@@ -288,22 +288,44 @@ export default function ConsolidatedReports() {
             <p>{report.narrative.milestoneStory}</p>
           </section>
 
+          {report.ai ? (
+            <section className="report-section report-ai-section">
+              <h2><span className="index">02</span> AI decision brief</h2>
+              <div className="report-ai-head">
+                <span><Sparkles size={15} /> {report.ai.engine}</span>
+                <span>{report.ai.confidence}% confidence</span>
+                <span>Generated {new Date(report.ai.generatedAt).toLocaleString("en-GB")}</span>
+              </div>
+              <p className="report-ai-summary">{report.ai.summary}</p>
+              <div className="row g-3 mt-1">
+                <div className="col-md-6">
+                  <h3 className="h6 fw-bold">What the data says</h3>
+                  <ul className="mb-0">{report.ai.findings.map((finding, index) => <li key={index}>{finding}</li>)}</ul>
+                </div>
+                <div className="col-md-6">
+                  <h3 className="h6 fw-bold">Recommended actions</h3>
+                  <ol className="mb-0">{report.ai.actions.map((action, index) => <li key={index}>{action}</li>)}</ol>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           <section className="report-section">
-            <h2><span className="index">02</span> Achievements</h2>
+            <h2><span className="index">03</span> Achievements</h2>
             {report.narrative.achievements.length ? (
               <ul>{report.narrative.achievements.map((item, index) => <li key={index}>{item}</li>)}</ul>
             ) : <p className="mb-0 text-muted">No achievements were recorded in this window.</p>}
           </section>
 
           <section className="report-section">
-            <h2><span className="index">03</span> Challenges and risks</h2>
+            <h2><span className="index">04</span> Challenges and risks</h2>
             {report.narrative.challenges.length ? (
               <ul>{report.narrative.challenges.map((item, index) => <li key={index}>{item}</li>)}</ul>
             ) : <p className="mb-0 text-muted">No material challenges were recorded.</p>}
           </section>
 
           <section className="report-section">
-            <h2><span className="index">04</span> Next steps</h2>
+            <h2><span className="index">05</span> Next steps</h2>
             {report.narrative.nextSteps.length ? (
               <ul>{report.narrative.nextSteps.map((item, index) => <li key={index}>{item}</li>)}</ul>
             ) : <p className="mb-0 text-muted">Next steps will be set at the next reporting window.</p>}
@@ -311,22 +333,22 @@ export default function ConsolidatedReports() {
           </section>
 
           <section className="report-section">
-            <h2><span className="index">05</span> KPI performance matrix</h2>
+            <h2><span className="index">06</span> KPI performance matrix</h2>
             <KpiMatrix rows={report.matrices.kpis} />
           </section>
 
           <section className="report-section">
-            <h2><span className="index">06</span> Milestone matrix</h2>
+            <h2><span className="index">07</span> Milestone matrix</h2>
             <DeliveryMatrix rows={report.matrices.milestones} label="Milestones" />
           </section>
 
           <section className="report-section">
-            <h2><span className="index">07</span> Activity matrix</h2>
+            <h2><span className="index">08</span> Activity matrix</h2>
             <DeliveryMatrix rows={report.matrices.activities} label="Activities" />
           </section>
 
           <section className="report-section">
-            <h2><span className="index">08</span> Accountability by task owner</h2>
+            <h2><span className="index">09</span> Accountability by task owner</h2>
             {report.matrices.owners.length ? (
               <div className="matrix-scroll">
                 <table className="report-matrix">
@@ -352,7 +374,7 @@ export default function ConsolidatedReports() {
           </section>
 
           <section className="report-section">
-            <h2><span className="index">09</span> Task-owner progress notes</h2>
+            <h2><span className="index">10</span> Task-owner progress notes</h2>
             {report.narrative.ownerNotes.length ? (
               <div className="d-flex flex-column gap-3">
                 {report.narrative.ownerNotes.map((note) => (
@@ -370,7 +392,7 @@ export default function ConsolidatedReports() {
 
           {(report.reports.length > 0 || report.rollup.length > 0) && (
             <section className="report-section">
-              <h2><span className="index">10</span> Reporting obligations and roll-up</h2>
+              <h2><span className="index">11</span> Reporting obligations and roll-up</h2>
               {report.rollup.length > 0 && (
                 <>
                   <h3 className="h6 fw-bold">Linked child plans</h3>

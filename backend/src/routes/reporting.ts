@@ -1,9 +1,70 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { buildExecutiveAnalytics } from "../lib/executiveAnalytics";
 
 const router = Router();
-router.use(requireAuth, requireRole("admin", "project_manager"));
+router.use(requireAuth, requireRole("admin", "executive", "project_manager"));
+
+function filtersFrom(query: any) {
+  return {
+    department: typeof query.department === "string" && query.department !== "all" ? query.department : undefined,
+    status: typeof query.status === "string" && query.status !== "all" ? query.status : undefined,
+    fund: typeof query.fund === "string" && query.fund !== "all" ? query.fund : undefined,
+    manager: typeof query.manager === "string" && query.manager !== "all" ? query.manager : undefined,
+  };
+}
+
+/** AI-assisted, cross-filtered portfolio intelligence for the executive page. */
+router.get("/executive-bi", async (req, res, next) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    res.json(await buildExecutiveAnalytics(filtersFrom(req.query)));
+  } catch (error) {
+    next(error);
+  }
+});
+
+/** Power BI-ready flat extract. The dashboard's own export uses the same shape. */
+router.get("/executive-bi/export", async (req, res, next) => {
+  try {
+    const analytics = await buildExecutiveAnalytics(filtersFrom(req.query));
+    const columns = [
+      "projectId",
+      "title",
+      "status",
+      "priority",
+      "department",
+      "division",
+      "manager",
+      "fund",
+      "startDate",
+      "endDate",
+      "progress",
+      "plan",
+      "actual",
+      "variance",
+      "utilization",
+      "health",
+      "daysToDue",
+      "activityCount",
+      "milestoneCount",
+    ];
+    const quote = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const csv = [
+      columns.join(","),
+      ...analytics.projects.map((row: any) => columns.map((column) => quote(row[column])).join(",")),
+    ].join("\r\n");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="EB-EMS_Executive_BI_${new Date().toISOString().slice(0, 10)}.csv"`
+    );
+    res.send(csv);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get("/executive", async (req, res, next) => {
   try {

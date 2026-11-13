@@ -18,7 +18,7 @@ import SignatureDialog from "./SignatureDialog";
 const STATUS = {
   SUBMITTED: { label: "Awaiting HR", tone: "#b06a1f" },
   INITIATED: { label: "Initiated", tone: "#2e6f9e" },
-  IN_PROGRESS: { label: "In progress", tone: "#c9a227" },
+  IN_PROGRESS: { label: "In progress", tone: "var(--brand-secondary)" },
   READY_FOR_EXIT: { label: "Ready for exit", tone: "#2f8f6b" },
   COMPLETED: { label: "Completed", tone: "#0d3357" },
   WITHDRAWN: { label: "Withdrawn", tone: "#8c8c8c" },

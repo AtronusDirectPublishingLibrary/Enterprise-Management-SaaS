@@ -154,7 +154,7 @@ export default function Users() {
                   <td>{u.role}</td>
                   <td className="small">{u.position || "—"}</td>
                   <td>{u.email || "—"}</td>
-                  <td>{u.department || u.assignedDirectorate || "—"}</td>
+                  <td>{u.department || "—"}</td>
                   <td>{u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "Never"}</td>
                   <td>
                     <button className="btn btn-sm btn-link text-secondary p-0 me-2" onClick={() => { setEditUser(u); setShowModal(true); }}>

@@ -53,7 +53,7 @@ export default function Partners() {
           <div className="col-md-4" key={group.title}>
             <div className="card border-0 shadow-sm p-4 h-100">
               <div className="mb-3" style={{ color: "var(--brand-secondary)" }}>{group.icon}</div>
-              <h5 className="fw-bold" style={{ color: "#0B2545" }}>{group.title}</h5>
+              <h5 className="fw-bold" style={{ color: "var(--brand-primary)" }}>{group.title}</h5>
               <p className="text-muted small mt-2 mb-0">{group.body}</p>
             </div>
           </div>

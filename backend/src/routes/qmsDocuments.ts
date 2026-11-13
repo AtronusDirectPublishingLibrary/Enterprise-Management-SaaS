@@ -39,7 +39,7 @@ const VERSION_PATTERN = /^\d+\.\d+(\.\d+)?$/;
 const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".doc", ".xlsx", ".xls"];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-const uploadDir = path.join(process.cwd(), "uploads");
+const uploadDir = path.join(process.cwd(), "uploads", "qms");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 /**
@@ -98,7 +98,7 @@ function addYears(date: Date, years: number) {
 function uploadFields(file?: Express.Multer.File) {
   if (!file) return {};
   return {
-    fileUrl: `/uploads/${file.filename}`,
+    fileUrl: `/uploads/qms/${file.filename}`,
     fileName: file.originalname,
     fileSize: file.size,
   };

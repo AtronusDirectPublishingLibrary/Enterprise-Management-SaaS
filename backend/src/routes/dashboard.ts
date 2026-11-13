@@ -62,13 +62,13 @@ router.get("/stats", async (req, res, next) => {
     const dirAgg: Record<string, { total: number; count: number }> = {};
     const divAgg: Record<string, { total: number; count: number }> = {};
     for (const p of projects) {
-      const d = p.leadDirectorate || "Unassigned";
+      const d = p.leadDepartment || "Unassigned";
       const v = p.leadDivision    || "Unassigned";
       dirAgg[d] ??= { total: 0, count: 0 }; dirAgg[d].total += p.progress; dirAgg[d].count++;
       divAgg[v] ??= { total: 0, count: 0 }; divAgg[v].total += p.progress; divAgg[v].count++;
     }
-    const directorateProgress = Object.entries(dirAgg).map(([k, v]) => ({
-      directorate: k, avgProgress: Math.round(v.total / v.count),
+    const departmentProgress = Object.entries(dirAgg).map(([k, v]) => ({
+      department: k, avgProgress: Math.round(v.total / v.count),
     }));
     const divisionProgress = Object.entries(divAgg).map(([k, v]) => ({
       division: k, avgProgress: Math.round(v.total / v.count),
@@ -152,7 +152,7 @@ router.get("/stats", async (req, res, next) => {
         totalPlan, totalActual, variance, overBudgetProjects,
       },
       statusDistribution,
-      directorateProgress,
+      departmentProgress,
       divisionProgress,
       planActualData,
       milestoneTimeline,

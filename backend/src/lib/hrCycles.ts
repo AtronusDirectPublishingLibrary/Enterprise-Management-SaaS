@@ -69,6 +69,59 @@ export const DEFAULT_APPRAISAL_ITEMS = [
   "Initiative, learning and development",
 ];
 
+/**
+ * The editable starting framework. The HR team can rename, re-weight, add or
+ * retire criteria from the UI; these defaults are only used to seed an empty
+ * framework. Existing appraisal items keep the snapshot they were opened with.
+ */
+export const DEFAULT_APPRAISAL_CRITERIA = [
+  {
+    title: "Job knowledge and technical quality",
+    description: "Depth of role knowledge, accuracy and technical judgement.",
+    guidance: "Consider quality of outputs, technical decisions and how well the person applies standards relevant to their role.",
+    category: "Performance",
+    weight: 25,
+    maxScore: 5,
+    sortOrder: 0,
+  },
+  {
+    title: "Delivery, ownership and timeliness",
+    description: "Reliable delivery against agreed commitments and deadlines.",
+    guidance: "Look for ownership, prioritisation and evidence of follow-through rather than activity alone.",
+    category: "Delivery",
+    weight: 25,
+    maxScore: 5,
+    sortOrder: 1,
+  },
+  {
+    title: "Quality, compliance and documentation",
+    description: "Compliance with GMP, SOPs, safety and data-integrity requirements.",
+    guidance: "Use audit findings, documentation quality and observed compliance behaviours.",
+    category: "Compliance",
+    weight: 20,
+    maxScore: 5,
+    sortOrder: 2,
+  },
+  {
+    title: "Collaboration and communication",
+    description: "Works constructively across teams and communicates clearly.",
+    guidance: "Consider how the person shares information, handles disagreement and supports shared goals.",
+    category: "Behaviour",
+    weight: 15,
+    maxScore: 5,
+    sortOrder: 3,
+  },
+  {
+    title: "Initiative, learning and development",
+    description: "Seeks improvement, learns from feedback and develops capability.",
+    guidance: "Look for evidence of learning, constructive use of feedback and improvement at work.",
+    category: "Development",
+    weight: 15,
+    maxScore: 5,
+    sortOrder: 4,
+  },
+];
+
 /** Induction checklist created for every new joiner. */
 export const DEFAULT_INDUCTION_TASKS = [
   { title: "Sign employment contract and personal data form", category: "DOCUMENTS", offsetDays: 0 },

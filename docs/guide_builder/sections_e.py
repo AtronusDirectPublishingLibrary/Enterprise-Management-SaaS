@@ -321,7 +321,7 @@ def appendix_verification(doc):
             ["Training", "Create, edit and delete a training record", "History reflects every change; expiry date and result persist."],
             ["Social", "Publish an article with an unconfigured channel", "One queue row per enabled channel; missing credential records SKIPPED with a reason."],
             ["Social", "Retry a SKIPPED row after configuration", "Row returns to QUEUED and is processed on the next run."],
-            ["Executive BI", "Apply a directorate filter and export", "Every chart and the CSV reflect the same filtered project set."],
+            ["Executive BI", "Apply a department filter and export", "Every chart and the CSV reflect the same filtered project set."],
             ["Consolidated report", "Open a report and export Word", "AI brief headings and recommendations appear in the export."],
             ["Documents", "Upload corporate document, publish, unpublish", "Same ID appears and disappears on the public endpoint; no duplicate."],
             ["Documents", "Upload a project document", "Visible on the project endpoint; absent from the public endpoint."],

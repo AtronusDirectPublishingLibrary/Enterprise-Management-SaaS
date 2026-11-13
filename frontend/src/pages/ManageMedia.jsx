@@ -330,7 +330,7 @@ export default function ManageMedia() {
                     height: 68,
                     borderRadius: 4,
                     flexShrink: 0,
-                    backgroundColor: "#0b2545",
+                    backgroundColor: "var(--brand-primary)",
                     backgroundImage: video.posterUrl ? `url(${video.posterUrl})` : undefined,
                     backgroundSize: "cover",
                     backgroundPosition: "center",

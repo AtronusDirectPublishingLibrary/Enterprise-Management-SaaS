@@ -58,6 +58,16 @@ export default function MyApprovals() {
     }
   };
 
+  const forwardTimesheet = async (sheet) => {
+    if (!window.confirm(`Forward ${sheet.user.firstName} ${sheet.user.lastName}'s ${sheet.month}/${sheet.year} timesheet to their supervisor?`)) return;
+    try {
+      await api.post(`/timesheets/${sheet.id}/forward`, {});
+      loadData();
+    } catch (err) {
+      alert(err.message || "Failed to forward the timesheet");
+    }
+  };
+
   return (
     <div className="container-fluid py-4">
       <Helmet><title>My Approvals | EBPE</title></Helmet>
@@ -132,6 +142,9 @@ export default function MyApprovals() {
           <div className="card shadow-sm border-0 h-100">
             <div className="card-header bg-white fw-bold py-3">
               <Clock size={18} className="me-2" /> Pending Timesheets
+              <div className="small fw-normal text-muted mt-1">
+                Route: employee → HR &amp; Admin Manager → supervisor.
+              </div>
             </div>
             <div className="card-body p-0">
               {timesheets.length === 0 ? (
@@ -141,11 +154,30 @@ export default function MyApprovals() {
                   {timesheets.map(t => (
                     <li key={t.id} className="list-group-item p-3">
                       <div className="d-flex justify-content-between align-items-center mb-2">
-                        <div className="fw-bold">{t.user.firstName} {t.user.lastName} ({t.month}/{t.year})</div>
+                        <div>
+                          <div className="fw-bold">{t.user.firstName} {t.user.lastName} ({t.month}/{t.year})</div>
+                          <div className="small">
+                            {t.stage === "HR" ? (
+                              <span className="badge bg-warning text-dark">Awaiting HR &amp; Admin Manager</span>
+                            ) : (
+                              <span className="badge bg-info text-dark">
+                                Awaiting supervisor{t.supervisor ? ` (${t.supervisor.firstName} ${t.supervisor.lastName})` : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                         <div className="d-flex gap-2">
                           <Link to={`/print-timesheet/${t.id}`} className="btn btn-sm btn-outline-secondary">View</Link>
-                          <button className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("timesheet", t, "APPROVED")}><PenLine size={13} /> Approve</button>
-                          <button className="btn btn-sm btn-danger" onClick={() => requestSignature("timesheet", t, "REJECTED")}>Reject</button>
+                          {t.stage === "HR" ? (
+                            <button className="btn btn-sm btn-primary" onClick={() => forwardTimesheet(t)}>
+                              Forward to supervisor
+                            </button>
+                          ) : (
+                            <>
+                              <button className="btn btn-sm btn-success d-inline-flex align-items-center gap-1" onClick={() => requestSignature("timesheet", t, "APPROVED")}><PenLine size={13} /> Approve</button>
+                              <button className="btn btn-sm btn-danger" onClick={() => requestSignature("timesheet", t, "REJECTED")}>Reject</button>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="small text-muted">{(t.entries || []).length} days logged</div>

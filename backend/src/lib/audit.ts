@@ -1,10 +1,8 @@
-import { prisma } from "./prisma";
+import { appendAudit } from "./auditChain";
 
 export async function logAudit(grantId: string, action: string, user: string, details?: any) {
   try {
-    await prisma.auditLog.create({
-      data: { grantId: grantId || "PMS", action, user: user || "system", details: details ?? {} },
-    });
+    await appendAudit({ grantId, action, user, details });
   } catch (e) {
     console.error("audit failed", e);
   }

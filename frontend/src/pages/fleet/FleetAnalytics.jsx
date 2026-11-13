@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Doughnut, Bar, Line } from "react-chartjs-2";
 import AutoFitNumber from "../../components/AutoFitNumber";
+import { useTheme } from "../../lib/theme";
 import {
   Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement,
   LineElement, PointElement, Tooltip, Legend, Title,
@@ -25,13 +26,14 @@ const STATUS_COLORS = {
   Unavailable: "#6B7280",
 };
 
-const NAVY = "#0B2545";
-const GOLD = "#C9A227";
-
 export default function FleetAnalytics() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Canvas charts need resolved hex values, not CSS variables.
+  const { colors } = useTheme();
+  const NAVY = colors.primary;
+  const GOLD = colors.secondary;
 
   useEffect(() => {
     api.get("/fleet/analytics/stats")

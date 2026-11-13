@@ -6,8 +6,8 @@ const TYPE_LABEL = { AOP: "Annual Operational Plan", STRATEGIC: "Strategic Plan"
 
 const KIND_COLORS = {
   PILLAR: "#7c3aed",
-  GOAL: "#0B2545",
-  OBJECTIVE: "#0B2545",
+  GOAL: "var(--brand-primary)",
+  OBJECTIVE: "var(--brand-primary)",
   STRATEGY: "#0369a1",
   ACTIVITY: "#b45309",
   KPI: "#be123c",
@@ -80,7 +80,7 @@ export default function SharedPlanPage() {
 
   return (
     <div style={{ background: "var(--brand-bg, #f6f8f6)", minHeight: "100vh" }}>
-      <header style={{ background: "var(--brand-primary, #0B2545)", color: "#fff" }}>
+      <header style={{ background: "var(--brand-primary, var(--brand-primary))", color: "#fff" }}>
         <div className="container py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div className="d-flex align-items-center gap-2">
             <ShieldCheck size={22} style={{ color: "var(--brand-secondary, #d4af37)" }} />
@@ -180,7 +180,7 @@ export default function SharedPlanPage() {
                               <td>
                                 <div className="d-flex align-items-center gap-2">
                                   <div className="progress flex-grow-1" style={{ height: 6 }}>
-                                    <div className="progress-bar" style={{ width: `${Math.min(100, kpi.progress || 0)}%`, background: kpi.progress >= 80 ? "#0B2545" : kpi.progress >= 40 ? "#d97706" : "#dc2626" }} />
+                                    <div className="progress-bar" style={{ width: `${Math.min(100, kpi.progress || 0)}%`, background: kpi.progress >= 80 ? "var(--brand-primary)" : kpi.progress >= 40 ? "#d97706" : "#dc2626" }} />
                                   </div>
                                   <span className="small text-muted">{Math.round(kpi.progress || 0)}%</span>
                                 </div>

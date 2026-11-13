@@ -5,6 +5,7 @@ import fs from "fs";
 import { requireAuth, requireRole } from "../middleware/auth";
 import {
   getPublicSiteSettings,
+  publishTheme,
   savePublicSiteSettings,
   toPublicPayload,
 } from "../lib/siteSettings";
@@ -103,6 +104,16 @@ router.get("/", async (_req, res, next) => {
     // up on the next page view (Express' ETag keeps repeat loads cheap).
     res.set("Cache-Control", "no-cache");
     res.json(toPublicPayload(settings));
+  } catch (e) {
+    next(e);
+  }
+});
+
+/** Admin: publish the working brand palette to every surface at once. */
+router.post("/theme/publish", requireAuth, requireRole("admin"), async (req, res, next) => {
+  try {
+    const settings = await publishTheme(req.user?.username);
+    res.json({ success: true, theme: settings.theme });
   } catch (e) {
     next(e);
   }

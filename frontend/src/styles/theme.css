@@ -12,6 +12,18 @@
   --brand-info:      #3498db;
 }
 
+/* Extended palette. These are the variables the Settings → Brand colours
+   screen writes to; keep every component reading from them rather than a
+   hard-coded hex so a published palette repaints the whole platform. */
+:root {
+  --brand-primary-dark:   #081a30;
+  --brand-secondary-deep: #8a6a12;
+  --brand-secondary-soft: #e8c766;
+  --brand-accent-deep:    #8a3a3a;
+  --brand-surface:        #ffffff;
+  --brand-canvas:         #418acf;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -308,7 +320,7 @@ body {
   position: absolute;
   inset: -5%;
   background-image: none !important;
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-size: cover;
   background-position: center;
   z-index: 1;
@@ -543,7 +555,7 @@ body {
 
 /* --- GLASSMORPHISM FOOTER --- */
 .site-footer {
-  background: #0B2545; /* Very dark green */
+  background: var(--brand-primary); /* Very dark green */
   color: #94a3b8;
   padding: 80px 0 30px;
   border-top: 4px solid var(--brand-secondary);
@@ -751,21 +763,21 @@ body {
    ============================================================ */
 
 /* --- Bars: navy instead of green --- */
-.progress-bar-brand { background: #0B2545 !important; }
+.progress-bar-brand { background: var(--brand-primary) !important; }
 
 /* --- Text inputs: navy focus ring instead of Bootstrap blue (#86b7fe) --- */
 .form-control:focus,
 .form-select:focus,
 .form-check-input:focus,
 textarea.form-control:focus {
-  border-color: #0B2545;
+  border-color: var(--brand-primary);
   box-shadow: 0 0 0 0.2rem rgba(11, 37, 69, 0.25);
   outline: 0;
 }
 
 /* --- Traffic-light bars: 'bg-success' progress bars use navy (was green) --- */
 /* Safe: only targets .progress-bar elements (badges use bg-success alone and are untouched). */
-.progress-bar.bg-success { background-color: #0B2545 !important; }
+.progress-bar.bg-success { background-color: var(--brand-primary) !important; }
 
 /* ============================================================
    FULL REBRAND — kill remaining brand greens
@@ -774,35 +786,35 @@ textarea.form-control:focus {
    ============================================================ */
 
 /* Progress bars using Bootstrap's bg-success â†’ navy */
-.progress-bar.bg-success { background-color: #0B2545 !important; }
+.progress-bar.bg-success { background-color: var(--brand-primary) !important; }
 
 /* If any utility class renders a brand-green background, kill it */
-.bg-success.progress-bar { background-color: #0B2545 !important; }
+.bg-success.progress-bar { background-color: var(--brand-primary) !important; }
 
 /* ============================================================
    FORCE NAVY FALLBACK FOR HERO SLIDING AREA
    This hides the image layers and uses a pure navy background.
    ============================================================ */
 .hero-section {
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 .hero-bg, .hero-bg-layer {
   display: block !important;
   opacity: 1 !important;
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 .hero-section::before {
   /* Removes the green tint overlay, leaves a clean navy gradient */
-  background: linear-gradient(135deg, #0B2545 0%, #081a30 100%) !important;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%) !important;
 }
 
 /* ============================================================
    FORCE NAVY EVERYWHERE ON PUBLIC PAGES
    ============================================================ */
 header, nav, footer, .site-footer, .landing-nav, .hero-section {
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -810,7 +822,7 @@ header, nav, footer, .site-footer, .landing-nav, .hero-section {
 .hero-bg, .hero-bg-layer {
   display: block !important;
   opacity: 1 !important;
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -820,7 +832,7 @@ footer h3, footer h5, .site-footer h3, .site-footer h5 { color: #ffffff !importa
 
 /* --- ULTIMATE FOOTER OVERRIDE --- */
 footer, .site-footer, .footer, [class*="footer"] {
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   background-image: none !important;
   color: #94a3b8 !important;
 }
@@ -831,13 +843,13 @@ footer h3, footer h5, footer h4, footer .text-white {
   color: #ffffff !important;
 }
 footer a:hover {
-  color: #C9A227 !important; /* Gold hover */
+  color: var(--brand-secondary) !important; /* Gold hover */
 }
 
 /* --- FORCE FOOTER TO MATCH HEADER NAVY --- */
 footer, .site-footer, .footer, [class*="footer"] {
-  background: #0B2545 !important;
-  background-color: #0B2545 !important;
+  background: var(--brand-primary) !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* ============================================================
@@ -845,7 +857,7 @@ footer, .site-footer, .footer, [class*="footer"] {
    Images float over this deep ocean color during transitions
    ============================================================ */
 .hero-section {
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -858,7 +870,7 @@ footer, .site-footer, .footer, [class*="footer"] {
 .hero-bg, .hero-bg-layer {
   display: block !important;
   opacity: 1 !important;
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -922,7 +934,7 @@ footer, .site-footer, .footer {
 
 /* 5. Ensure the Hero Section isn't hidden under the sticky header */
 .hero-section {
-  margin-top: 0 !important; 
+  margin-top: 0 !important;
 }
 
 /* ============================================================
@@ -978,9 +990,9 @@ main, .main-content, [class*="main-content"] {
 /* ============================================================
    FORCE STICKY HEADER
    ============================================================ */
-header, 
-.navbar, 
-.landing-nav, 
+header,
+.navbar,
+.landing-nav,
 [class*="navbar"],
 #root > div > header,
 #root > div > nav {
@@ -1000,14 +1012,14 @@ body, #root {
 /* ============================================================
    NUCLEAR STICKY HEADER (BREAKS WRAPPER LIMITS)
    ============================================================ */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav {
   position: -webkit-sticky !important;
   position: sticky !important;
   top: 0 !important;
   z-index: 2147483647 !important; /* Max z-index */
-  background-color: #0B2545 !important; /* Force background so text doesn't bleed */
+  background-color: var(--brand-primary) !important; /* Force background so text doesn't bleed */
 }
 
 /* Force all parent wrappers to allow sticky to work */
@@ -1024,8 +1036,8 @@ body, #root, #root > div, .app-wrapper, .public-layout {
    ============================================================ */
 
 /* 1. Break the footer out of any parent wrappers */
-footer, 
-.site-footer, 
+footer,
+.site-footer,
 .footer,
 [class*="footer"] {
   width: 100vw !important;
@@ -1034,7 +1046,7 @@ footer,
   margin-right: calc(-50vw + 50%) !important;
   margin-top: auto !important;
   margin-bottom: 0 !important;
-  
+
   /* Ensure it visually connects to the edges */
   position: relative !important;
   left: 0 !important;
@@ -1044,7 +1056,7 @@ footer,
 }
 
 /* 2. Keep the text/content inside nicely padded */
-footer > .container, 
+footer > .container,
 footer > .container-fluid,
 footer > .row,
 footer > div > .container {
@@ -1067,16 +1079,16 @@ html, body {
    ============================================================ */
 
 /* 1. Force Sticky Header (absolute highest priority) */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 #root > div > header,
 #root > div > nav {
   position: -webkit-sticky !important;
   position: sticky !important;
   top: 0 !important;
-  z-index: 2147483647 !important; 
-  background-color: #0B2545 !important; 
+  z-index: 2147483647 !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* 2. Fix the Page Layout to prevent horizontal scroll (which breaks sticky) */
@@ -1088,8 +1100,8 @@ html, body, #root {
 }
 
 /* 3. Make the footer span full width WITHOUT breaking sticky */
-footer, 
-.site-footer, 
+footer,
+.site-footer,
 .footer {
   width: 100% !important;
   max-width: 100% !important;
@@ -1100,7 +1112,7 @@ footer,
 }
 
 /* 4. Keep footer inner content padded */
-footer > .container, 
+footer > .container,
 footer > .container-fluid,
 footer > div > .container {
   max-width: 100% !important;
@@ -1111,8 +1123,8 @@ footer > div > .container {
 }
 
 /* 5. Ensure the parent wrapper allows sticky */
-#root > div, 
-.app-wrapper, 
+#root > div,
+.app-wrapper,
 .main-content {
   display: flex !important;
   flex-direction: column !important;
@@ -1126,22 +1138,22 @@ footer > div > .container {
 
 /* 1. Break the body out of any scroll traps */
 html, body {
-  overflow: visible !important; 
+  overflow: visible !important;
   height: auto !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
 /* 2. Force the header to stick globally */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 .public-layout > header {
   position: sticky !important;
   top: 0 !important;
   z-index: 9999 !important;
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* 3. Fix the root wrapper so it doesn't block sticky */
@@ -1170,7 +1182,7 @@ body {
    ============================================================ */
 
 /* 1. Reset the page wrapper to a full-height flex column */
-#root, 
+#root,
 body > div,
 .public-layout,
 .app-wrapper {
@@ -1182,15 +1194,15 @@ body > div,
 }
 
 /* 2. Make the main content expand to fill all available space */
-main, 
-.main-content, 
+main,
+.main-content,
 .hero-section,
 .page-content {
-  flex: 1 0 auto !important; 
+  flex: 1 0 auto !important;
 }
 
 /* 3. Force the footer to sit at the absolute bottom */
-footer, 
+footer,
 .site-footer {
   flex-shrink: 0 !important;
   margin: 0 !important;
@@ -1198,15 +1210,15 @@ footer,
   width: 100% !important;
   max-width: 100% !important;
   border-radius: 0 !important;
-  
+
   /* Remove any shadows that might look like gaps */
-  box-shadow: none !important; 
+  box-shadow: none !important;
   border: none !important;
 }
 
 /* 4. Force the background to extend behind the footer */
 html, body {
-  background-color: #0B2545 !important; /* Matches footer background to prevent white flashes */
+  background-color: var(--brand-primary) !important; /* Matches footer background to prevent white flashes */
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -1228,25 +1240,25 @@ header, .navbar, .landing-nav {
 }
 
 /* 2. Force the entire app wrapper to fill the screen */
-#root, 
-body, 
-.app-wrapper, 
+#root,
+body,
+.app-wrapper,
 .public-layout {
   display: flex !important;
   flex-direction: column !important;
   min-height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
-  background-color: #0B2545 !important; /* Makes any gaps Navy instead of white */
+  background-color: var(--brand-primary) !important; /* Makes any gaps Navy instead of white */
 }
 
 /* 3. Make the main content stretch to push the footer down */
-main, 
-.main-content, 
+main,
+.main-content,
 .page-content,
 section:not(.hero-section) {
   flex: 1 0 auto !important; /* Fills available space */
-  background-color: #F5F2EA !important; /* Matches your cream content background */
+  background-color: var(--brand-bg) !important; /* Matches your cream content background */
 }
 
 /* 4. Snap the footer perfectly to the bottom */
@@ -1279,13 +1291,13 @@ html, body, #root, .app-wrapper, .public-layout {
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
-  overflow-x: hidden !important; 
+  overflow-x: hidden !important;
 }
 
 /* 2. Make sure the content area fills the space and has the cream background */
 main, .main-content, .content-wrapper {
   flex: 1 1 auto !important; /* Forces it to stretch and fill empty space */
-  background-color: #F5F2EA !important; /* Your cream content color */
+  background-color: var(--brand-bg) !important; /* Your cream content color */
   display: flex !important;
   flex-direction: column !important;
 }
@@ -1295,7 +1307,7 @@ footer, .site-footer {
   flex-shrink: 0 !important;
   margin-top: auto !important; /* Pushes it to the absolute bottom */
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* 4. Fix that weird white block sticking into the header */
@@ -1304,7 +1316,7 @@ header, .navbar, .landing-nav {
   top: 0 !important;
   width: 100% !important;
   margin: 0 !important;
-  background-color: #0B2545 !important; 
+  background-color: var(--brand-primary) !important;
   /* Prevents visual glitches on the edges */
   box-shadow: none !important;
 }
@@ -1323,8 +1335,8 @@ html, body, #root {
 }
 
 /* 2. Force the header to stick */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 [class*="navbar"] {
   position: -webkit-sticky !important;
@@ -1332,32 +1344,32 @@ header,
   top: 0 !important;
   z-index: 99999 !important;
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   margin: 0 !important;
 }
 
 /* 3. Push the footer to the bottom using standard min-height */
-#root, 
+#root,
 body > div {
   display: flex !important;
   flex-direction: column !important;
-  min-height: 100vh !important; 
+  min-height: 100vh !important;
 }
 
 /* 4. Stretch the main content */
-main, 
-.main-content, 
+main,
+.main-content,
 .content-wrapper {
   flex: 1 0 auto !important; /* Pushes the footer down */
-  background-color: #F5F2EA !important; 
+  background-color: var(--brand-bg) !important;
 }
 
 /* 5. Pin the footer to the bottom edge */
 footer, .site-footer {
   flex-shrink: 0 !important;
-  margin-top: auto !important; 
+  margin-top: auto !important;
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* ============================================================
@@ -1365,18 +1377,18 @@ footer, .site-footer {
    ============================================================ */
 
 /* 1. Ensure the page wrapper allows the footer to grow */
-#root, 
-.app-wrapper, 
+#root,
+.app-wrapper,
 .public-layout {
   display: flex !important;
   flex-direction: column !important;
-  min-height: 100vh !important; 
+  min-height: 100vh !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
 /* 2. Force the footer to GROW and fill all empty space */
-footer, 
+footer,
 .site-footer,
 [class*="footer"] {
   flex-grow: 1 !important; /* This is the magic property */
@@ -1408,8 +1420,8 @@ main, .main-content {
    ============================================================ */
 
 /* 1. Set the whole app to a Grid */
-#root, 
-body > div, 
+#root,
+body > div,
 .public-layout,
 .app-wrapper {
   display: grid !important;
@@ -1432,11 +1444,11 @@ header, .navbar {
 /* 3. Force the Footer to expand and fill all remaining space */
 footer, .site-footer {
   grid-row: 3 !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   width: 100% !important;
   margin: 0 !important;
   /* This stretches the background to fill the grid cell */
-  min-height: 100% !important; 
+  min-height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important; /* Keeps text at the top of the footer */
@@ -1445,8 +1457,8 @@ footer, .site-footer {
 }
 
 /* 4. Increase Footer Font Sizes to match Header */
-footer a, 
-footer p, 
+footer a,
+footer p,
 footer li,
 footer .footer-links a {
   font-size: 1.05rem !important; /* Matches typical header nav size */
@@ -1454,7 +1466,7 @@ footer .footer-links a {
   line-height: 2 !important; /* Adds nice spacing between links */
 }
 
-footer h3, 
+footer h3,
 footer h5,
 footer .footer-brand {
   font-size: 1.25rem !important; /* Headers slightly larger */
@@ -1465,7 +1477,7 @@ footer .footer-brand {
 /* 5. Ensure the main content doesn't force a white background */
 main, .main-content {
   grid-row: 2 !important;
-  background-color: #F5F2EA !important;
+  background-color: var(--brand-bg) !important;
 }
 
 /* ============================================================
@@ -1481,8 +1493,8 @@ html, body {
 }
 
 /* 2. Set the app wrapper to exactly the screen height minus the header */
-#root, 
-body > div, 
+#root,
+body > div,
 .public-layout,
 .app-wrapper {
   display: grid !important;
@@ -1517,10 +1529,10 @@ footer, .site-footer {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #F5F2EA; 
+  background: var(--brand-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #0B2545; 
+  background: var(--brand-primary);
   border-radius: 4px;
 }
 
@@ -1545,13 +1557,13 @@ header, .navbar, .landing-nav {
   top: 0 !important;
   z-index: 2147483647 !important; /* Max z-index to stay above everything */
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* 3. Use standard flexbox to push the footer down */
-#root, 
-body > div, 
+#root,
+body > div,
 .public-layout,
 .app-wrapper {
   display: flex !important;
@@ -1564,7 +1576,7 @@ body > div,
 /* 4. Content stretches to fill available space */
 main, .main-content {
   flex: 1 0 auto !important;
-  background-color: #F5F2EA !important;
+  background-color: var(--brand-bg) !important;
 }
 
 /* 5. Footer snaps to the bottom and doesn't overlap */
@@ -1574,7 +1586,7 @@ footer, .site-footer {
   margin-top: auto !important; /* Pushes it flush to the bottom */
   width: 100% !important;
   padding: 3rem 0 !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
 }
 
 /* ============================================================
@@ -1592,8 +1604,8 @@ html, body, #root {
 }
 
 /* 2. Force the header to stick to the top of the screen */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 .public-layout > header,
 #root > div > header {
@@ -1602,14 +1614,14 @@ header,
   top: 0 !important;
   z-index: 2147483647 !important; /* Max possible z-index */
   width: 100% !important;
-  background-color: #0B2545 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important; 
+  background-color: var(--brand-primary) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
 }
 
 /* 3. Standard layout for the footer (no flexbox that might break sticky) */
 footer, .site-footer {
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   margin: 0 !important;
 }
 
@@ -1627,26 +1639,26 @@ html, body, #root {
 }
 
 /* 2. Make the header sticky, enlarge it, and add a shadow */
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 [class*="navbar"] {
   position: -webkit-sticky !important;
   position: sticky !important;
   top: 0 !important;
   z-index: 99999 !important;
-  
+
   /* Slightly increase size */
   padding-top: 1.25rem !important;
   padding-bottom: 1.25rem !important;
-  
+
   /* Ensure it stays Navy */
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   width: 100% !important;
   margin: 0 !important;
-  
+
   /* Adds a subtle shadow so text doesn't blend into the header when scrolling */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important; 
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* ============================================================
@@ -1654,8 +1666,8 @@ header,
    ============================================================ */
 
 /* 1. Remove ANY fixed positioning that breaks the layout flow */
-header, 
-.navbar, 
+header,
+.navbar,
 .fixed-top,
 .sticky-top {
   position: -webkit-sticky !important;
@@ -1663,7 +1675,7 @@ header,
   top: 0 !important;
   z-index: 99999 !important;
   width: 100% !important;
-  background-color: #0B2545 !important;
+  background-color: var(--brand-primary) !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
 
@@ -1683,10 +1695,10 @@ html, body, #root, #root > div, .public-layout, .app-wrapper {
    ============================================================ */
 
 /* 1. Force the Staff Login button to stay on one line and have proper padding */
-.btn-warning, 
-a[href*="login"], 
+.btn-warning,
+a[href*="login"],
 button:contains("Staff Login") {
-  white-space: nowrap !important; 
+  white-space: nowrap !important;
   padding: 0.5rem 1.25rem !important;
   line-height: 1.5 !important;
   display: inline-flex !important;
@@ -1695,7 +1707,7 @@ button:contains("Staff Login") {
 }
 
 /* 2. Add gap between the language toggle and the search icon */
-.navbar .d-flex, 
+.navbar .d-flex,
 .landing-nav .d-flex {
   gap: 1rem !important;
   flex-wrap: nowrap !important;
@@ -1716,7 +1728,7 @@ header,
 }
 
 /* 2. Ensure the language toggle and login button don't squish */
-.navbar a, 
+.navbar a,
 .navbar button,
 .nav-link {
   font-size: 1rem !important; /* Make sure font is readable */
@@ -1726,11 +1738,11 @@ header,
 
 /* 3. Add a little gap between items so they don't touch */
 .navbar-nav {
-  gap: 1.5rem !important; 
+  gap: 1.5rem !important;
 }
 
 /* 4. Keep the Staff Login button looking perfect */
-.navbar .btn, 
+.navbar .btn,
 .landing-nav .btn {
   white-space: nowrap !important;
   padding: 0.5rem 1.25rem !important;
@@ -1773,7 +1785,7 @@ header,
 .hero-bg, .hero-bg-layer {
   display: block !important;
   opacity: 1 !important;
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -1797,7 +1809,7 @@ header,
 
 /* 4. Ensure the background behind the images is the deep ocean navy */
 .hero-section {
-  background-color: #418acf !important;
+  background-color: var(--brand-canvas) !important;
   background-image: none !important;
 }
 
@@ -1853,18 +1865,18 @@ header,
 }
 
 /* Hover Float Effect */
-.card, 
-.feature-card, 
-.chart-card, 
-.auth-card, 
+.card,
+.feature-card,
+.chart-card,
+.auth-card,
 .stat-item-landing {
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
 }
 
-.card:hover, 
-.feature-card:hover, 
-.chart-card:hover, 
-.auth-card:hover, 
+.card:hover,
+.feature-card:hover,
+.chart-card:hover,
+.auth-card:hover,
 .stat-item-landing:hover {
   transform: translateY(-8px) !important;
   box-shadow: 0 15px 35px rgba(11, 37, 69, 0.15) !important; /* Navy shadow */
@@ -1877,7 +1889,7 @@ html {
 }
 /* Offset scrolling so the sticky header doesn't cover the titles */
 section[id] {
-  scroll-margin-top: 100px; 
+  scroll-margin-top: 100px;
 }
 
 /* ============================================================
@@ -1902,8 +1914,8 @@ section[id] {
    ============================================================ */
 
 /* 1. Force text to wrap cleanly inside any card content */
-.card-body, 
-.stat-item-landing, 
+.card-body,
+.stat-item-landing,
 .card {
   overflow-wrap: break-word !important;
   word-wrap: break-word !important;
@@ -1913,7 +1925,7 @@ section[id] {
 }
 
 /* 2. Specifically target lists inside the cards */
-.card-body ul, 
+.card-body ul,
 .card-body li,
 .card ul,
 .card li {
@@ -1942,8 +1954,8 @@ section[id] {
    SLIGHTLY NARROW HEADER FOR MORE HERO SPACE
    ============================================================ */
 
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav {
   padding-top: 0.75rem !important;    /* Reduced from 1.25rem */
   padding-bottom: 0.75rem !important; /* Reduced from 1.25rem */
@@ -1965,7 +1977,7 @@ header,
   height: 90vh;
   min-height: 700px;
   overflow: hidden;
-  background-color: #0B2545 !important; /* Deep navy fallback */
+  background-color: var(--brand-primary) !important; /* Deep navy fallback */
 }
 
 /* 2. The Image Layers (Crossfade & Zoom) */
@@ -2051,7 +2063,7 @@ header,
   object-fit: cover;
   opacity: 0;
   /* 4 images * 4 seconds each = 16s total loop */
-  animation: aboutFade 16s infinite; 
+  animation: aboutFade 16s infinite;
 }
 
 @keyframes aboutFade {
@@ -2065,7 +2077,7 @@ header,
 /* ============================================================
    HERO OVERLAY FIX (LIGHT BLUE / NAVY)
    ============================================================ */
-.hero-section, 
+.hero-section,
 div[style*="height: 90vh"] {
   background-color: #3cb4e5 !important;
 }
@@ -2079,7 +2091,7 @@ div[style*="height: 90vh"] > div:first-child {
 /* ============================================================
    SHIELDVAX LIGHT BLUE HERO FALLBACK (FINAL)
    ============================================================ */
-.hero-section, 
+.hero-section,
 div[style*="height: 90vh"] {
   background-color: #3cb4e5 !important;
 }
@@ -2088,8 +2100,8 @@ div[style*="height: 90vh"] {
    SLIM HEADER (REDUCED SIZE)
    ============================================================ */
 
-header, 
-.navbar, 
+header,
+.navbar,
 .landing-nav,
 [class*="navbar"] {
   padding-top: 0.5rem !important;    /* Reduced from 0.75rem */

@@ -12,7 +12,7 @@ const VEHICLE_TYPES = ["Sedan", "4x4", "Minibus", "Ambulance", "Truck", "Motorcy
 const emptyVehicleForm = {
   requestType: "In-Town",
   tripPurpose: "",
-  directorate: "",
+  department: "",
   division: "",
   vehicleTypePreferred: "",
   passengers: 1,
@@ -56,7 +56,7 @@ export default function NewFleetRequest() {
       await api.post("/fleet/requests", {
         requestType: vehicleForm.requestType,
         tripPurpose: vehicleForm.tripPurpose,
-        directorate: vehicleForm.directorate || null,
+        department: vehicleForm.department || null,
         division: vehicleForm.division || null,
         vehicleTypePreferred: vehicleForm.vehicleTypePreferred || null,
         passengers: Number(vehicleForm.passengers) || 1,
@@ -191,8 +191,8 @@ export default function NewFleetRequest() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label small fw-bold">Directorate</label>
-                  <input type="text" className="form-control" value={vehicleForm.directorate} onChange={(e) => setVehicleForm({ ...vehicleForm, directorate: e.target.value })} />
+                  <label className="form-label small fw-bold">Department</label>
+                  <input type="text" className="form-control" value={vehicleForm.department} onChange={(e) => setVehicleForm({ ...vehicleForm, department: e.target.value })} />
                 </div>
                 <div className="col-md-6">
                   <label className="form-label small fw-bold">Division / Team</label>

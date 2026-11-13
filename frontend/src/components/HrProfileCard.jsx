@@ -51,7 +51,7 @@ export default function HrProfileCard({ data, onSaved, onError }) {
   return (
     <div
       className="card border-0 shadow-sm mb-4"
-      style={!data.profileComplete ? { borderLeft: "4px solid #c9a227" } : undefined}
+      style={!data.profileComplete ? { borderLeft: "4px solid var(--brand-secondary)" } : undefined}
     >
       <div className="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h2 className="h6 fw-bold mb-0 d-flex align-items-center gap-2">

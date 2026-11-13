@@ -10,8 +10,8 @@ import { canAccess } from "../lib/access";
 const TABS = [
   { key: "pms", path: "/pms-dashboard", label: "PMS Dashboard", icon: BarChart3 },
   { key: "pms", path: "/database/pms", label: "Project Details", icon: Database, end: true },
-  { key: "pms", path: "/goals", label: "Goals", icon: Target },
-  { key: "pms", path: "/portfolios", label: "Portfolios", icon: Briefcase },
+  { key: "pms", path: "/pms/goals", label: "Project Objectives", icon: Target },
+  { key: "pms", path: "/pms/portfolio", label: "Project Portfolio", icon: Briefcase },
   { key: "reports", path: "/executive", label: "Executive", icon: TrendingUp },
 ];
 

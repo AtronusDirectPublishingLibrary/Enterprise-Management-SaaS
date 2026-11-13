@@ -4,11 +4,13 @@ import { Helmet } from "react-helmet-async";
 import { Users, AlertTriangle, TrendingUp } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { useTheme } from "../lib/theme";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function HRAnalytics() {
   const [data, setData] = useState(null);
+  const { colors } = useTheme();
 
   useEffect(() => {
     api.get("/hr-analytics").then(setData).catch(console.error);
@@ -56,8 +58,8 @@ export default function HRAnalytics() {
             <div className="card-body">
               <h5 className="fw-bold mb-4">Hiring Trend (Last 12 Months)</h5>
               <div style={{ height: "300px" }}>
-                <Bar 
-                  data={{ labels: data.chart.labels, datasets: [{ label: 'New Hires', data: data.chart.data, backgroundColor: '#0B2545', borderRadius: 4 }] }} 
+                <Bar
+                  data={{ labels: data.chart.labels, datasets: [{ label: 'New Hires', data: data.chart.data, backgroundColor: colors.primary, borderRadius: 4 }] }}
                   options={{ responsive: true, maintainAspectRatio: false }}
                 />
               </div>

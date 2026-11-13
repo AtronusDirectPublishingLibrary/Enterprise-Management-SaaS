@@ -16,8 +16,14 @@ export async function pruneAuditLog(options: { days?: number } = {}) {
     return { deleted: 0, retentionDays: 0, cutoff: null, skipped: true };
   }
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const result = await prisma.auditLog.deleteMany({
-    where: { timestamp: { lt: cutoff } },
+  // The append-only trigger blocks ordinary DELETEs. This transaction-local
+  // setting is the single controlled maintenance path used by the retention
+  // job; normal application writes never set it.
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe("SET LOCAL app.audit_maintenance = 'on'");
+    return tx.auditLog.deleteMany({
+      where: { timestamp: { lt: cutoff } },
+    });
   });
   return { deleted: result.count, retentionDays: days, cutoff: cutoff.toISOString(), skipped: false };
 }

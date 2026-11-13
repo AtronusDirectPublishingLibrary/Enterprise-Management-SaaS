@@ -1030,7 +1030,7 @@ function AdvancedGantt({ project, activities, milestones }) {
 
                 const isComplete = item.status === "Complete";
                 const progressPct = item.progress || (isComplete ? 100 : 0);
-                const colorBg = isMs ? "#D4AF37" : (item.status === "Complete" ? "#2ecc71" : item.status === "In Progress" ? "#f39c12" : "#0B2545");
+                const colorBg = isMs ? "#D4AF37" : (item.status === "Complete" ? "#2ecc71" : item.status === "In Progress" ? "#f39c12" : "var(--brand-primary)");
                 const colorFaded = isMs ? "#F1F5F9" : (item.status === "Complete" ? "rgba(46, 204, 113, 0.2)" : item.status === "In Progress" ? "rgba(243, 156, 18, 0.2)" : "rgba(30, 86, 49, 0.2)");
 
                 return (

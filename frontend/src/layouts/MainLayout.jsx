@@ -16,6 +16,7 @@ import {
   Database,
   FileText,
   Film,
+  FolderKanban,
   GitPullRequest,
   Globe,
   LayoutDashboard,
@@ -79,6 +80,8 @@ export default function MainLayout() {
         items: [
           { key: "dashboard", path: "/dashboard", label: "Home", icon: LayoutDashboard },
           { key: "pms", path: "/database/pms", label: "PMS (Projects)", icon: Database },
+          { key: "pms", path: "/pms/goals", label: "Project Objectives", icon: ClipboardList },
+          { key: "pms", path: "/pms/portfolio", label: "Project Portfolio", icon: FolderKanban },
           { key: "myhr", path: "/my-hr", label: "My Portal", icon: UsersIcon },
           { key: "approvals", path: "/my-approvals", label: "My Approvals", icon: CheckSquare },
           { key: null, path: "/team-tasks", label: "Team & Tasks", icon: ClipboardList },
@@ -96,8 +99,8 @@ export default function MainLayout() {
           { key: "reports", path: "/reports", label: "Consolidated Reports", icon: BarChart3 },
           { key: "calendar", path: "/planning-calendar", label: "Planning Calendar", icon: CalendarRange },
           { key: "alerts", path: "/plan-alerts", label: "Plan Alerts", icon: BellRing },
-          { key: "pms", path: "/goals", label: "Goals", icon: Target },
-          { key: "pms", path: "/portfolios", label: "Portfolios", icon: Briefcase },
+          { key: "pms", path: "/goals", label: "Corporate Objectives", icon: Target },
+          { key: "pms", path: "/portfolios", label: "Corporate Portfolios", icon: Briefcase },
         ],
       },
       {
@@ -124,6 +127,7 @@ export default function MainLayout() {
           { key: "fleet", path: "/fleet/vehicles", label: "Vehicles", icon: Car },
           { key: "fleet", path: "/fleet/drivers", label: "Drivers", icon: UsersIcon },
           { key: "fleet", path: "/fleet/rides", label: "Ride Services", icon: CarFront },
+          { key: "fleet", path: "/fleet/cost-control", label: "Cost Control", icon: Wallet },
           { key: "fleet", path: "/fleet/analytics", label: "Fleet Analytics", icon: BarChart3 },
           { key: "fleet", path: "/fleet/settings", label: "Fleet Settings", icon: Settings },
         ],
@@ -147,6 +151,7 @@ export default function MainLayout() {
         items: [
           { key: "settings", path: "/database/hero-settings", label: "Settings", icon: Settings },
           { key: "users", path: "/users", label: "Users", icon: UsersIcon },
+          { key: "audit", path: "/audit-log", label: "Audit Trail", icon: ShieldAlert },
           { key: "languages", path: "/language-settings", label: "Language Settings", icon: Globe },
           { key: "publicSite", path: "/public-site", label: "Public Site", icon: Megaphone },
           { key: "archive", path: "/database/archive", label: "Internal Archive", icon: Archive },

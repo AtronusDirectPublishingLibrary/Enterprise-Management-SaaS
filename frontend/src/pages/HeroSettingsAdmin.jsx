@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import PageHeader from "../components/PageHeader";
 import DropdownManager from "../components/DropdownManager";
+import BrandColourSettings from "../components/BrandColourSettings";
 import {
   Plus,
   Trash2,
@@ -179,8 +180,10 @@ export default function HeroSettingsAdmin() {
         icon={<LayoutTemplate size={20} />}
         kicker="Workspace · configuration"
         title="Settings"
-        subtitle="Hero slides transition their image and copy together on the public home page, and the project entry dropdowns feed every form in the PMS."
+        subtitle="Publish the approved brand palette, manage hero slides and edit the project entry dropdowns that feed every form in the PMS."
       />
+
+      <BrandColourSettings />
 
       {/* Dropdown manager */}
       <div className="card p-4 shadow-sm border-0 mb-4">

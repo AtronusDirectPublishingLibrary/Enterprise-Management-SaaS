@@ -17,7 +17,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { api, API_BASE } from "../lib/api";
+import { api, assetUrl } from "../lib/api";
 import RecruitmentRequestsPanel from "../components/RecruitmentRequestsPanel";
 import JobDescriptionsPanel from "../components/JobDescriptionsPanel";
 import RecruitmentProcedurePanel from "../components/RecruitmentProcedurePanel";
@@ -216,7 +216,7 @@ export default function Recruitment() {
             <div className="hrx-stat-label"><Briefcase size={13} /> Open roles</div>
             <div className="hrx-stat-value">{openRoles}</div>
           </div>
-          <div className="hrx-stat" style={{ "--hrx-accent": "#c9a227", minWidth: 120 }}>
+          <div className="hrx-stat" style={{ "--hrx-accent": "var(--brand-secondary)", minWidth: 120 }}>
             <div className="hrx-stat-label"><Users size={13} /> Applicants</div>
             <div className="hrx-stat-value">{applicants.length}</div>
           </div>
@@ -460,7 +460,7 @@ export default function Recruitment() {
                     <Send size={14} /> Email
                   </a>
                   {selected.resumeUrl ? (
-                    <a className="btn btn-sm btn-outline-primary" href={`${API_BASE.replace(/\/api$/, "")}${selected.resumeUrl}`} target="_blank" rel="noreferrer">
+                    <a className="btn btn-sm btn-outline-primary" href={assetUrl(selected.resumeUrl)} target="_blank" rel="noreferrer">
                       <FileText size={14} /> CV <ExternalLink size={12} />
                     </a>
                   ) : <span className="small text-muted align-self-center">No CV attached</span>}

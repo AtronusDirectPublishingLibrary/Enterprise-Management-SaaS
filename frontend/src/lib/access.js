@@ -53,6 +53,7 @@ export const TAB_KEYS = [
   "settings",
   "fleet",
   "qms",
+  "audit",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -60,7 +61,7 @@ const PLANS_READ = ["aop", "strategic", "roadmap", "reports", "calendar", "archi
 
 export const POSITION_ACCESS = {
   "Board Secretary": [...PLANS_READ, "pms", "progress", "alerts"],
-  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts"],
+  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts", "audit"],
   "Chief Executive Officer": [
     "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
@@ -83,7 +84,7 @@ export const POSITION_ACCESS = {
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms", "audit",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -114,7 +115,7 @@ export function canApprovePayroll(user) {
 const ROLE_ACCESS = {
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms", "audit",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -184,6 +185,8 @@ export function canAccess(user, key) {
 export const PATH_ACCESS = [
   { prefix: "/database/pms", key: "pms" },
   { prefix: "/pms-dashboard", key: "pms" },
+  { prefix: "/pms/goals", key: "pms" },
+  { prefix: "/pms/portfolio", key: "pms" },
   { prefix: "/goals", key: "pms" },
   { prefix: "/portfolios", key: "pms" },
   { prefix: "/executive", key: "reports" },
@@ -212,6 +215,7 @@ export const PATH_ACCESS = [
   { prefix: "/manage-media", key: "media" },
   { prefix: "/public-site", key: "publicSite" },
   { prefix: "/users", key: "users" },
+  { prefix: "/audit-log", key: "audit" },
 ];
 
 export function accessKeyForPath(pathname) {

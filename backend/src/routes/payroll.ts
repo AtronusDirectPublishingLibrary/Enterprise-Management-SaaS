@@ -5,6 +5,9 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { monthLabel } from "../lib/payroll";
 import { canApprovePayroll, canManagePayroll } from "../lib/payrollAccess";
+import { withTransaction } from "../lib/withTransaction";
+import { recordFieldChanges } from "../lib/fieldHistory";
+import { logAudit } from "../lib/audit";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -260,10 +263,25 @@ router.post("/:id/approve", managerOnly, async (req: any, res) => {
     if (!canApprovePayroll(req.user)) {
       return res.status(403).json({ message: "Finance officers prepare changes; a Finance Manager, HR Manager or executive approves them." });
     }
-    const record = await prisma.salaryRecord.update({
-      where: { id: req.params.id },
-      data: { approvalStatus: "Approved", approvedBy: req.user.username, approvedAt: new Date(), approvalNote: null },
+    const before = await prisma.salaryRecord.findUnique({ where: { id: req.params.id } });
+    if (!before) return res.status(404).json({ message: "Salary change not found." });
+    const record = await withTransaction(async (tx) => {
+      const data = await tx.salaryRecord.update({
+        where: { id: req.params.id },
+        data: { approvalStatus: "Approved", approvedBy: req.user.username, approvedAt: new Date(), approvalNote: null },
+      });
+      await recordFieldChanges(tx, {
+        entityType: "SALARY_RECORD",
+        entityId: data.id,
+        before,
+        after: data,
+        fields: ["approvalStatus", "approvedBy", "approvedAt", "approvalNote"],
+        user: { id: req.user?.sub, username: req.user?.username },
+        requestId: res.locals.requestId,
+      });
+      return data;
     });
+    await logAudit("PAYROLL", "SALARY_APPROVED", req.user.username, { recordId: record.id, userId: record.userId });
     res.json(record);
   } catch {
     res.status(404).json({ message: "Salary change not found." });
@@ -275,10 +293,25 @@ router.post("/:id/reject", managerOnly, async (req: any, res) => {
     if (!canApprovePayroll(req.user)) {
       return res.status(403).json({ message: "Finance officers prepare changes; a Finance Manager, HR Manager or executive rejects them." });
     }
-    const record = await prisma.salaryRecord.update({
-      where: { id: req.params.id },
-      data: { approvalStatus: "Rejected", approvedBy: req.user.username, approvedAt: new Date(), approvalNote: req.body?.note || "Rejected" },
+    const before = await prisma.salaryRecord.findUnique({ where: { id: req.params.id } });
+    if (!before) return res.status(404).json({ message: "Salary change not found." });
+    const record = await withTransaction(async (tx) => {
+      const data = await tx.salaryRecord.update({
+        where: { id: req.params.id },
+        data: { approvalStatus: "Rejected", approvedBy: req.user.username, approvedAt: new Date(), approvalNote: req.body?.note || "Rejected" },
+      });
+      await recordFieldChanges(tx, {
+        entityType: "SALARY_RECORD",
+        entityId: data.id,
+        before,
+        after: data,
+        fields: ["approvalStatus", "approvedBy", "approvedAt", "approvalNote"],
+        user: { id: req.user?.sub, username: req.user?.username },
+        requestId: res.locals.requestId,
+      });
+      return data;
     });
+    await logAudit("PAYROLL", "SALARY_REJECTED", req.user.username, { recordId: record.id, userId: record.userId });
     res.json(record);
   } catch {
     res.status(404).json({ message: "Salary change not found." });

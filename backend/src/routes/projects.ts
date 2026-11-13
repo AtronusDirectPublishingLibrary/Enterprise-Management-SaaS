@@ -92,7 +92,7 @@ const ProjectInput = z.object({
   status:           z.string().optional(),
   priority:         z.string().optional(),
   projectCategory:  z.string().optional(),
-  leadDirectorate:  z.string().optional(),
+  leadDepartment:   z.string().optional(),
   leadDivision:     z.string().optional(),
   projectManager:   z.string().optional(),
   milestones:       z.array(MilestoneInput).optional().default([]),
@@ -109,14 +109,14 @@ async function nextProjectId() {
 
 router.get("/", async (req, res, next) => {
   try {
-    const { status, priority, projectId, search, category, directorate, division,
+    const { status, priority, projectId, search, category, department, division,
             startDateFrom, startDateTo, endDateFrom, endDateTo, sourceOfFunds, pi } = req.query as any;
     const where: any = {};
     if (status && status !== "All") where.status = status;
     if (priority && priority !== "All") where.priority = priority;
     if (projectId && projectId !== "All") where.projectId = projectId;
     if (category && category !== "All") where.projectCategory = category;
-    if (directorate && directorate !== "All") where.leadDirectorate = directorate;
+    if (department && department !== "All") where.leadDepartment = department;
     if (division && division !== "All") where.leadDivision = division;
     if (sourceOfFunds && sourceOfFunds !== "All") where.sourceOfFunds = { startsWith: sourceOfFunds };
     const andClauses: any[] = [];
@@ -147,7 +147,7 @@ router.get("/", async (req, res, next) => {
 
 router.get("/template", canImport, (_req, res) => {
   const csv = [
-    "projectId,title,description,projectCategory,sourceOfFunds,startDate,endDate,status,priority,progress,leadDirectorate,leadDivision,projectManager",
+    "projectId,title,description,projectCategory,sourceOfFunds,startDate,endDate,status,priority,progress,leadDepartment,leadDivision,projectManager",
     'P-0001,Expanded vaccine distribution,Regional distribution and cold-chain coverage,Access,Treasury,2026-01-01,2026-12-31,In Progress,High,35,Operations,Distribution,Dessalew Adane',
     ',New diagnostics laboratory,Establish diagnostic testing capacity,Diagnostics,Competitive Grants,2026-03-01,2027-02-28,Not Started,Medium,0,Quality,Quality Assurance,Hirut Bekele',
   ].join("\n");
@@ -231,7 +231,7 @@ router.post("/import", canImport, csvUpload.single("file"), async (req: any, res
         status: csvText(row.status) || existing?.status || "Not Started",
         priority: csvText(row.priority) || existing?.priority || "Medium",
         progress: progressValue == null ? existing?.progress ?? 0 : Math.max(0, Math.min(100, Math.round(progressValue))),
-        leadDirectorate: csvText(row.leaddirectorate) || existing?.leadDirectorate || null,
+        leadDepartment: csvText(row.leaddepartment) || existing?.leadDepartment || null,
         leadDivision: csvText(row.leaddivision) || existing?.leadDivision || null,
         projectManager: csvText(row.projectmanager) || existing?.projectManager || null,
         lastModifiedBy: req.user!.username,
@@ -366,7 +366,7 @@ router.post("/", canImport, async (req, res, next) => {
         projectId, title: d.title, description: d.description,
         sourceOfFunds: source, startDate: d.startDate, endDate: d.endDate,
         status: d.status || "Not Started", priority: d.priority || "Medium",
-        projectCategory: d.projectCategory, leadDirectorate: d.leadDirectorate,
+        projectCategory: d.projectCategory, leadDepartment: d.leadDepartment,
         leadDivision: d.leadDivision, projectManager: d.projectManager,
         createdBy: req.user!.username, lastModifiedBy: req.user!.username,
       },
@@ -410,7 +410,7 @@ router.put("/:projectId", canEditProject, async (req, res, next) => {
         title: d.title, description: d.description,
         sourceOfFunds: source, startDate: d.startDate, endDate: d.endDate,
         status: d.status, priority: d.priority,
-        projectCategory: d.projectCategory, leadDirectorate: d.leadDirectorate,
+        projectCategory: d.projectCategory, leadDepartment: d.leadDepartment,
         leadDivision: d.leadDivision, projectManager: d.projectManager,
         lastModifiedBy: req.user!.username, lastModifiedDate: new Date(),
       },

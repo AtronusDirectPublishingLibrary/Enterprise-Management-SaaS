@@ -6,7 +6,7 @@
 export const TAB_KEYS = [
   "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
   "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll",
-  "languages", "alerts",   "news", "documents", "media", "publicSite", "users", "settings", "fleet", "qms",
+  "languages", "alerts",   "news", "documents", "media", "publicSite", "users", "settings", "fleet", "qms", "audit",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
@@ -14,7 +14,7 @@ const PLANS_READ = ["aop", "strategic", "roadmap", "reports", "calendar", "archi
 
 export const POSITION_ACCESS: Record<string, string[]> = {
   "Board Secretary": [...PLANS_READ, "pms", "progress", "alerts"],
-  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts"],
+  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts", "audit"],
   "Chief Executive Officer": [
     "*", "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "alerts",
@@ -34,7 +34,7 @@ export const POSITION_ACCESS: Record<string, string[]> = {
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
-    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms",
+    "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms", "audit",
   ],
   "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
   "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -46,7 +46,7 @@ const ROLE_ACCESS: Record<string, string[]> = {
   admin: ["*"],
   executive: [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms",
+    "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "alerts", "news", "documents", "fleet", "qms", "audit",
   ],
   project_manager: ["pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive", "myhr", "approvals", "alerts"],
   pi: ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
@@ -98,10 +98,14 @@ export function allows(user: { role: string; position?: string | null } | undefi
  * Manager is the fleet manager for both vehicles and ride services. Admins
  * and Strategy & Planning Officers retain admin override.
  */
-export function isFleetManager(user: { role: string; position?: string | null } | undefined) {
+export function isHrAdmin(user: { role: string; position?: string | null } | undefined) {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   return (user.position || "").trim() === "Human Resource and Administration Manager";
+}
+
+export function isFleetManager(user: { role: string; position?: string | null } | undefined) {
+  return isHrAdmin(user);
 }
 
 /**

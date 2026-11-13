@@ -25,11 +25,15 @@ model Project {
   lastModifiedBy   String?
   lastModifiedDate DateTime?
   projectCategory  String?
-  leadDirectorate  String?
+  leadDepartment   String?
   leadDivision     String?
   piName           String?
   piEmail          String?
   projectManager   String?
+  // The plan period whose financial targets this project delivers. PMS
+  // financial plans are consolidated into the AOP/Strategic plan, so the
+  // portfolio roll-up reads money from the plan and only actuals from PMS.
+  planId           String?   @map("plan_id")
 
   workPackages    WorkPackage[]
   documents       Document[]
@@ -41,8 +45,10 @@ model Project {
   timeEntries     TimeEntry[]
   milestones      Milestone[]
   activities      Activity[]
+  plan            Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
 
   @@map("Project")
+  @@index([planId])
 }
 
 model WorkPackage {
@@ -147,6 +153,9 @@ model User {
   coPiName           String?   @map("co_pi_name")
   email              String?
   lastLogin          DateTime? @map("last_login")
+  failedLoginAttempts Int      @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  lastFailedLoginAt   DateTime? @map("last_failed_login_at")
   createdDate        DateTime  @default(now()) @map("created_date")
   forceChange        Boolean   @default(false) @map("force_change")
   mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
@@ -238,40 +247,83 @@ model User {
 }
 
 model AuditLog {
-  id        BigInt   @id @default(autoincrement())
-  timestamp DateTime @default(now())
-  grantId   String?  @map("grant_id")
-  action    String
-  user      String
-  details   Json?
+  id           BigInt   @id @default(autoincrement())
+  timestamp    DateTime @default(now())
+  grantId      String?  @map("grant_id")
+  action       String
+  user         String
+  details      Json?
+  // Hash-chain fields. Nullable only for legacy rows awaiting backfill; every
+  // new entry is written with all four values.
+  nonce        String?
+  chainVersion Int      @default(1) @map("chain_version")
+  eventHash    String?  @map("event_hash")
+  prevHash     String?  @map("prev_hash")
 
   @@map("audit_log")
+  @@unique([eventHash])
+  @@unique([prevHash])
+}
+
+model AuditVerification {
+  id           BigInt   @id @default(autoincrement())
+  checkedAt    DateTime @default(now()) @map("checked_at")
+  checkedBy    String   @map("checked_by")
+  checkedCount Int      @map("checked_count")
+  valid        Boolean
+  brokenAt     BigInt?  @map("broken_at")
+  headHash     String?  @map("head_hash")
+  legacyCount  Int      @default(0) @map("legacy_count")
+  truncated    Boolean  @default(false)
+
+  @@index([checkedAt])
+  @@map("audit_verification")
+}
+
+// Field-level history for changes that are not fully represented by the
+// coarse audit event. Values are stored as text so a record can be compared
+// without losing null/empty distinctions.
+model FieldChange {
+  id            String   @id @default(cuid())
+  entityType    String   @map("entity_type")
+  entityId      String   @map("entity_id")
+  field         String
+  oldValue      String?  @map("old_value")
+  newValue      String?  @map("new_value")
+  changedById   String?  @map("changed_by_id")
+  changedByName String?  @map("changed_by_name")
+  requestId     String?  @map("request_id")
+  changedAt     DateTime @default(now()) @map("changed_at")
+
+  @@index([entityType, entityId, changedAt])
+  @@index([changedById, changedAt])
+  @@map("field_change")
 }
 
 model Document {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   title            String
-  docNumber        String?  @unique @map("doc_number")
+  docNumber        String?   @unique @map("doc_number")
   thematic         String
-  thematicOther    String?  @map("thematic_other")
+  thematicOther    String?   @map("thematic_other")
   type             String
-  typeOther        String?  @map("type_other")
+  typeOther        String?   @map("type_other")
   unit             String?
-  language         String   @default("English")
+  language         String    @default("English")
   version          String?
-  firstEndorsement String?  @map("first_endorsement")
-  recentRenewal    String?  @map("recent_renewal")
+  firstEndorsement String?   @map("first_endorsement")
+  recentRenewal    String?   @map("recent_renewal")
   expiry           String?
-  status           String   @default("Active")
+  status           String    @default("Active")
   notes            String?
-  fileName         String?  @map("file_name")
-  fileUrl          String?  @map("file_url")
-  uploadedBy       String?  @map("uploaded_by")
-  uploadDate       DateTime @default(now()) @map("upload_date")
-  folderPath       String?  @map("folder_path")
-  projectId        String?  @map("project_id")
+  fileName         String?   @map("file_name")
+  fileUrl          String?   @map("file_url")
+  uploadedBy       String?   @map("uploaded_by")
+  uploadDate       DateTime  @default(now()) @map("upload_date")
+  folderPath       String?   @map("folder_path")
+  projectId        String?   @map("project_id")
   // Internal archive by default; only public documents appear on the website.
-  isPublic         Boolean  @default(false) @map("is_public")
+  isPublic         Boolean   @default(false) @map("is_public")
   publishedAt      DateTime? @map("published_at")
 
   project Project? @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
@@ -439,10 +491,15 @@ model Goal {
   progress    Int      @default(0)
   createdBy   String
   createdAt   DateTime @default(now()) @map("created_at")
+  // The corporate objective (a plan item in the AOP, Strategic Plan or
+  // Roadmap) that this delivery-level project objective contributes to.
+  planItemId  String?  @map("plan_item_id")
+  corporateObjective PlanItem? @relation("GoalCorporateObjective", fields: [planItemId], references: [id], onDelete: SetNull)
 
   projects ProjectGoal[]
 
   @@map("goal")
+  @@index([planItemId])
 }
 
 model ProjectGoal {
@@ -515,16 +572,21 @@ model TranslationValue {
 }
 
 model News {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  titleAm   String?  @map("title_am")
-  contentAm String?  @map("content_am")
-  videoUrl  String?  @map("video_url")
-  imageUrl  String?
-  author    String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String       @id @default(cuid())
+  title         String
+  content       String
+  titleAm       String?      @map("title_am")
+  contentAm     String?      @map("content_am")
+  videoUrl      String?      @map("video_url")
+  imageUrl      String?
+  author        String
+  // Editorial distribution. A news item can be shared automatically when it
+  // is saved; each destination receives its own queue row and retry history.
+  autoShare     Boolean      @default(true) @map("auto_share")
+  socialCaption String?      @map("social_caption")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  socialPosts   SocialPost[]
 
   @@map("news")
 }
@@ -565,6 +627,7 @@ model Plan {
   shares          PlanShare[]
   revisions       PlanRevision[]
   progressUpdates ProgressUpdate[]
+  projects        Project[]
 
   @@unique([type, periodLabel])
   @@index([type, status])
@@ -666,6 +729,7 @@ model PlanItem {
   targets         PlanKpiTarget[]
   alerts          PlanAlert[]
   progressUpdates ProgressUpdate[]
+  linkedGoals     Goal[]           @relation("GoalCorporateObjective")
 
   @@index([planId, parentId, sortOrder])
   @@index([linkedItemId])
@@ -893,8 +957,14 @@ model Training {
   completedAt    DateTime
   expiresAt      DateTime?
   certificateUrl String?
+  category       String? // GMP | Safety | Technical | Leadership | Compliance | Other
+  hours          Float?
+  result         String? // Pass | Complete | Distinction | Attended
+  notes          String?
   createdAt      DateTime  @default(now())
   user           User      @relation("UserTraining", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
 }
 
 model LeaveRequest {
@@ -1003,11 +1073,13 @@ model Timesheet {
   user            User      @relation("UserTimesheets", fields: [userId], references: [id], onDelete: Cascade)
   month           Int // 1-12
   year            Int
-  status          String    @default("DRAFT") // DRAFT | SUBMITTED | APPROVED | REJECTED
+  status          String    @default("DRAFT") // DRAFT | SUBMITTED | FORWARDED | APPROVED | REJECTED
   supervisorId    String?
   supervisor      User?     @relation("TimesheetSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
   rejectionReason String?
   submittedAt     DateTime?
+  hrReviewedAt    DateTime? @map("hr_reviewed_at")
+  hrReviewedBy    String?   @map("hr_reviewed_by")
   approvedAt      DateTime?
   createdAt       DateTime  @default(now())
 
@@ -1163,23 +1235,23 @@ model ReportSchedule {
 // --- STAFF SELF-SERVICE: TASKS & DOCUMENTS ---
 
 model StaffTask {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  user        User      @relation("UserStaffTasks", fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  priority    String    @default("NORMAL") // LOW | NORMAL | HIGH
-  dueAt       DateTime? @map("due_at")
-  status      String    @default("OPEN") // OPEN | DONE
-  link        String?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  completedAt DateTime? @map("completed_at")
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  user           User              @relation("UserStaffTasks", fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  priority       String            @default("NORMAL") // LOW | NORMAL | HIGH
+  dueAt          DateTime?         @map("due_at")
+  status         String            @default("OPEN") // OPEN | DONE
+  link           String?
+  createdAt      DateTime          @default(now()) @map("created_at")
+  completedAt    DateTime?         @map("completed_at")
   // Supervisor assignment and two-way progress exchange.
-  assignedById   String?   @map("assigned_by_id")
-  assignedByName String?   @map("assigned_by_name")
-  progress       Int       @default(0)
-  latestUpdate   String?   @map("latest_update")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  assignedById   String?           @map("assigned_by_id")
+  assignedByName String?           @map("assigned_by_name")
+  progress       Int               @default(0)
+  latestUpdate   String?           @map("latest_update")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
   updates        StaffTaskUpdate[]
 
   @@index([userId, status, dueAt])
@@ -1190,15 +1262,15 @@ model StaffTask {
 // A timestamped progress note on a task, visible to the assignee and the
 // supervisor who assigned it. The task keeps the latest note for list views.
 model StaffTaskUpdate {
-  id         String   @id @default(cuid())
-  taskId     String   @map("task_id")
+  id         String    @id @default(cuid())
+  taskId     String    @map("task_id")
   task       StaffTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  authorId   String   @map("author_id")
-  authorName String?  @map("author_name")
+  authorId   String    @map("author_id")
+  authorName String?   @map("author_name")
   progress   Int?
   note       String
   status     String? // OPEN | DONE snapshot at the time of the note
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@index([taskId, createdAt])
   @@map("staff_task_update")
@@ -1441,13 +1513,36 @@ model AppraisalItem {
   appraisalId  String    @map("appraisal_id")
   appraisal    Appraisal @relation(fields: [appraisalId], references: [id], onDelete: Cascade)
   title        String
+  description  String?
+  category     String?
   weight       Int       @default(20)
+  maxScore     Float     @default(5) @map("max_score")
   selfScore    Float?    @map("self_score")
   managerScore Float?    @map("manager_score")
   comment      String?
   sortOrder    Int       @default(0) @map("sort_order")
 
   @@map("appraisal_item")
+}
+
+// HR-configurable appraisal framework. Changes apply to newly opened cycles;
+// existing appraisal items keep their snapshot so historic scores never move.
+model AppraisalCriterion {
+  id                  String   @id @default(cuid())
+  title               String
+  description         String?
+  category            String?  @default("Core")
+  weight              Int      @default(20)
+  maxScore            Float    @default(5) @map("max_score")
+  guidance            String?
+  appliesToDepartment String?  @map("applies_to_department")
+  sortOrder           Int      @default(0) @map("sort_order")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("appraisal_criterion")
 }
 
 // ============================================================
@@ -1473,7 +1568,11 @@ model Vehicle {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  requests VehicleRequest[]
+  requests           VehicleRequest[]
+  fuelLogs           FuelLog[]
+  maintenanceRecords MaintenanceRecord[]
+  spareParts         SparePartRecord[]
+  tyres              TyreRecord[]
 
   @@index([status])
   @@map("vehicle")
@@ -1494,6 +1593,7 @@ model Driver {
 
   vehicles Vehicle[]        @relation("VehicleDriver")
   requests VehicleRequest[] @relation("VehicleRequestDriver")
+  fuelLogs FuelLog[]        @relation("FuelLogDriver")
 
   @@index([status])
   @@map("driver")
@@ -1506,7 +1606,7 @@ model VehicleRequest {
   requester            User      @relation("VehicleRequester", fields: [requesterId], references: [id], onDelete: Cascade)
   requestType          String    @map("request_type") // In-Town | Field
   tripPurpose          String    @map("trip_purpose")
-  directorate          String?
+  department           String?
   division             String?
   vehicleTypePreferred String?   @map("vehicle_type_preferred")
   passengers           Int       @default(1)
@@ -1603,6 +1703,135 @@ model FleetSetting {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("fleet_setting")
+}
+
+// ============================================================
+// FLEET COST CONTROL
+// Fuel, scheduled maintenance, spare parts and tyre lifecycle,
+// all costed per vehicle and rollable into one total cost of ownership.
+// ============================================================
+
+model FuelLog {
+  id           String   @id @default(cuid())
+  vehicleId    String   @map("vehicle_id")
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  driverId     String?  @map("driver_id")
+  driver       Driver?  @relation("FuelLogDriver", fields: [driverId], references: [id], onDelete: SetNull)
+  date         DateTime
+  odometer     Float?
+  litres       Float
+  unitCost     Float    @map("unit_cost")
+  totalCost    Float    @map("total_cost")
+  fuelType     String?  @map("fuel_type")
+  station      String?
+  reference    String?
+  receiptUrl   String?  @map("receipt_url")
+  notes        String?
+  recordedById String?  @map("recorded_by_id")
+  recordedBy   String?  @map("recorded_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([vehicleId, date])
+  @@index([date])
+  @@map("fleet_fuel_log")
+}
+
+model MaintenanceRecord {
+  id                  String    @id @default(cuid())
+  vehicleId           String    @map("vehicle_id")
+  vehicle             Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  title               String
+  type                String    @default("Scheduled") // Scheduled | Repair | Inspection | Tyre service
+  status              String    @default("Scheduled") // Scheduled | In Progress | Completed | Cancelled
+  scheduledDate       DateTime? @map("scheduled_date")
+  completedDate       DateTime? @map("completed_date")
+  odometer            Float?
+  vendor              String?
+  laborCost           Float     @default(0) @map("labor_cost")
+  partsCost           Float     @default(0) @map("parts_cost")
+  totalCost           Float     @default(0) @map("total_cost")
+  invoiceNo           String?   @map("invoice_no")
+  nextServiceDate     DateTime? @map("next_service_date")
+  nextServiceOdometer Float?    @map("next_service_odometer")
+  notes               String?
+  recordedById        String?   @map("recorded_by_id")
+  recordedBy          String?   @map("recorded_by")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@index([vehicleId, scheduledDate])
+  @@index([status, scheduledDate])
+  @@map("fleet_maintenance")
+}
+
+model SparePartRecord {
+  id            String   @id @default(cuid())
+  vehicleId     String   @map("vehicle_id")
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  date          DateTime
+  partName      String   @map("part_name")
+  partNumber    String?  @map("part_number")
+  quantity      Float    @default(1)
+  unitCost      Float    @map("unit_cost")
+  totalCost     Float    @map("total_cost")
+  supplier      String?
+  odometer      Float?
+  maintenanceId String?  @map("maintenance_id")
+  notes         String?
+  recordedById  String?  @map("recorded_by_id")
+  recordedBy    String?  @map("recorded_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([vehicleId, date])
+  @@map("fleet_spare_part")
+}
+
+model TyreRecord {
+  id           String   @id @default(cuid())
+  vehicleId    String   @map("vehicle_id")
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  date         DateTime
+  position     String // FL | FR | RL | RR | Spare | Set
+  brand        String?
+  size         String?
+  serialNumber String?  @map("serial_number")
+  quantity     Float    @default(1)
+  unitCost     Float    @map("unit_cost")
+  totalCost    Float    @map("total_cost")
+  odometer     Float?
+  action       String   @default("Fitted") // Fitted | Rotated | Replaced | Retired
+  notes        String?
+  recordedById String?  @map("recorded_by_id")
+  recordedBy   String?  @map("recorded_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([vehicleId, date])
+  @@index([position])
+  @@map("fleet_tyre")
+}
+
+// One row per destination per news item. The publisher updates status and
+// retry history, so a failed Facebook or LinkedIn call never blocks the news
+// article from being published on the website.
+model SocialPost {
+  id           String    @id @default(cuid())
+  newsId       String    @map("news_id")
+  news         News      @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  channel      String // facebook | linkedin | x | telegram | webhook
+  status       String    @default("QUEUED") // QUEUED | SENDING | SENT | FAILED | SKIPPED
+  caption      String?
+  externalId   String?   @map("external_id")
+  externalUrl  String?   @map("external_url")
+  error        String?
+  attempts     Int       @default(0)
+  scheduledFor DateTime  @default(now()) @map("scheduled_for")
+  sentAt       DateTime? @map("sent_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([newsId, channel])
+  @@index([status, scheduledFor])
+  @@map("social_post")
 }
 
 // ============================================================

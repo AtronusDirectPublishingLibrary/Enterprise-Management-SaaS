@@ -3,7 +3,7 @@ import MyApprovals from "./pages/MyApprovals";
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./lib/auth";
-import { isSystemAdmin } from "./lib/access";
+import { canAccess, isSystemAdmin } from "./lib/access";
 import AuditLog from "./pages/AuditLog";
 import Payroll from "./pages/Payroll";
 import Recruitment from "./pages/Recruitment";
@@ -41,6 +41,8 @@ import ManageMedia from "./pages/ManageMedia";
 import PublicSiteSettings from "./pages/PublicSiteSettings";
 import Goals from "./pages/Goals";
 import Portfolios from "./pages/Portfolios";
+import PmsProjectGoals from "./pages/PmsProjectGoals";
+import PmsPortfolio from "./pages/PmsPortfolio";
 import Users from "./pages/Users";
 import ProgressUpdates from "./pages/ProgressUpdates";
 import TeamTasks from "./pages/TeamTasks";
@@ -55,6 +57,7 @@ import FleetDrivers from "./pages/fleet/FleetDrivers";
 import RideServices from "./pages/fleet/RideServices";
 import FleetSettings from "./pages/fleet/FleetSettings";
 import FleetAnalytics from "./pages/fleet/FleetAnalytics";
+import FleetCostControl from "./pages/fleet/FleetCostControl";
 import GatePassVerifyPage from "./pages/fleet/GatePassVerifyPage";
 import GatePassPage from "./pages/fleet/GatePassPage";
 import QmsDocuments from "./pages/qms/QmsDocuments";
@@ -83,6 +86,14 @@ function RequireAuth({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-success" role="status" /></div>;
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AccessRoute({ children, accessKey }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-primary" /></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!canAccess(user, accessKey)) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -143,6 +154,8 @@ export default function App() {
         <Route element={<DatabasePage />}>
           <Route path="/dashboard" element={<HomePage />} />
           <Route path="/pms-dashboard" element={<Dashboard />} />
+        <Route path="/pms/goals" element={<PmsProjectGoals />} />
+        <Route path="/pms/portfolio" element={<PmsPortfolio />} />
         <Route path="/my-hr" element={<MyHRPortal />} />
         <Route path="/my-approvals" element={<MyApprovals />} />
         <Route path="/team-tasks" element={<TeamTasks />} />
@@ -155,7 +168,7 @@ export default function App() {
         </Route>
 
         <Route path="/users" element={<RoleRoute allowedRoles={["admin"]}><Users /></RoleRoute>} />
-        <Route path="/audit-log" element={<RoleRoute allowedRoles={["admin"]}><AuditLog /></RoleRoute>} />
+        <Route path="/audit-log" element={<AccessRoute accessKey="audit"><AuditLog /></AccessRoute>} />
         <Route path="/payroll" element={<Payroll />} />
         <Route path="/fleet" element={<FleetDashboard />} />
         <Route path="/fleet/gate-pass/:requestId" element={<GatePassPage />} />
@@ -167,6 +180,7 @@ export default function App() {
         <Route path="/fleet/rides" element={<RideServices />} />
         <Route path="/fleet/settings" element={<FleetSettings />} />
         <Route path="/fleet/analytics" element={<FleetAnalytics />} />
+        <Route path="/fleet/cost-control" element={<FleetCostControl />} />
         <Route path="/qms" element={<Navigate to="/qms/overview" replace />} />
         <Route path="/qms/overview" element={<QmsOverview />} />
         <Route path="/qms/documents" element={<QmsDocuments />} />

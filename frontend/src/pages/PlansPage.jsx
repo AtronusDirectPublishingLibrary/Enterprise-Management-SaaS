@@ -48,7 +48,7 @@ const TYPE_META = {
     subtitle: "Fiscal-year operating plan. Generated from the standard template and linked to a strategic plan.",
     icon: ClipboardList,
     parentType: "STRATEGIC",
-    accent: "#0B2545",
+    accent: "var(--brand-primary)",
   },
 };
 

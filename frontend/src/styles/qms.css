@@ -4,18 +4,18 @@
    ========================================================================== */
 
 .qms-page {
-  --qms-navy: #0b2545;
-  --qms-navy-deep: #07182d;
-  --qms-gold: #c9a227;
-  --qms-gold-soft: #f4e8bd;
-  --qms-line: #e5ddcb;
-  --qms-paper: #fffdf8;
-  --qms-soft: #f7f4ec;
-  --qms-ink: #172235;
-  --qms-muted: #667085;
-  --qms-red: #a12b2b;
-  --qms-green: #247050;
-  --qms-blue: #1d4f7a;
+  --qms-navy: var(--brand-primary);
+  --qms-navy-deep: var(--brand-primary-dark);
+  --qms-gold: var(--brand-secondary);
+  --qms-gold-soft: color-mix(in srgb, var(--brand-secondary) 24%, #ffffff);
+  --qms-line: color-mix(in srgb, var(--brand-primary) 10%, #fffdf8);
+  --qms-paper: var(--brand-surface);
+  --qms-soft: var(--brand-bg);
+  --qms-ink: var(--brand-text);
+  --qms-muted: var(--brand-muted);
+  --qms-red: var(--brand-danger);
+  --qms-green: var(--brand-success);
+  --qms-blue: var(--brand-info);
   max-width: 1520px;
   margin: 0 auto;
   color: var(--qms-ink);
@@ -36,7 +36,7 @@
   border-radius: 20px;
   background:
     radial-gradient(circle at 86% 8%, rgba(201, 162, 39, 0.33), transparent 28%),
-    linear-gradient(128deg, #07182d 0%, #0b2545 58%, #15446f 100%);
+    linear-gradient(128deg, #07182d 0%, var(--brand-primary) 58%, #15446f 100%);
   color: #fff;
   box-shadow: 0 18px 42px rgba(7, 24, 45, 0.24);
 }
@@ -559,7 +559,7 @@
   gap: 1rem;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid #eee6d5;
-  background: linear-gradient(135deg, #07182d, #0b2545);
+  background: linear-gradient(135deg, #07182d, var(--brand-primary));
   border-radius: 16px 16px 0 0;
   color: #fff;
 }

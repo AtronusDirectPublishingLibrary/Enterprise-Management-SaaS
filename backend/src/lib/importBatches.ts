@@ -111,7 +111,7 @@ export async function rollbackImport(batchId: string, user: { sub: string; role:
             priority: before.priority,
             progress: before.progress,
             projectCategory: before.projectCategory,
-            leadDirectorate: before.leadDirectorate,
+            leadDepartment: before.leadDepartment,
             leadDivision: before.leadDivision,
             projectManager: before.projectManager,
           },

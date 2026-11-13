@@ -5,13 +5,13 @@
    ========================================================================== */
 
 :root {
-  --hrx-navy: #07233d;
-  --hrx-navy-soft: #0d3357;
-  --hrx-gold: #c9a227;
-  --hrx-mint: #2f8f6b;
-  --hrx-surface: #ffffff;
-  --hrx-line: rgba(7, 35, 61, 0.1);
-  --hrx-shadow: 0 18px 38px -22px rgba(7, 35, 61, 0.45);
+  --hrx-navy: var(--brand-primary);
+  --hrx-navy-soft: var(--brand-primary-dark);
+  --hrx-gold: var(--brand-secondary);
+  --hrx-mint: var(--brand-success);
+  --hrx-surface: var(--brand-surface);
+  --hrx-line: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  --hrx-shadow: 0 18px 38px -22px color-mix(in srgb, var(--brand-primary) 45%, transparent);
 }
 
 /* ------------------------------------------------ shared card & type rules */
@@ -803,3 +803,52 @@ input[type="number"] {
 .exit-checklist__item.is-locked { opacity: 0.72; background: #f8fafc; }
 .offboarding__settings { border-left: 4px solid var(--brand-secondary); border-radius: 14px; }
 .offboarding__notice-input { width: 130px; }
+
+/* Timesheet reporting gate */
+.timesheet-gate { border-left: 4px solid var(--brand-secondary) !important; }
+.timesheet-gate.is-clear { border-left-color: #2f8f6b !important; background: linear-gradient(135deg, #ffffff, #f7fcf9); }
+.timesheet-gate.is-blocked { border-left-color: #b23a3a !important; background: linear-gradient(135deg, #ffffff, #fff9f7); }
+.timesheet-gate__mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbf3dc;
+  color: var(--brand-secondary-deep);
+}
+.timesheet-gate__mark.is-clear { background: #e9f6ef; color: #247050; }
+.timesheet-gate__mark.is-blocked { background: #fbe9e9; color: #a12b2b; }
+.timesheet-gate__blockers { display: flex; flex-direction: column; gap: 0.4rem; }
+.timesheet-gate__item {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  border: 1px solid #f0d7d7;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+}
+.timesheet-gate__type {
+  border-radius: 999px;
+  background: #fbe9e9;
+  color: #a12b2b;
+  font-size: 0.56rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.16rem 0.4rem;
+  flex: 0 0 auto;
+}
+.timesheet-gate__note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  border-top: 1px solid #eee8da;
+  padding-top: 0.6rem;
+  color: #8b8272;
+  font-size: 0.66rem;
+}
+.timesheet-gate__note span { display: inline-flex; align-items: center; gap: 0.3rem; }

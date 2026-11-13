@@ -1,8 +1,11 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
 import bcrypt from "bcryptjs";
+import { logAudit } from "../lib/audit";
+import { withTransaction } from "../lib/withTransaction";
+import { recordFieldChanges } from "../lib/fieldHistory";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -125,9 +128,15 @@ router.get("/template", (req, res) => {
 
 router.get("/training", async (req, res) => {
   try {
+    const userId = typeof req.query.userId === "string" ? req.query.userId : undefined;
     const data = await prisma.training.findMany({
-      include: { user: { select: { firstName: true, lastName: true } } },
-      orderBy: { completedAt: "desc" },
+      where: userId ? { userId } : undefined,
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, username: true, department: true, jobTitle: true },
+        },
+      },
+      orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
     });
     res.json(data);
   } catch (err) { res.status(500).json({ error: "Failed to fetch training" }); }
@@ -135,16 +144,73 @@ router.get("/training", async (req, res) => {
 
 router.post("/training", async (req, res) => {
   try {
-    const { userId, title, provider, completedAt, expiresAt } = req.body;
+    const { userId, title, provider, completedAt, expiresAt, certificateUrl, category, hours, result, notes } = req.body;
+    if (!userId || !title || !provider || !completedAt) {
+      return res.status(400).json({ error: "Staff member, course, provider and completion date are required." });
+    }
     const data = await prisma.training.create({
       data: {
-        userId, title, provider,
+        userId,
+        title,
+        provider,
         completedAt: new Date(completedAt),
         expiresAt: expiresAt ? new Date(expiresAt) : null,
+        certificateUrl: certificateUrl || null,
+        category: category || null,
+        hours: hours === "" || hours == null ? null : Number(hours),
+        result: result || null,
+        notes: notes || null,
       },
+      include: { user: { select: { id: true, firstName: true, lastName: true, username: true } } },
+    });
+    await logAudit("HR", "TRAINING_RECORD_CREATED", (req as any).user?.username || "system", {
+      trainingId: data.id,
+      userId,
+    });
+    res.status(201).json(data);
+  } catch (err) { res.status(500).json({ error: "Failed to create training" }); }
+});
+
+router.put("/training/:id", async (req, res) => {
+  try {
+    const { title, provider, completedAt, expiresAt, certificateUrl, category, hours, result, notes } = req.body;
+    const data = await prisma.training.update({
+      where: { id: req.params.id },
+      data: {
+        ...(title !== undefined ? { title } : {}),
+        ...(provider !== undefined ? { provider } : {}),
+        ...(completedAt ? { completedAt: new Date(completedAt) } : {}),
+        ...(expiresAt !== undefined ? { expiresAt: expiresAt ? new Date(expiresAt) : null } : {}),
+        ...(certificateUrl !== undefined ? { certificateUrl: certificateUrl || null } : {}),
+        ...(category !== undefined ? { category: category || null } : {}),
+        ...(hours !== undefined ? { hours: hours === "" || hours == null ? null : Number(hours) } : {}),
+        ...(result !== undefined ? { result: result || null } : {}),
+        ...(notes !== undefined ? { notes: notes || null } : {}),
+      },
+      include: { user: { select: { id: true, firstName: true, lastName: true, username: true } } },
+    });
+    await logAudit("HR", "TRAINING_RECORD_UPDATED", (req as any).user?.username || "system", {
+      trainingId: data.id,
     });
     res.json(data);
-  } catch (err) { res.status(500).json({ error: "Failed to create training" }); }
+  } catch (err: any) {
+    if (err?.code === "P2025") return res.status(404).json({ error: "Training record not found" });
+    res.status(500).json({ error: "Failed to update training" });
+  }
+});
+
+router.delete("/training/:id", async (req, res) => {
+  try {
+    const row = await prisma.training.delete({ where: { id: req.params.id } });
+    await logAudit("HR", "TRAINING_RECORD_DELETED", (req as any).user?.username || "system", {
+      trainingId: row.id,
+      userId: row.userId,
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    if (err?.code === "P2025") return res.status(404).json({ error: "Training record not found" });
+    res.status(500).json({ error: "Failed to delete training" });
+  }
 });
 
 // ============ LEAVE ============
@@ -196,59 +262,77 @@ router.put("/leave/:id", async (req: any, res) => {
   try {
     const { status, rejectionReason, signedName } = req.body;
     const isAdmin = ['admin', 'executive'].includes(req.user?.role);
-
-    const leave = await prisma.leaveRequest.findUnique({ where: { id: req.params.id } });
-    if (!leave) return res.status(404).json({ error: "Not found" });
-
-    if (!isAdmin && leave.supervisorId !== req.user?.sub) {
-      return res.status(403).json({ error: "Only the assigned supervisor or admin can approve" });
-    }
-
-    // If approving, check balance and deduct days
-    if (status === "APPROVED" && leave.status !== "APPROVED") {
-      const days = Math.ceil((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 3600 * 24)) + 1;
-      const year = new Date(leave.startDate).getFullYear();
-
-      const balance = await prisma.leaveBalance.findUnique({
-        where: { userId_year_leaveType: { userId: leave.userId, year, leaveType: leave.type } }
-      });
-
-      if (balance) {
-        const remaining = (balance.entitledDays + balance.rolloverDays) - balance.usedDays;
-        if (days > remaining) {
-          return res.status(400).json({ error: `Insufficient balance. Requested: ${days} days, Available: ${remaining} days` });
+    const result = await withTransaction(
+      async (tx) => {
+        const leave = await tx.leaveRequest.findUnique({ where: { id: req.params.id } });
+        if (!leave) return { error: { status: 404, body: { error: "Not found" } } };
+        if (!isAdmin && leave.supervisorId !== req.user?.sub) {
+          return { error: { status: 403, body: { error: "Only the assigned supervisor or admin can approve" } } };
         }
-        await prisma.leaveBalance.update({
-          where: { id: balance.id },
-          data: { usedDays: balance.usedDays + days }
-        });
-      }
-    }
+        // Re-approval must not deduct the balance twice. The status check is
+        // repeated inside the transaction with Serializable isolation.
+        if (status === "APPROVED" && leave.status === "APPROVED") {
+          return { error: { status: 409, body: { error: "This leave request is already approved" } } };
+        }
 
-    const data = await prisma.leaveRequest.update({
-      where: { id: req.params.id },
-      data: { status, rejectionReason, approvedById: req.user?.sub },
-    });
-    if (typeof signedName === "string" && signedName.trim().length >= 3) {
-      const signer = await prisma.user.findUnique({
-        where: { id: req.user!.sub },
-        select: { signatureUrl: true, initialsUrl: true, initialsText: true },
-      });
-      await prisma.signatureRecord.create({
-        data: {
-          userId: req.user!.sub,
+        if (status === "APPROVED") {
+          const days = Math.ceil((new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime()) / (1000 * 3600 * 24)) + 1;
+          const year = new Date(leave.startDate).getFullYear();
+          const balance = await tx.leaveBalance.findUnique({
+            where: { userId_year_leaveType: { userId: leave.userId, year, leaveType: leave.type } },
+          });
+
+          if (balance) {
+            const remaining = (balance.entitledDays + balance.rolloverDays) - balance.usedDays;
+            if (days > remaining) {
+              return { error: { status: 400, body: { error: `Insufficient balance. Requested: ${days} days, Available: ${remaining} days` } } };
+            }
+            await tx.leaveBalance.update({
+              where: { id: balance.id },
+              data: { usedDays: balance.usedDays + days },
+            });
+          }
+        }
+
+        const data = await tx.leaveRequest.update({
+          where: { id: req.params.id },
+          data: { status, rejectionReason, approvedById: req.user?.sub },
+        });
+        await recordFieldChanges(tx, {
           entityType: "LEAVE_REQUEST",
           entityId: data.id,
-          decision: status,
-          signedName: signedName.trim(),
-          signatureUrl: signer?.signatureUrl || null,
-          initialsUrl: signer?.initialsUrl || null,
-          initialsText: signer?.initialsText || null,
-          note: rejectionReason || null,
-        },
-      });
-    }
-    res.json(data);
+          before: leave,
+          after: data,
+          fields: ["status", "rejectionReason", "approvedById"],
+          user: { id: req.user?.sub, username: req.user?.username },
+          requestId: res.locals.requestId,
+        });
+        if (typeof signedName === "string" && signedName.trim().length >= 3) {
+          const signer = await tx.user.findUnique({
+            where: { id: req.user!.sub },
+            select: { signatureUrl: true, initialsUrl: true, initialsText: true },
+          });
+          await tx.signatureRecord.create({
+            data: {
+              userId: req.user!.sub,
+              entityType: "LEAVE_REQUEST",
+              entityId: data.id,
+              decision: status,
+              signedName: signedName.trim(),
+              signatureUrl: signer?.signatureUrl || null,
+              initialsUrl: signer?.initialsUrl || null,
+              initialsText: signer?.initialsText || null,
+              note: rejectionReason || null,
+            },
+          });
+        }
+        return { data };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+
+    if (result.error) return res.status(result.error.status).json(result.error.body);
+    res.json(result.data);
   } catch (err) { res.status(500).json({ error: "Failed to update leave" }); }
 });
 

@@ -11,7 +11,7 @@ const STATUSES = ["Planned", "In Progress", "Completed", "At Risk"];
 const KIND_COLORS = {
   PILLAR: "#7c3aed",
   GOAL: "var(--brand-primary)",
-  OBJECTIVE: "#0B2545",
+  OBJECTIVE: "var(--brand-primary)",
   STRATEGY: "#0369a1",
   ACTIVITY: "#b45309",
   KPI: "#be123c",

@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { buildTimesheetCompliance } from "./timesheetCompliance";
 
 /**
  * Daily HR reminder sweep.
@@ -78,28 +79,67 @@ export async function runHrReminders(): Promise<ReminderResult> {
     );
   }
 
-  // Timesheet deadline, a few days ahead so people have time to fill it in.
+  // Timesheet gate reminders. The reporting obligations are checked before
+  // the nudge, so each person receives the actual reason they are blocked as
+  // well as the deadline. Reminders go out at T-5, T-2, on the due date and
+  // once the period is overdue.
   const setting = await prisma.timesheetSetting.findFirst({ orderBy: { updatedAt: "desc" } });
   const submissionDay = setting?.submissionDay ?? 25;
   const month = new Date().getMonth() + 1;
   const year = new Date().getFullYear();
-  const deadline = new Date(year, month - 1, submissionDay);
+  const deadline = new Date(year, month - 1, Math.min(28, submissionDay));
   const daysLeft = Math.round((deadline.getTime() - today.getTime()) / DAY);
 
-  if (daysLeft >= 0 && daysLeft <= 3) {
+  const reminderDays = new Set([5, 2, 0, -1, -7]);
+  if (reminderDays.has(daysLeft)) {
     const [staff, sheets] = await Promise.all([
       prisma.user.findMany({ where: { role: { not: "viewer" } }, select: { id: true, username: true } }),
       prisma.timesheet.findMany({ where: { month, year }, select: { userId: true, status: true } }),
     ]);
     const done = new Set(
-      sheets.filter((sheet) => sheet.status === "SUBMITTED" || sheet.status === "APPROVED").map((sheet) => sheet.userId)
+      sheets
+        .filter((sheet) => ["SUBMITTED", "FORWARDED", "APPROVED"].includes(sheet.status))
+        .map((sheet) => sheet.userId)
     );
     for (const member of staff) {
       if (done.has(member.id)) continue;
+      const compliance = await buildTimesheetCompliance(member.id, month, year);
+      const when =
+        daysLeft === 0
+          ? "is due today"
+          : daysLeft > 0
+            ? `is due in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (${fmt(deadline)})`
+            : `was due on ${fmt(deadline)} and is now overdue`;
+      const reason = compliance.blockers.length
+        ? ` Before submitting, complete: ${compliance.blockers.map((blocker) => blocker.title).slice(0, 2).join("; ")}${compliance.blockers.length > 2 ? ` and ${compliance.blockers.length - 2} more` : ""}.`
+        : " Your reporting obligations are clear, so you can sign and submit.";
       await send(
         member.username,
-        `Timesheet due ${fmt(deadline)}`,
-        `Your timesheet for ${new Date(year, month - 1, 1).toLocaleString("en-GB", { month: "long", year: "numeric" })} is due in ${daysLeft === 0 ? "today" : `${daysLeft} day${daysLeft === 1 ? "" : "s"}`}.`
+        `Timesheet ${daysLeft < 0 ? "overdue" : daysLeft === 0 ? "due today" : `due in ${daysLeft} days`} · ${fmt(deadline)}`,
+        `Your timesheet for ${new Date(year, month - 1, 1).toLocaleString("en-GB", { month: "long", year: "numeric" })} ${when}.${reason}`
+      );
+    }
+  }
+
+  // Early in a new month, chase last month's unsubmitted sheet once. This is
+  // deliberately limited to the first three days so it cannot become spam.
+  if (today.getDate() <= 3) {
+    const previousMonth = month === 1 ? 12 : month - 1;
+    const previousYear = month === 1 ? year - 1 : year;
+    const previousDeadline = new Date(previousYear, previousMonth - 1, Math.min(28, submissionDay));
+    const sheets = await prisma.timesheet.findMany({
+      where: { month: previousMonth, year: previousYear, status: { notIn: ["SUBMITTED", "APPROVED"] } },
+      include: { user: { select: { id: true, username: true } } },
+    });
+    for (const sheet of sheets) {
+      const compliance = await buildTimesheetCompliance(sheet.user.id, previousMonth, previousYear);
+      const reasons = compliance.blockers.length
+        ? ` Clear ${compliance.blockers.length} overdue reporting obligation${compliance.blockers.length === 1 ? "" : "s"} first: ${compliance.blockers[0].title}${compliance.blockers.length > 1 ? "…" : ""}.`
+        : " Your reporting obligations are clear.";
+      await send(
+        sheet.user.username,
+        `Previous timesheet outstanding · ${fmt(previousDeadline)}`,
+        `Your ${new Date(previousYear, previousMonth - 1, 1).toLocaleString("en-GB", { month: "long", year: "numeric" })} timesheet is still unsubmitted.${reasons}`
       );
     }
   }

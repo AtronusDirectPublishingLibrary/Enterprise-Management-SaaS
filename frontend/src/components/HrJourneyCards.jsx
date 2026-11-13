@@ -18,6 +18,14 @@ const money = (value, currency = "ETB") =>
     ? `${value.toLocaleString("en-US", { maximumFractionDigits: 0 })} ${currency}`
     : "—";
 
+const scoreOptions = (maxScore = 5) => {
+  const max = Number(maxScore) || 5;
+  const step = Number.isInteger(max) ? 1 : 0.5;
+  const options = [];
+  for (let value = step; value <= max + 0.0001; value += step) options.push(Number(value.toFixed(1)));
+  return options;
+};
+
 const STATUS = {
   DRAFT: ["Self-assessment open", "hrx-chip--warn"],
   SELF_SUBMITTED: ["Submitted — with your supervisor", "hrx-chip--info"],
@@ -187,7 +195,7 @@ export default function HrJourneyCards({ data, onSaved, onError }) {
                       <CalendarClock size={13} /> {appraisal.periodLabel}
                     </span>
                     <span>{formatDate(appraisal.periodStart)} – {formatDate(appraisal.periodEnd)}</span>
-                    {appraisal.managerRating ? <span>Manager rating {appraisal.managerRating}/5</span> : null}
+                    {appraisal.managerRating ? <span>Manager rating {appraisal.managerRating}/{appraisal.items?.[0]?.maxScore || 5}</span> : null}
                   </div>
 
                   <div className="row g-2">
@@ -195,8 +203,9 @@ export default function HrJourneyCards({ data, onSaved, onError }) {
                       <div className="col-md-6" key={item.id}>
                         <label className="form-label d-flex justify-content-between gap-2">
                           <span>{item.title}</span>
-                          <span className="text-muted" style={{ fontSize: "0.7rem", whiteSpace: "nowrap" }}>{item.weight}%</span>
+                          <span className="text-muted" style={{ fontSize: "0.7rem", whiteSpace: "nowrap" }}>{item.weight}% · {item.maxScore}-point</span>
                         </label>
+                        {item.description ? <div className="form-text mt-0 mb-1">{item.description}</div> : null}
                         <select
                           className="form-select form-select-sm"
                           value={items[item.id] ?? ""}
@@ -204,8 +213,8 @@ export default function HrJourneyCards({ data, onSaved, onError }) {
                           onChange={(event) => setItems({ ...items, [item.id]: event.target.value })}
                         >
                           <option value="">Not scored</option>
-                          {[1, 2, 3, 4, 5].map((score) => (
-                            <option key={score} value={score}>{score} / 5</option>
+                          {scoreOptions(item.maxScore).map((score) => (
+                            <option key={score} value={score}>{score} / {item.maxScore}</option>
                           ))}
                         </select>
                       </div>
