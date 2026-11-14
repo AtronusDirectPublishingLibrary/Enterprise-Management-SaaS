@@ -7,7 +7,7 @@ import RecoveryCodesCard from "../components/RecoveryCodesCard";
 export default function AccountSecurity() {
   return (
     <div className="container-fluid px-0">
-      <Helmet><title>Account security | EB-EMS</title></Helmet>
+      <Helmet><title>Account security | BEMS</title></Helmet>
       <div className="mb-4">
         <div className="home-eyebrow d-flex align-items-center gap-2"><ShieldCheck size={15} /> Account security</div>
         <h1 className="h3 fw-bold mb-1">Protect your account</h1>

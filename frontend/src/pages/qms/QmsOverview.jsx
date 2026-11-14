@@ -110,7 +110,7 @@ export default function QmsOverview() {
 
   return (
     <div>
-      <Helmet><title>QMS Overview | EB-EMS</title></Helmet>
+      <Helmet><title>QMS Overview | BEMS</title></Helmet>
       <QmsShell
         title="Quality control tower"
         description="One view of the quality system: controlled documents, quality events, corrective actions and changes. The loop is complete only when every signal is reviewed, actioned and closed with evidence."

@@ -179,7 +179,7 @@ export default function QmsDocuments() {
 
   return (
     <div>
-      <Helmet><title>QMS Document Register | EB-EMS</title></Helmet>
+      <Helmet><title>QMS Document Register | BEMS</title></Helmet>
       <QmsShell
         title="Document register"
         description="Controlled documents, version history and approval records under WHO GMP document control. Superseded versions are retained; nothing leaves the register without an audited decision."

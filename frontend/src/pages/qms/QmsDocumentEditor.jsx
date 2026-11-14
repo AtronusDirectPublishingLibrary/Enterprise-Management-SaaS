@@ -274,7 +274,7 @@ export default function QmsDocumentEditor() {
 
   return (
     <div>
-      <Helmet><title>{isNew ? "New QMS Document" : `${document.code} | QMS`} | EB-EMS</title></Helmet>
+      <Helmet><title>{isNew ? "New QMS Document" : `${document.code} | QMS`} | BEMS</title></Helmet>
       <QmsShell
         title={isNew ? "Register a controlled document" : document.title}
         description={

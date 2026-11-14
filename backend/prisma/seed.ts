@@ -16,10 +16,11 @@ async function upsertUser(
     where:  { username },
     update: { passwordHash, role, email, forceChange: extra.forceChange ?? false },
     create: {
+      tenantId: "tenant_default_ethio_biopharma",
       username, passwordHash, role, email,
       piName: extra.piName,
       forceChange: extra.forceChange ?? false,
-    },
+    } as any,
   });
   console.log(`  ${username.padEnd(14)} role=${role.padEnd(16)} id=${user.id}`);
 }

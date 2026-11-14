@@ -21,6 +21,7 @@
     "seed:dropdowns": "ts-node prisma/seed-dropdowns.ts",
     "seed:milestones": "ts-node prisma/seed-milestones.ts",
     "seed:plans": "ts-node prisma/seed-plans.ts",
+    "seed:first-tenant": "ts-node prisma/seed-first-tenant.ts",
     "periods:backfill": "ts-node prisma/backfill-periods.ts",
     "alerts:run": "ts-node prisma/run-plan-alerts.ts",
     "seed:hr-demo": "ts-node prisma/seed-hr-demo.ts",

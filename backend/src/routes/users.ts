@@ -56,6 +56,7 @@ router.post("/", async (req, res, next) => {
     const passwordHash = await bcrypt.hash(d.password, 12);
     await prisma.user.create({
       data: {
+        tenantId: (req as any).user?.tenantId,
         firstName: d.firstName || null,
         lastName: d.lastName || null,
         username: d.username,
@@ -65,7 +66,7 @@ router.post("/", async (req, res, next) => {
         position: d.position || null,
         email: d.email || null,
         forceChange: true,
-      },
+      } as any,
     });
     await logAudit("PMS", "USER_ADDED", req.user!.username, { newUser: d.username, role: d.role });
     res.json({ success: true });

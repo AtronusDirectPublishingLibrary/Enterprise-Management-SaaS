@@ -23,6 +23,7 @@ import {
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { accessSummary, canAccess } from "../lib/access";
+import { useTenantContext } from "../lib/tenantContext";
 import MfaCard from "../components/MfaCard";
 
 const MODULES = {
@@ -171,13 +172,14 @@ function greeting(date) {
 }
 
 export default function HomePage() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const { tenant } = useTenantContext();
   const [revoking, setRevoking] = useState(false);
-  const { user } = useAuth();
   const [briefing, setBriefing] = useState(null);
   const [qmsDue, setQmsDue] = useState(null);
   const now = new Date();
   const profile = profileFor(user);
+  const orgName = tenant?.orgName || tenant?.name || "Ethio-Biopharma";
   // Address people by first name on their home page; full names stay for
   // signatures, timesheets and formal documents.
   const name = user?.firstName || user?.username || "colleague";
@@ -202,25 +204,26 @@ export default function HomePage() {
 
   return (
     <div className="container-fluid py-4 home-page">
-      <Helmet><title>Home | EBPE Database</title></Helmet>
+      <Helmet><title>Home | {orgName}</title></Helmet>
 
       <section className="home-hero">
         <div className="home-hero-copy">
-          <div className="home-eyebrow">Ethio-Biopharma · integrated performance database</div>
+          <div className="home-eyebrow">{orgName} — integrated enterprise management</div>
           <h1>{greeting(now)}, {name}.</h1>
           <p>
             Welcome to your workspace. This is the shared source of truth for plans, projects, performance and people.
-            Use it carefully: what you record here informs reports, decisions and payroll.
+            Use it carefully: what you record here informs reports, decisions and operations.
           </p>
           <div className="home-hero-meta">
             <span>{now.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</span>
             <span>{profile.label}</span>
+            {tenant?.industryType ? <span>{tenant.industryType}</span> : null}
             {user?.username ? <span>Signed in as {user.username}</span> : null}
           </div>
         </div>
         <div className="home-hero-mark" aria-hidden="true">
-          <Landmark size={48} />
-          <span>One database.<br />One version of the truth.</span>
+          {tenant?.logoUrl ? <img src={tenant.logoUrl} alt="" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8 }} /> : <Landmark size={48} />}
+          <span>{orgName}<br />Enterprise workspace</span>
         </div>
       </section>
 

@@ -302,6 +302,7 @@ async function ensureUsers() {
         })
       : await prisma.user.create({
           data: {
+            tenantId: "tenant_default_ethio_biopharma",
             username: person.username,
             passwordHash,
             firstName: person.first,
@@ -312,7 +313,7 @@ async function ensureUsers() {
             email: `${person.username}@ethio-biopharma.example`,
             hireDate: at(-500),
             profileCompletedAt: at(-500),
-          },
+          } as any,
         });
     users[person.username] = { id: user.id, name: `${person.first} ${person.last}` };
   }

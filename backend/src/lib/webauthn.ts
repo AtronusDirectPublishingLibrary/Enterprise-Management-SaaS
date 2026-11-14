@@ -27,6 +27,6 @@ export function webauthnConfig() {
     configured,
     rpID,
     origins,
-    rpName: process.env.WEBAUTHN_RP_NAME || "Ethio-Biopharma EB-EMS",
+    rpName: process.env.WEBAUTHN_RP_NAME || "Beshilo Enterprise Management System (BEMS)",
   };
 }

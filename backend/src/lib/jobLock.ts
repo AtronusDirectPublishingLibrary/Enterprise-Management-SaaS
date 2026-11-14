@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { prisma } from "./prisma";
+import { runAsPlatform } from "./tenantContext";
 
 export type JobOutcome<T> =
   | { skipped: true; result: null }
@@ -22,28 +23,32 @@ export async function runExclusiveJob<T>(
   // A transactional advisory lock serialises the claim itself. PostgreSQL's
   // ON CONFLICT predicate alone can let two simultaneous inserts both believe
   // they hold a new lease, so the lock is taken before reading the row.
-  const claimed = await prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${name})::bigint)`;
-    const current = await tx.jobLock.findUnique({ where: { name } });
-    if (current?.lockedBy && current.lockedUntil && current.lockedUntil > new Date()) {
-      return false;
-    }
-    await tx.jobLock.upsert({
-      where: { name },
-      create: { name, lockedBy: owner, lockedUntil: until },
-      update: { lockedBy: owner, lockedUntil: until },
-    });
-    return true;
-  });
+  const claimed = await runAsPlatform(async () =>
+    prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${name})::bigint)`;
+      const current = await tx.jobLock.findUnique({ where: { name } });
+      if (current?.lockedBy && current.lockedUntil && current.lockedUntil > new Date()) {
+        return false;
+      }
+      await tx.jobLock.upsert({
+        where: { name },
+        create: { name, lockedBy: owner, lockedUntil: until },
+        update: { lockedBy: owner, lockedUntil: until },
+      });
+      return true;
+    }),
+  );
 
   if (!claimed) return { skipped: true, result: null };
 
   try {
     return { skipped: false, result: await fn() };
   } finally {
-    await prisma.jobLock.updateMany({
-      where: { name, lockedBy: owner },
-      data: { lockedBy: null, lockedUntil: new Date(0) },
-    }).catch((error) => console.error(`[job-lock] release failed for ${name}`, error));
+    await runAsPlatform(async () =>
+      prisma.jobLock.updateMany({
+        where: { name, lockedBy: owner },
+        data: { lockedBy: null, lockedUntil: new Date(0) },
+      }),
+    ).catch((error) => console.error(`[job-lock] release failed for ${name}`, error));
   }
 }

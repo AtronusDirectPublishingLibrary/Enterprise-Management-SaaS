@@ -263,7 +263,7 @@ function emailBody(candidate: Candidate, plan: PlanForAlerts): { subject: string
     <div style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
       <div style="background:${color};height:6px"></div>
       <div style="padding:24px">
-        <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280">Ethio-Biopharma &middot; Plan performance alert</p>
+        <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280">BEMS &middot; Plan performance alert</p>
         <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3">${candidate.title}</h1>
         <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#374151">${candidate.message}</p>
         <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -277,7 +277,7 @@ function emailBody(candidate: Candidate, plan: PlanForAlerts): { subject: string
         <a href="${link}" style="display:inline-block;margin-top:20px;background:${color};color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600">Open the plan</a>
       </div>
     </div>
-    <p style="font-size:11px;color:#9ca3af;margin-top:14px">Automated message from the EBPE plan management system. Manage recipients and thresholds in Admin &rarr; Plan Alerts.</p>
+    <p style="font-size:11px;color:#9ca3af;margin-top:14px">Automated message from the BEMS plan management system. Manage recipients and thresholds in Admin &rarr; Plan Alerts.</p>
   </div></body></html>`;
 
   const text = [
@@ -339,6 +339,7 @@ export async function runPlanAlerts(
           planId: candidate.planId,
           itemId: candidate.itemId,
           reportId: candidate.reportId,
+          tenantId: (plan as any).tenantId ?? null,
           dedupeKey: candidate.dedupeKey,
           periodLabel: candidate.periodLabel,
           severity: candidate.severity,
@@ -350,6 +351,7 @@ export async function runPlanAlerts(
           progress: candidate.progress ?? null,
         },
         update: {
+          tenantId: (plan as any).tenantId ?? existing?.tenantId ?? null,
           severity: candidate.severity,
           title: candidate.title,
           message: candidate.message,
@@ -371,12 +373,13 @@ export async function runPlanAlerts(
         for (const owner of owners) {
           await prisma.notification.create({
             data: {
+              tenantId: (plan as any).tenantId ?? null,
               recipient: owner,
               type: "DEADLINE",
               title: alert.title,
               body: alert.message,
               link: `/database/${typePath(plan.type)}?plan=${plan.id}`,
-            },
+            } as any,
           });
         }
 
@@ -389,12 +392,13 @@ export async function runPlanAlerts(
             const result = await sendMail({ to: recipients, ...body });
             await prisma.planAlertMail.create({
               data: {
+                tenantId: (plan as any).tenantId ?? null,
                 alertId: alert.id,
                 to: recipients.join(", "),
                 subject: body.subject,
                 status: result.status,
                 error: result.error,
-              },
+              } as any,
             });
             if (result.status === "SENT") {
               summary.emailsSent += 1;

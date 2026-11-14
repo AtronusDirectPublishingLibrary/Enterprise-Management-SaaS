@@ -149,7 +149,7 @@ export default function TeamTasks() {
 
   return (
     <div className="container-fluid py-4 team-tasks">
-      <Helmet><title>Team & Tasks | EB-EMS</title></Helmet>
+      <Helmet><title>Team & Tasks | BEMS</title></Helmet>
 
       <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
         <div>

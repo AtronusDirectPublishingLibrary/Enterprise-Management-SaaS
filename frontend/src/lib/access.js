@@ -54,42 +54,58 @@ export const TAB_KEYS = [
   "fleet",
   "qms",
   "audit",
+  "procurement",
+  "warehouse",
+  "accounting",
+  "maintenance",
+  "crm",
+  "portals",
+  "helpdesk",
+  "dms",
+  "grc",
+  "bi",
+  "resources",
+  "contracts",
+  "ehs",
 ];
 
 const DELIVERY = ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"];
 const PLANS_READ = ["aop", "strategic", "roadmap", "reports", "calendar", "archive", "myhr", "approvals"];
 
 export const POSITION_ACCESS = {
-  "Board Secretary": [...PLANS_READ, "pms", "progress", "alerts"],
-  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts", "audit"],
+  "Board Secretary": [...PLANS_READ, "pms", "progress", "alerts", "dms"],
+  "Internal Audit Officer": [...PLANS_READ, "pms", "progress", "alerts", "audit", "grc"],
   "Chief Executive Officer": [
     "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "alerts",
-    "news", "documents", "qms",
+    "news", "documents", "qms", "procurement", "warehouse", "accounting", "maintenance",
+    "crm", "portals", "helpdesk", "dms", "grc", "bi", "resources", "contracts", "ehs",
   ],
-  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents", "qms"],
+  "QA and regulatory Affairs Officer": [...DELIVERY, "strategic", "roadmap", "calendar", "documents", "qms", "grc", "ehs", "dms"],
   "Strategy and Planning Officer": [
     "*",
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
     "myhr", "approvals", "alerts", "news", "documents", "languages", "users", "publicSite", "settings",
     "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "media", "qms",
+    "procurement", "warehouse", "accounting", "maintenance", "crm", "portals", "helpdesk", "dms", "grc", "bi", "resources", "contracts", "ehs",
   ],
-  "Legal Counsel": [...PLANS_READ, "progress", "documents"],
-  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts", "qms"],
-  Engineer: ["pms", "aop", "progress", "archive", "myhr", "approvals", "qms"],
+  "Legal Counsel": [...PLANS_READ, "progress", "documents", "contracts", "grc", "dms"],
+  "Operation Manager": [...DELIVERY, "roadmap", "calendar", "alerts", "qms", "warehouse", "maintenance", "procurement", "ehs", "resources"],
+  "Engineer": ["pms", "aop", "progress", "archive", "myhr", "approvals", "qms", "maintenance", "ehs", "helpdesk"],
   "IT Officer": [
     "pms", "aop", "strategic", "roadmap", "progress", "reports", "calendar", "archive",
-    "myhr", "approvals", "languages", "documents", "media", "qms",
+    "myhr", "approvals", "languages", "documents", "media", "qms", "helpdesk", "dms",
   ],
   "Human Resource and Administration Manager": [
     "aop", "reports", "progress", "archive", "myhr", "approvals",
     "hr", "hrAnalytics", "recruitment", "hrOps", "payroll", "languages", "alerts", "documents", "fleet", "qms", "audit",
+    "resources", "helpdesk", "dms", "grc",
   ],
-  "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals"],
-  "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals"],
-  "Finance Manager": ["pms", "aop", "strategic", "roadmap", "progress", "reports", "payroll", "archive", "myhr", "approvals", "alerts"],
-  "Finance Officer": ["pms", "aop", "progress", "payroll", "archive", "myhr", "approvals"],
+  "Property Management Officer": ["pms", "aop", "progress", "archive", "myhr", "approvals", "maintenance", "warehouse", "assets"],
+  "Procurement Officer": ["pms", "aop", "progress", "reports", "archive", "myhr", "approvals", "procurement", "warehouse", "contracts"],
+  "Finance Manager": ["pms", "aop", "strategic", "roadmap", "progress", "reports", "payroll", "archive", "myhr", "approvals", "alerts", "finance", "accounting", "bi", "contracts"],
+  "Finance Officer": ["pms", "aop", "progress", "payroll", "archive", "myhr", "approvals", "finance", "accounting"],
 };
 
 export const PAYROLL_MANAGER_POSITIONS = [
@@ -162,9 +178,61 @@ export function canCreateQmsDocument(user) {
   );
 }
 
+const MODULE_ALIASES = {
+  hr: ["hr"],
+  hrAnalytics: ["hr"],
+  hrOps: ["hr"],
+  recruitment: ["recruitment"],
+  payroll: ["payroll"],
+  fleet: ["fleet"],
+  qms: ["qms"],
+  aop: ["aop", "planning"],
+  strategic: ["strategic", "planning"],
+  roadmap: ["roadmap", "planning"],
+  progress: ["planning", "projects", "pms"],
+  reports: ["reports"],
+  calendar: ["planning"],
+  alerts: ["planning"],
+  pms: ["pms", "projects"],
+  projects: ["projects", "pms"],
+  supply_chain: ["supply_chain", "inventory", "assets", "scm", "procurement", "warehouse", "wms", "maintenance", "eam"],
+  inventory: ["supply_chain", "inventory", "assets", "scm", "warehouse", "wms"],
+  assets: ["supply_chain", "inventory", "assets", "scm", "maintenance", "eam", "cmms"],
+  finance: ["finance", "financial", "accounting", "gl", "ap", "ar"],
+  financial: ["finance", "financial", "accounting", "gl", "ap", "ar"],
+  procurement: ["procurement", "vendors", "purchasing", "supply_chain", "scm"],
+  vendors: ["procurement", "vendors", "purchasing", "supply_chain"],
+  warehouse: ["warehouse", "wms", "inventory_mgmt", "supply_chain", "inventory", "scm"],
+  accounting: ["accounting", "gl", "ap", "ar", "finance", "financial"],
+  maintenance: ["maintenance", "eam", "cmms", "assets", "supply_chain"],
+  crm: ["crm", "sales", "orders"],
+  portals: ["portals_ext", "customer_portal", "partner_portal"],
+  helpdesk: ["helpdesk", "itsm", "service_desk"],
+  dms: ["dms", "records", "knowledge"],
+  grc: ["grc", "risk", "compliance_audit"],
+  bi: ["bi", "analytics_adv"],
+  resources: ["resources", "capacity"],
+  contracts: ["contracts", "legal"],
+  ehs: ["ehs", "safety"],
+  publicSite: ["public_site"],
+  news: ["public_site"],
+  documents: ["public_site"],
+  media: ["public_site"],
+  languages: ["public_site"],
+};
+
+export function moduleEnabled(user, key) {
+  const mods = user?.enabledModules;
+  if (!mods || !Array.isArray(mods) || mods.length === 0) return true; // null/empty => allow-all
+  const aliases = MODULE_ALIASES[key];
+  if (!aliases || aliases.length === 0) return true;
+  return aliases.some((m) => mods.includes(m));
+}
+
 export function canAccess(user, key) {
   if (!user) return false;
   if (!key || key === "dashboard") return true;
+  if (!moduleEnabled(user, key)) return false;
   // Everyone has a personal payroll view; the API exposes the full register
   // only to executives, Finance and HR.
   if (key === "payroll") return true;
@@ -208,6 +276,19 @@ export const PATH_ACCESS = [
   { prefix: "/payslips", key: "payroll" },
   { prefix: "/fleet", key: "fleet" },
   { prefix: "/qms", key: "qms" },
+  { prefix: "/procurement", key: "procurement" },
+  { prefix: "/warehouse", key: "warehouse" },
+  { prefix: "/accounting", key: "accounting" },
+  { prefix: "/maintenance", key: "maintenance" },
+  { prefix: "/crm", key: "crm" },
+  { prefix: "/external-portals", key: "portals" },
+  { prefix: "/helpdesk", key: "helpdesk" },
+  { prefix: "/dms", key: "dms" },
+  { prefix: "/grc", key: "grc" },
+  { prefix: "/bi", key: "bi" },
+  { prefix: "/resources", key: "resources" },
+  { prefix: "/contracts", key: "contracts" },
+  { prefix: "/ehs", key: "ehs" },
   { prefix: "/language-settings", key: "languages" },
   { prefix: "/plan-alerts", key: "alerts" },
   { prefix: "/manage-news", key: "news" },

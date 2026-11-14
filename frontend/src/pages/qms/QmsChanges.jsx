@@ -165,7 +165,7 @@ export default function QmsChanges() {
 
   return (
     <div>
-      <Helmet><title>QMS Change Control | EB-EMS</title></Helmet>
+      <Helmet><title>QMS Change Control | BEMS</title></Helmet>
       <QmsShell
         title="Change control"
         description="Assess impact before anything changes. Each request moves from draft to QA review, approval, implementation and closure, with the risk assessment and evidence recorded at each stage."

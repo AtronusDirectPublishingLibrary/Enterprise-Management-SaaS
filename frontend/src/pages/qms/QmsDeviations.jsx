@@ -173,7 +173,7 @@ export default function QmsDeviations() {
 
   return (
     <div>
-      <Helmet><title>QMS Deviations | EB-EMS</title></Helmet>
+      <Helmet><title>QMS Deviations | BEMS</title></Helmet>
       <QmsShell
         title="Deviation management"
         description="Report, contain and investigate anything that departs from an approved process, specification or document. A deviation stays open until QA records the root cause, investigation and closure decision."

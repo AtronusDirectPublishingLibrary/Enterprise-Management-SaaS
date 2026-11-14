@@ -222,6 +222,7 @@ router.post("/applicants/:id/hire", async (req, res, next) => {
     const startDate = body.startDate ? new Date(body.startDate) : new Date();
     const user = await prisma.user.create({
       data: {
+        tenantId: (req as any).user?.tenantId,
         username,
         passwordHash: await bcrypt.hash("Welcome123!", 12),
         firstName,
@@ -233,7 +234,7 @@ router.post("/applicants/:id/hire", async (req, res, next) => {
         jobTitle: body.jobTitle || applicant.job.title,
         hireDate: startDate,
         forceChange: true,
-      },
+      } as any,
     });
 
     const induction = await prisma.induction.create({

@@ -58,7 +58,7 @@ router.get("/executive-bi/export", async (req, res, next) => {
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="EB-EMS_Executive_BI_${new Date().toISOString().slice(0, 10)}.csv"`
+      `attachment; filename="BEMS_Executive_BI_${new Date().toISOString().slice(0, 10)}.csv"`
     );
     res.send(csv);
   } catch (error) {

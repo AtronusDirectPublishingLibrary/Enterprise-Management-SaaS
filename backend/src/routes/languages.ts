@@ -4,6 +4,7 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAccess, requireAuth } from "../middleware/auth";
+import { runAsPlatform } from "../lib/tenantContext";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -65,11 +66,13 @@ router.get("/", requireAuth, async (_req, res, next) => {
 /** Public list for the language toggle: only enabled languages. */
 router.get("/enabled", async (_req, res, next) => {
   try {
-    const languages = await prisma.language.findMany({
-      where: { isEnabled: true },
-      select: { code: true, name: true, nativeName: true, sortOrder: true },
-      orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
-    });
+    const languages = await runAsPlatform(async () =>
+      prisma.language.findMany({
+        where: { isEnabled: true },
+        select: { code: true, name: true, nativeName: true, sortOrder: true },
+        orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+      })
+    );
     res.json(languages);
   } catch (e) { next(e); }
 });

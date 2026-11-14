@@ -39,6 +39,7 @@ router.post("/staff", async (req, res) => {
     const passwordHash = await bcrypt.hash(password || "Password123!", 12);
     const user = await prisma.user.create({
       data: {
+        tenantId: (req as any).user?.tenantId,
         firstName, lastName, username, email: email || null,
         passwordHash, role: role || "viewer",
         department: department || null, subDepartment: subDepartment || null,
@@ -48,7 +49,7 @@ router.post("/staff", async (req, res) => {
         employmentType: employmentType || "Regular",
         contractEnd: employmentType === "Regular" ? null : (contractEnd ? new Date(contractEnd) : null),
         hireDate: hireDate ? new Date(hireDate) : null,
-      },
+      } as any,
     });
     res.json(user);
   } catch (err) { res.status(500).json({ error: "Failed to create staff" }); }
@@ -100,6 +101,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       const passwordHash = await bcrypt.hash(row.password || "Password123!", 12);
       await prisma.user.create({
         data: {
+          tenantId: (req as any).user?.tenantId,
           firstName: row.firstName || "", lastName: row.lastName || "",
           username, email: row.email || null, passwordHash,
           role: row.role || "viewer", department: row.department || null,
@@ -109,7 +111,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           employmentType: row.employmentType || "Regular",
           hireDate: row.hireDate ? new Date(row.hireDate) : null,
           contractEnd: row.employmentType && row.employmentType !== "Regular" && row.contractEnd ? new Date(row.contractEnd) : null,
-        },
+        } as any,
       });
       added++;
     }

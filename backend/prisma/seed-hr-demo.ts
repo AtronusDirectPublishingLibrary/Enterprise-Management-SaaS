@@ -38,6 +38,7 @@ async function main() {
     if (!existing) {
       await prisma.user.create({
         data: {
+          tenantId: "tenant_default_ethio_biopharma",
           username,
           passwordHash: await bcrypt.hash("Demo12345!", 12),
           firstName: "Hirut",
@@ -45,7 +46,7 @@ async function main() {
           role: "staff",
           department: "Quality Assurance",
           email: `${username}@ethio-biopharma.example`,
-        },
+        } as any,
       });
       console.log(`created ${username} / Demo12345!`);
     }
@@ -297,6 +298,7 @@ async function main() {
     existingReport ||
     (await prisma.user.create({
       data: {
+        tenantId: "tenant_default_ethio_biopharma",
         username: "demo.staff",
         passwordHash: await bcrypt.hash("Welcome123!", 12),
         firstName: "Tsion",
@@ -308,7 +310,7 @@ async function main() {
         immediateSupervisorId: user.id,
         hireDate: fromNow(-420),
         profession: "QC_ANALYST",
-      },
+      } as any,
     }));
 
   await prisma.training.deleteMany({ where: { userId: report.id } });

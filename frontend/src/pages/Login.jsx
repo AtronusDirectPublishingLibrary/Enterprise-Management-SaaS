@@ -1,14 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Fingerprint, ShieldCheck } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../lib/auth";
-import { api } from "../lib/api";
+import { api, assetUrl } from "../lib/api";
 import BrandLogo from "../components/BrandLogo";
 
-export default function Login() {
+export default function Login({ slug: slugProp, tenantContext: tenantContextProp } = {}) {
   const { login, loginWithPasskey } = useAuth();
   const navigate = useNavigate();
+  const slug = (slugProp || "ethio-biopharma").trim();
+  const [tenant, setTenant] = useState(tenantContextProp || null);
+  const [tenantLoading, setTenantLoading] = useState(!tenantContextProp);
+  const [tenantError, setTenantError] = useState("");
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
@@ -25,6 +30,21 @@ export default function Login() {
   const turnstileBox = useRef(null);
   const turnstileWidget = useRef(null);
   const [turnstileToken, setTurnstileToken] = useState("");
+
+  useEffect(() => {
+    if (tenantContextProp) {
+      setTenant(tenantContextProp);
+      setTenantLoading(false);
+      return;
+    }
+    let active = true;
+    setTenantLoading(true);
+    api.get(`/portals/tenant-context?slug=${encodeURIComponent(slug)}`)
+      .then((data) => { if (active) { setTenant(data); setTenantError(""); } })
+      .catch((e) => { if (active) setTenantError(e?.message || "Organization not found"); })
+      .finally(() => { if (active) setTenantLoading(false); });
+    return () => { active = false; };
+  }, [slug, tenantContextProp]);
 
   useEffect(() => {
     api.get("/auth/passkeys/status")
@@ -97,14 +117,23 @@ export default function Login() {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+    if (tenant?.status && tenant.status !== "ACTIVE" && tenant.status !== "TRIAL") {
+      setErr(`Your subscription is ${tenant.status}. Contact billing.`);
+      return;
+    }
     if (!mfaRequired && turnstileRequired && !turnstileToken) {
       setErr("Complete the security check before signing in.");
       return;
     }
     setBusy(true);
     try {
-      const signedIn = await login(username.trim(), password, mfaRequired ? code.trim() : undefined, turnstileToken);
-      navigate(signedIn.mfaEnrollmentRequired ? "/account-security" : "/dashboard");
+      const effectiveSlug = tenant?.slug || slug;
+      const signedIn = await login(username.trim(), password, mfaRequired ? code.trim() : undefined, turnstileToken, effectiveSlug);
+      if (signedIn.isPlatformAdmin) {
+        navigate(signedIn.mfaEnrollmentRequired ? "/account-security" : "/dashboard");
+      } else {
+        navigate(signedIn.mfaEnrollmentRequired ? "/account-security" : "/dashboard");
+      }
     } catch (e2) {
       console.error("Login error:", e2);
       if (e2.data?.mfaRequired) {
@@ -136,22 +165,56 @@ export default function Login() {
     }
   }
 
+  const primaryColor = tenant?.primaryColor || "#0B2545";
+  const secondaryColor = tenant?.secondaryColor || "#C9A227";
+  const orgName = tenant?.orgName || tenant?.name || "Beshilo Enterprise Management System";
+  const logoUrl = tenant?.logoUrl ? assetUrl(tenant.logoUrl) : "";
+
+  const wrapperStyle = useMemo(() => ({
+    background: `linear-gradient(180deg, ${primaryColor} 0%, #081a30 100%)`,
+  }), [primaryColor]);
+
+  if (tenantLoading) {
+    return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-light" role="status" /></div>;
+  }
+  if (tenantError || !tenant) {
+    return (
+      <div className="auth-wrapper" style={wrapperStyle}>
+        <div className="auth-card text-center">
+          <h4 className="mb-2">Organization not found</h4>
+          <p className="text-muted mb-0">{tenantError || "The requested organization could not be found."}</p>
+        </div>
+      </div>
+    );
+  }
+  if (tenant.status && tenant.status !== "ACTIVE" && tenant.status !== "TRIAL") {
+    return (
+      <div className="auth-wrapper" style={wrapperStyle}>
+        <div className="auth-card text-center">
+          <h4 className="mb-2">{orgName}</h4>
+          <div className="alert alert-warning mb-0">Your subscription is <strong>{tenant.status}</strong>. Contact billing.</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="auth-wrapper">
+    <div className="auth-wrapper" style={wrapperStyle}>
       <Helmet>
-        <title>Sign in | EB-EMS</title>
-        <meta name="description" content="Sign in to the Ethio-Biopharma Enterprise Management System (EB-EMS)." />
+        <title>{`Sign in | ${orgName}`}</title>
+        <meta name="description" content={`Sign in to ${orgName} on Beshilo Enterprise Management System (BEMS).`} />
       </Helmet>
       <form className="auth-card" onSubmit={onSubmit}>
         <div className="text-center mb-4">
-          <BrandLogo variant="login" />
-          <h1
-            className="auth-brand mb-0"
-            aria-label="Ethio-Biopharma Enterprise Management System (EB-EMS)"
-          >
-            <span className="auth-brand__org">Ethio-Biopharma</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={orgName} style={{ maxHeight: 72, maxWidth: 220, objectFit: "contain", marginBottom: 12 }} />
+          ) : (
+            <BrandLogo variant="login" />
+          )}
+          <h1 className="auth-brand mb-0" aria-label={`${orgName} - BEMS`}>
+            <span className="auth-brand__org">{orgName}</span>
             <span className="auth-brand__system">Enterprise Management System</span>
-            <span className="auth-brand__badge">EB-EMS</span>
+            <span className="auth-brand__badge" style={{ background: secondaryColor, color: "#0B2545" }}>BEMS</span>
           </h1>
           <p className="auth-brand__note">Integrated corporate operations platform</p>
         </div>
@@ -159,12 +222,13 @@ export default function Login() {
         {err && <div className="alert alert-danger py-2">{err}</div>}
 
         <div className="mb-3">
-          <label className="form-label fw-semibold">Username</label>
+          <label className="form-label fw-semibold">Username or email</label>
           <input
             className="form-control"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
+            placeholder="Enter your username or email"
             autoFocus
             required
             disabled={mfaRequired}
@@ -245,6 +309,7 @@ export default function Login() {
         <div className="mt-4 pt-3 border-top text-center" style={{ fontSize: "0.8rem", color: "#6c757d" }}>
           Use the account issued to you by the system administrator. Access is recorded in the audit trail.
         </div>
+        <div className="mt-2 text-center" style={{ fontSize: "0.75rem", color: "#8a94a6" }}>Powered by BEMS</div>
       </form>
     </div>
   );

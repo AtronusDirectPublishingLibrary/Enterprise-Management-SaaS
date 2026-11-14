@@ -28,6 +28,23 @@ import fleetDriverRoutes from './routes/fleetDrivers';
 import fleetRequestRoutes from './routes/fleetRequests';
 import fleetSettingsRoutes from './routes/fleetSettings';
 import fleetAnalyticsRoutes from './routes/fleetAnalytics';
+import tenantSettingsRoutes from "./routes/tenantSettings";
+import tenantExportRoutes from "./routes/tenantExport";
+import portalsRoutes from "./routes/portals";
+import billingRoutes from "./routes/billing";
+import procurementRoutes from "./routes/procurement";
+import warehouseRoutes from "./routes/warehouse";
+import accountingRoutes from "./routes/accounting";
+import maintenanceRoutes from "./routes/maintenance";
+import crmRoutes from "./routes/crm";
+import externalPortalsRoutes from "./routes/externalPortals";
+import helpdeskRoutes from "./routes/helpdesk";
+import dmsRoutes from "./routes/dms";
+import grcRoutes from "./routes/grc";
+import biRoutes from "./routes/bi";
+import resourcesRoutes from "./routes/resources";
+import contractsRoutes from "./routes/contracts";
+import ehsRoutes from "./routes/ehs";
 import qmsDocumentRoutes from "./routes/qmsDocuments";
 import qmsDeviationRoutes from "./routes/qmsDeviations";
 import qmsCapaRoutes from "./routes/qmsCapa";
@@ -94,9 +111,11 @@ import { createAuditCheckpoint } from "./lib/auditCheckpoint";
 import { runPlanAlerts } from "./lib/planAlerts";
 import { runPeriodLifecycle } from "./lib/periodLifecycle";
 import { runExclusiveJob } from "./lib/jobLock";
+import { runAsPlatform } from "./lib/tenantContext";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestId } from "./middleware/requestId";
 import { csrfProtection } from "./middleware/csrf";
+import { requestLogger } from "./middleware/requestLogger";
 import { optionalAuth, requireAccess, requireAuth } from './middleware/auth';
 import { assertTurnstileProductionConfig } from "./lib/turnstile";
 
@@ -184,6 +203,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(requestId);
+app.use(requestLogger);
 app.use(rateLimit({ windowMs: 60_000, max: 200 }));
 app.use(csrfProtection);
 
@@ -203,8 +223,36 @@ app.get("/api/ready", async (_req, res) => {
   }
 });
 
+// Basic observability/metrics endpoint (process + app info). Protect or restrict in production as needed.
+app.get("/api/metrics", (_req, res) => {
+  const mem = process.memoryUsage();
+  res.set("Cache-Control", "no-store").json({
+    ok: true,
+    uptimeSec: Math.round(process.uptime()),
+    memory: { rss: mem.rss, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
+    node: process.version,
+    env: process.env.NODE_ENV || "development",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/api/auth",         authRoutes);
 app.use("/api/auth/passkeys", passkeyRoutes);
+app.use("/api/portals",      portalsRoutes);
+app.use("/api/billing",      billingRoutes);
+app.use("/api/procurement",      procurementRoutes);
+app.use("/api/warehouse",        warehouseRoutes);
+app.use("/api/accounting",       accountingRoutes);
+app.use("/api/maintenance",      maintenanceRoutes);
+app.use("/api/crm",              crmRoutes);
+app.use("/api/external-portals", externalPortalsRoutes);
+app.use("/api/helpdesk",         helpdeskRoutes);
+app.use("/api/dms",              dmsRoutes);
+app.use("/api/grc",              grcRoutes);
+app.use("/api/bi",               biRoutes);
+app.use("/api/resources",        resourcesRoutes);
+app.use("/api/contracts",        contractsRoutes);
+app.use("/api/ehs",              ehsRoutes);
 app.use("/api/visitors",     visitorRoutes);
 app.use("/api/projects",     projectRoutes);
 app.use("/api/milestones",   milestoneRoutes);
@@ -233,6 +281,8 @@ app.use("/api/fleet/ride-providers", requireAuth, rideProviderRoutes);
 app.use("/api/fleet/rides", requireAuth, rideRequestRoutes);
 app.use("/api/fleet/settings", requireAuth, fleetSettingsRoutes);
 app.use("/api/fleet/analytics", requireAuth, requireAccess("fleet"), fleetAnalyticsRoutes);
+app.use("/api/tenant", requireAuth, tenantSettingsRoutes);
+app.use("/api/tenant", requireAuth, tenantExportRoutes);
 app.use("/api/qms/documents", requireAuth, requireAccess("qms"), qmsDocumentRoutes);
 app.use("/api/qms/deviations", requireAuth, requireAccess("qms"), qmsDeviationRoutes);
 app.use("/api/qms/capa", requireAuth, requireAccess("qms"), qmsCapaRoutes);
@@ -279,19 +329,21 @@ app.use("/api/public", publicStatsRoutes);
 app.use("/api/site-settings", siteSettingsRoutes);
 app.use("/api/media", mediaVideoRoutes);
 
-// Social distribution worker. Posts are queued when a news item is saved and
-// retried here; disabled with SOCIAL_AUTORUN=false.
+// Social distribution worker. Runs per active tenant (social posts/news are tenant-scoped).
+// Disabled with SOCIAL_AUTORUN=false.
 if (process.env.SOCIAL_AUTORUN !== "false") {
   const tick = () => {
-    runExclusiveJob("social-queue", () => runSocialQueue(20))
-      .then(({ skipped, result: summary }) => {
-        if (skipped) return;
-        if (summary.evaluated) {
-          console.log(
-            `[social] evaluated=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
-          );
-        }
-      })
+    runExclusiveJob("social-queue", async () => {
+      const { runPerTenant } = await import("./lib/tenantJobs");
+      const results = await runPerTenant("social-queue", async () => runSocialQueue(20));
+      const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+      const agg = ok.reduce((a,s)=>({ evaluated: a.evaluated+(s.evaluated||0), sent: a.sent+(s.sent||0), skipped: a.skipped+(s.skipped||0), failed: a.failed+(s.failed||0) }), { evaluated:0,sent:0,skipped:0,failed:0 });
+      if (agg.evaluated) {
+        console.log(`[social] tenants=${ok.length}/${results.length} evaluated=${agg.evaluated} sent=${agg.sent} skipped=${agg.skipped} failed=${agg.failed}`);
+      }
+      return agg;
+    })
+      .then(({ skipped }) => skipped && null)
       .catch((error) => console.error("[social] queue run failed", error));
   };
   setTimeout(tick, 25_000);
@@ -318,7 +370,7 @@ app.use("/api/files", optionalAuth, fileRoutes);
 app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
-  console.log(`Ethio-Biopharma API listening on http://localhost:${PORT}`);
+  console.log(`BEMS API listening on http://localhost:${PORT}`);
   console.log(`  CORS origin: ${CORS_ORIGIN}`);
 });
 server.requestTimeout = Number(process.env.REQUEST_TIMEOUT_MS) || 30_000;
@@ -353,73 +405,92 @@ process.on("uncaughtException", (error) => {
   void shutdown("uncaughtException");
 });
 
-// HR due-date reminders: once shortly after boot, then every six hours so the
-// notification bell stays current without a separate cron service.
+// HR due-date reminders: once shortly after boot, then every six hours.
+// Runs per active tenant to preserve tenant context/attribution.
 const runRemindersSafely = () =>
-  runExclusiveJob("hr-reminders", () => runHrReminders())
-    .then(({ skipped, result }) => skipped ? undefined : console.log(`[hr-reminders] sent ${result.sent}, skipped ${result.skipped}`))
+  runExclusiveJob("hr-reminders", async () => {
+    const { runPerTenant } = await import("./lib/tenantJobs");
+    const results = await runPerTenant("hr-reminders", async () => runHrReminders());
+    const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+    return { tenants: ok.length, sent: ok.reduce((a,s)=>a+(s.sent||0),0), skipped: ok.reduce((a,s)=>a+(s.skipped||0),0) };
+  })
+    .then(({ skipped, result }) => skipped ? undefined : console.log(`[hr-reminders] tenants=${result.tenants} sent ${result.sent}, skipped ${result.skipped}`))
     .catch((error) => console.error("[hr-reminders] failed", error));
 
 setTimeout(runRemindersSafely, 10_000);
 setInterval(runRemindersSafely, 6 * 60 * 60 * 1000).unref();
 
 // Background KPI / reporting-deadline watch. Disable with PLAN_ALERTS_AUTORUN=false.
+// Runs per active tenant to preserve tenant attribution/context.
 if (process.env.PLAN_ALERTS_AUTORUN !== "false") {
   const intervalHours = Math.max(1, Number(process.env.PLAN_ALERT_INTERVAL_HOURS) || 6);
   const tick = () => {
-    runExclusiveJob("plan-alerts", () => runPlanAlerts(), 2 * 60 * 60 * 1000)
-      .then(({ skipped, result: summary }) => {
-        if (skipped) return;
-        if (summary.created || summary.emailsSent || summary.emailsFailed) {
-          console.log(
-            `[plan-alerts] plans=${summary.evaluated.plans} new=${summary.created} resolved=${summary.resolved} mail=${summary.emailsSent}/${summary.emailsFailed}`
-          );
-        }
-      })
+    runExclusiveJob("plan-alerts", async () => {
+      const { runPerTenant } = await import("./lib/tenantJobs");
+      const results = await runPerTenant("plan-alerts", async () => runPlanAlerts());
+      const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+      const summary = ok.reduce((acc, s) => ({
+        created: acc.created + (s.created || 0),
+        resolved: acc.resolved + (s.resolved || 0),
+        emailsSent: acc.emailsSent + (s.emailsSent || 0),
+        emailsFailed: acc.emailsFailed + (s.emailsFailed || 0),
+        plans: acc.plans + (s.evaluated?.plans || 0),
+      }), { created: 0, resolved: 0, emailsSent: 0, emailsFailed: 0, plans: 0 });
+      if (summary.created || summary.emailsSent || summary.emailsFailed || ok.length) {
+        console.log(`[plan-alerts] tenants=${ok.length}/${results.length} plans=${summary.plans} new=${summary.created} resolved=${summary.resolved} mail=${summary.emailsSent}/${summary.emailsFailed}`);
+      }
+      return summary;
+    }, 2 * 60 * 60 * 1000)
+      .then(({ skipped }) => skipped && null)
       .catch((error) => console.error("[plan-alerts] run failed", error));
   };
   setTimeout(tick, 15_000);
   setInterval(tick, intervalHours * 3_600_000).unref();
 }
 
-// Daily planning-period lifecycle: prepare the next period, activate approved
-// periods, close ended ones and archive superseded ones. Runs idempotently.
+// Daily planning-period lifecycle per active tenant. Runs idempotently.
 // Disable with PERIOD_LIFECYCLE_AUTORUN=false.
 if (process.env.PERIOD_LIFECYCLE_AUTORUN !== "false") {
   const intervalHours = Math.max(1, Number(process.env.PERIOD_LIFECYCLE_INTERVAL_HOURS) || 24);
   const tick = () => {
-    runExclusiveJob("period-lifecycle", () => runPeriodLifecycle(), 2 * 60 * 60 * 1000)
-      .then(({ skipped, result: summary }) => {
-        if (skipped) return;
-        const changed =
-          summary.prepared.length +
-          summary.activated.length +
-          summary.closed.length +
-          summary.archived.length;
-        if (changed || summary.warnings.length) {
-          console.log(
-            `[periods] prepared=${summary.prepared.length} activated=${summary.activated.length} closed=${summary.closed.length} archived=${summary.archived.length} warnings=${summary.warnings.length}`
-          );
-        }
-      })
+    runExclusiveJob("period-lifecycle", async () => {
+      const { runPerTenant } = await import("./lib/tenantJobs");
+      const results = await runPerTenant("period-lifecycle", async () => runPeriodLifecycle());
+      const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+      const agg = ok.reduce((a,s)=>({
+        prepared: a.prepared + (s.prepared?.length||0),
+        activated: a.activated + (s.activated?.length||0),
+        closed: a.closed + (s.closed?.length||0),
+        archived: a.archived + (s.archived?.length||0),
+        warnings: a.warnings + (s.warnings?.length||0),
+      }), { prepared:0, activated:0, closed:0, archived:0, warnings:0 });
+      if (agg.prepared+agg.activated+agg.closed+agg.archived+agg.warnings > 0) {
+        console.log(`[periods] tenants=${ok.length}/${results.length} prepared=${agg.prepared} activated=${agg.activated} closed=${agg.closed} archived=${agg.archived} warnings=${agg.warnings}`);
+      }
+      return agg;
+    }, 2 * 60 * 60 * 1000)
+      .then(({ skipped }) => skipped && null)
       .catch((error) => console.error("[periods] lifecycle run failed", error));
   };
   setTimeout(tick, 20_000);
   setInterval(tick, intervalHours * 3_600_000).unref();
 }
 
-// Scheduled consolidated-report delivery. Disable with REPORT_SCHEDULES_AUTORUN=false.
+// Scheduled consolidated-report delivery per active tenant.
+// Disable with REPORT_SCHEDULES_AUTORUN=false.
 if (process.env.REPORT_SCHEDULES_AUTORUN !== "false") {
   const tick = () => {
-    runExclusiveJob("report-schedules", () => runDueReportSchedules(), 2 * 60 * 60 * 1000)
-      .then(({ skipped, result: summary }) => {
-        if (skipped) return;
-        if (summary.evaluated) {
-          console.log(
-            `[report-schedules] due=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
-          );
-        }
-      })
+    runExclusiveJob("report-schedules", async () => {
+      const { runPerTenant } = await import("./lib/tenantJobs");
+      const results = await runPerTenant("report-schedules", async () => runDueReportSchedules());
+      const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+      const agg = ok.reduce((a,s)=>({ evaluated: a.evaluated+(s.evaluated||0), sent: a.sent+(s.sent||0), skipped: a.skipped+(s.skipped||0), failed: a.failed+(s.failed||0) }), { evaluated:0,sent:0,skipped:0,failed:0 });
+      if (agg.evaluated) {
+        console.log(`[report-schedules] tenants=${ok.length}/${results.length} due=${agg.evaluated} sent=${agg.sent} skipped=${agg.skipped} failed=${agg.failed}`);
+      }
+      return agg;
+    }, 2 * 60 * 60 * 1000)
+      .then(({ skipped }) => skipped && null)
       .catch((error) => console.error("[report-schedules] run failed", error));
   };
   setTimeout(tick, 30_000);
@@ -430,7 +501,7 @@ if (process.env.REPORT_SCHEDULES_AUTORUN !== "false") {
 // Disable with AUDIT_RETENTION_AUTORUN=false.
 if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
   const tick = () => {
-    runExclusiveJob("audit-retention", () => pruneAuditLog(), 2 * 60 * 60 * 1000)
+    runExclusiveJob("audit-retention", () => runAsPlatform(() => pruneAuditLog()), 2 * 60 * 60 * 1000)
       .then(({ skipped, result: summary }) => {
         if (skipped) return;
         if (summary.deleted) {
@@ -448,7 +519,7 @@ if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
 // changes the evidence it is checking.
 if (process.env.AUDIT_VERIFY_AUTORUN !== "false") {
   const tick = () => {
-    runExclusiveJob("audit-verification", () => runAuditVerification("system"), 2 * 60 * 60 * 1000)
+    runExclusiveJob("audit-verification", () => runAsPlatform(() => runAuditVerification("system")), 2 * 60 * 60 * 1000)
       .then(({ skipped, result }) => {
         if (skipped) return;
         if (!result.valid || result.legacyCount || result.truncated) {
@@ -467,7 +538,7 @@ if (process.env.AUDIT_VERIFY_AUTORUN !== "false") {
 // private key. They anchor the audit head outside the database.
 if (process.env.AUDIT_CHECKPOINT_AUTORUN !== "false" && process.env.AUDIT_CHECKPOINT_PRIVATE_KEY) {
   const tick = () => {
-    runExclusiveJob("audit-checkpoint", () => createAuditCheckpoint("system"), 2 * 60 * 60 * 1000)
+    runExclusiveJob("audit-checkpoint", () => runAsPlatform(() => createAuditCheckpoint("system")), 2 * 60 * 60 * 1000)
       .then(({ skipped, result }) => {
         if (skipped) return;
         console.log(`[audit-checkpoint] created ${result.id} at head ${result.headId.toString()}`);
@@ -477,13 +548,17 @@ if (process.env.AUDIT_CHECKPOINT_AUTORUN !== "false" && process.env.AUDIT_CHECKP
   setTimeout(tick, 5 * 60_000);
   setInterval(tick, 24 * 60 * 60 * 1000).unref();
 }
-// QMS review-due reminders: notify owners of approved documents whose periodic
-// review falls inside the next 30 days. Runs daily, matching the fleet pattern.
+// QMS review-due reminders per active tenant. Runs daily.
 const runQmsRemindersSafely = () =>
-  runExclusiveJob("qms-reminders", () => runQmsReminders())
+  runExclusiveJob("qms-reminders", async () => {
+    const { runPerTenant } = await import("./lib/tenantJobs");
+    const results = await runPerTenant("qms-reminders", async () => runQmsReminders());
+    const ok = results.filter(r => r.ok).map(r => r.result as any).filter(Boolean);
+    return { tenants: ok.length, sent: ok.reduce((a,s)=>a+(s.sent||0),0) };
+  })
     .then(({ skipped, result }) => {
       if (skipped) return;
-      if (result.sent) console.log(`[qms-reminders] sent ${result.sent}`);
+      if (result.sent) console.log(`[qms-reminders] tenants=${result.tenants} sent ${result.sent}`);
     })
     .catch((error) => console.error("[qms-reminders] failed", error));
 

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAccess, requireAuth } from "../middleware/auth";
+import { runAsPlatform } from "../lib/tenantContext";
 
 const router = Router();
 
@@ -27,10 +28,12 @@ function present(row: TranslationRow) {
 // Public: Get all translations (used by the frontend)
 router.get("/", async (_req, res, next) => {
   try {
-    const translations = await prisma.translation.findMany({
-      include: { values: { select: { lang: true, text: true } } },
-      orderBy: { key: "asc" },
-    });
+    const translations = await runAsPlatform(async () =>
+      prisma.translation.findMany({
+        include: { values: { select: { lang: true, text: true } } },
+        orderBy: { key: "asc" },
+      })
+    );
     res.json(translations.map(present));
   } catch (e) { next(e); }
 });

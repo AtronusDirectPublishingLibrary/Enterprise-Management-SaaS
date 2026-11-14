@@ -1,9 +1,10 @@
 import MyHRPortal from "./pages/MyHRPortal";
 import MyApprovals from "./pages/MyApprovals";
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "./lib/auth";
 import { canAccess, isSystemAdmin } from "./lib/access";
+import { useTenantContext } from "./lib/tenantContext";
 import AuditLog from "./pages/AuditLog";
 import Payroll from "./pages/Payroll";
 import Recruitment from "./pages/Recruitment";
@@ -12,6 +13,7 @@ import HRAnalytics from "./pages/HRAnalytics";
 import HRDashboard from "./pages/HRDashboard";
 import HomePage from "./pages/HomePage";
 import AccountSecurity from "./pages/AccountSecurity";
+import TenantSettings from "./pages/TenantSettings";
 import FlyInObserver from "./components/FlyInObserver";
 import LandingPage from "./pages/LandingPage";
 import Careers from "./pages/Careers";
@@ -28,12 +30,26 @@ import Documents from "./pages/public/Documents";
 import Contact from "./pages/public/Contact";
 import PrintTimesheet from "./pages/PrintTimesheet";
 import Login from "./pages/Login";
+import OrgLogin from "./pages/org/OrgLogin";
+import RegisterLanding from "./pages/register/RegisterLanding";
+import RegisterWizard from "./pages/register/RegisterWizard";
+import OnboardingWizard from "./pages/register/OnboardingWizard";
 import PublicForm from "./pages/PublicForm";
 import MainLayout from "./layouts/MainLayout";
 import DatabasePage from "./pages/DatabasePage";
 import Projects from "./pages/Projects";
 import ArchivePage from "./pages/ArchivePage";
 import HeroSettingsAdmin from "./pages/HeroSettingsAdmin";
+import RequirePlatformAdmin from "./pages/platform/RequirePlatformAdmin";
+import PlatformLogin from "./pages/platform/PlatformLogin";
+import PlatformLayout from "./pages/platform/PlatformLayout";
+import PlatformDashboard from "./pages/platform/PlatformDashboard";
+import PlatformTenants from "./pages/platform/PlatformTenants";
+import PlatformTenantDetail from "./pages/platform/PlatformTenantDetail";
+import PlatformPlans from "./pages/platform/PlatformPlans";
+import PlatformRevenue from "./pages/platform/PlatformRevenue";
+import PlatformActivity from "./pages/platform/PlatformActivity";
+import PlatformSupport from "./pages/platform/PlatformSupport";
 
 import LanguageSettings from "./pages/LanguageSettings";
 import ManageNews from "./pages/ManageNews";
@@ -67,6 +83,19 @@ import QmsOverview from "./pages/qms/QmsOverview";
 import QmsDeviations from "./pages/qms/QmsDeviations";
 import QmsCapa from "./pages/qms/QmsCapa";
 import QmsChanges from "./pages/qms/QmsChanges";
+import ProcurementPage from "./pages/modules/ProcurementPage";
+import WarehousePage from "./pages/modules/WarehousePage";
+import AccountingPage from "./pages/modules/AccountingPage";
+import MaintenancePage from "./pages/modules/MaintenancePage";
+import CrmPage from "./pages/modules/CrmPage";
+import ExternalPortalsPage from "./pages/modules/ExternalPortalsPage";
+import HelpdeskPage from "./pages/modules/HelpdeskPage";
+import DmsPage from "./pages/modules/DmsPage";
+import GrcPage from "./pages/modules/GrcPage";
+import BiPage from "./pages/modules/BiPage";
+import ResourcesPage from "./pages/modules/ResourcesPage";
+import ContractsPage from "./pages/modules/ContractsPage";
+import EhsPage from "./pages/modules/EhsPage";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const PlansPage = lazy(() => import("./pages/PlansPage"));
@@ -85,8 +114,18 @@ function RoleRoute({ children, allowedRoles }) {
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-success" role="status" /></div>;
+  const { context, loading: ctxLoading } = useTenantContext();
+  const location = useLocation();
+  const params = useParams();
+  if (loading || ctxLoading) return <div className="d-flex vh-100 justify-content-center align-items-center"><div className="spinner-border text-success" role="status" /></div>;
   if (!user) return <Navigate to="/login" replace />;
+  const tenant = context?.tenant;
+  if (tenant && tenant.onboardingComplete === false && !user.impersonatingTenantId) {
+    const slug = tenant.slug || params.slug;
+    if (slug && !location.pathname.includes("/onboarding")) {
+      return <Navigate to={`/org/${slug}/onboarding`} replace />;
+    }
+  }
   return children;
 }
 
@@ -145,8 +184,25 @@ export default function App() {
       {/* Auth & Intake */}
       <Route path="/print-timesheet/:id" element={<PrintTimesheet />} />
         <Route path="/login" element={user ? <Navigate to={user.mfaEnrollmentRequired ? "/account-security" : "/dashboard"} replace /> : <Login />} />
+        <Route path="/org/:slug/login" element={user ? <Navigate to={user.mfaEnrollmentRequired ? "/account-security" : "/dashboard"} replace /> : <OrgLogin />} />
+        <Route path="/register" element={<RegisterLanding />} />
+        <Route path="/register/start" element={<RegisterWizard />} />
+        <Route path="/org/:slug/onboarding" element={<OnboardingWizard />} />
       <Route path="/fleet/gate-pass/:requestId/verify" element={<GatePassVerifyPage />} />
       <Route path="/request" element={<PublicForm />} />
+
+      {/* Platform admin portal */}
+      <Route path="/platform/login" element={<PlatformLogin />} />
+      <Route path="/platform" element={<RequirePlatformAdmin><PlatformLayout /></RequirePlatformAdmin>}>
+        <Route index element={<Navigate to="/platform/dashboard" replace />} />
+        <Route path="dashboard" element={<PlatformDashboard />} />
+        <Route path="tenants" element={<PlatformTenants />} />
+        <Route path="tenants/:id" element={<PlatformTenantDetail />} />
+        <Route path="plans" element={<PlatformPlans />} />
+        <Route path="revenue" element={<PlatformRevenue />} />
+        <Route path="activity" element={<PlatformActivity />} />
+        <Route path="support" element={<PlatformSupport />} />
+      </Route>
       
       {/* Protected Application Routes */}
       <Route element={<RequireAuth><MainLayout /></RequireAuth>}>
@@ -155,6 +211,7 @@ export default function App() {
         <Route element={<DatabasePage />}>
           <Route path="/dashboard" element={<HomePage />} />
         <Route path="/account-security" element={<AccountSecurity />} />
+        <Route path="/tenant-settings" element={<TenantSettings />} />
           <Route path="/pms-dashboard" element={<Dashboard />} />
         <Route path="/pms/goals" element={<PmsProjectGoals />} />
         <Route path="/pms/portfolio" element={<PmsPortfolio />} />
@@ -191,6 +248,19 @@ export default function App() {
         <Route path="/qms/deviations" element={<QmsDeviations />} />
         <Route path="/qms/capa" element={<QmsCapa />} />
         <Route path="/qms/changes" element={<QmsChanges />} />
+        <Route path="/procurement" element={<AccessRoute accessKey="procurement"><ProcurementPage /></AccessRoute>} />
+        <Route path="/warehouse" element={<AccessRoute accessKey="warehouse"><WarehousePage /></AccessRoute>} />
+        <Route path="/accounting" element={<AccessRoute accessKey="accounting"><AccountingPage /></AccessRoute>} />
+        <Route path="/maintenance" element={<AccessRoute accessKey="maintenance"><MaintenancePage /></AccessRoute>} />
+        <Route path="/crm" element={<AccessRoute accessKey="crm"><CrmPage /></AccessRoute>} />
+        <Route path="/external-portals" element={<AccessRoute accessKey="portals"><ExternalPortalsPage /></AccessRoute>} />
+        <Route path="/helpdesk" element={<AccessRoute accessKey="helpdesk"><HelpdeskPage /></AccessRoute>} />
+        <Route path="/dms" element={<AccessRoute accessKey="dms"><DmsPage /></AccessRoute>} />
+        <Route path="/grc" element={<AccessRoute accessKey="grc"><GrcPage /></AccessRoute>} />
+        <Route path="/bi" element={<AccessRoute accessKey="bi"><BiPage /></AccessRoute>} />
+        <Route path="/resources" element={<AccessRoute accessKey="resources"><ResourcesPage /></AccessRoute>} />
+        <Route path="/contracts" element={<AccessRoute accessKey="contracts"><ContractsPage /></AccessRoute>} />
+        <Route path="/ehs" element={<AccessRoute accessKey="ehs"><EhsPage /></AccessRoute>} />
         <Route path="/recruitment" element={<RoleRoute allowedRoles={["admin", "executive"]}><Recruitment /></RoleRoute>} />
         <Route path="/hr-operations" element={<RoleRoute allowedRoles={["admin", "executive"]}><HrOperations /></RoleRoute>} />
         <Route path="/hr-analytics" element={<RoleRoute allowedRoles={["admin", "executive"]}><HRAnalytics /></RoleRoute>} />

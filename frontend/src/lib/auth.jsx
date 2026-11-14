@@ -25,6 +25,13 @@ export function AuthProvider({ children }) {
       position: res.position,
       role: res.role,
       email: res.email,
+      tenantId: res.tenantId || null,
+      isTenantAdmin: Boolean(res.isTenantAdmin),
+      isPlatformAdmin: Boolean(res.isPlatformAdmin),
+      impersonatingTenantId: res.impersonatingTenantId || null,
+      impersonatedBy: res.impersonatedBy || null,
+      impersonatedByUsername: res.impersonatedByUsername || null,
+      enabledModules: res.enabledModules ?? null,
       forceChange: res.forceChange,
       mfaEnabled: res.mfaEnabled,
       mfaEnrollmentRequired: Boolean(res.mfaEnrollmentRequired),
@@ -37,12 +44,13 @@ export function AuthProvider({ children }) {
     };
   }
 
-  async function login(username, password, token, turnstileToken) {
+  async function login(username, password, token, turnstileToken, slug) {
     const res = await api.post("/auth/login", {
       username,
       password,
       ...(token ? { token } : {}),
       ...(turnstileToken ? { turnstileToken } : {}),
+      ...(slug ? { slug } : {}),
     });
     const userData = toUser(res);
     setUser(userData);
@@ -75,8 +83,15 @@ export function AuthProvider({ children }) {
     navigate("/");
   }
 
+  async function refreshSession() {
+    const res = await api.get("/auth/me");
+    const u = toUser(res);
+    setUser(u);
+    return u;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithPasskey, logout, setUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithPasskey, logout, setUser, refreshUser, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

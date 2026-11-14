@@ -1,0 +1,36 @@
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../../lib/api";
+import { downloadFromApi } from "../../lib/download";
+export default function EhsPage(){
+  const [items,setItems]=useState([]); const [summary,setSummary]=useState(null); const [loading,setLoading]=useState(true); const [err,setErr]=useState(""); const [msg,setMsg]=useState("");
+  const [q,setQ]=useState(""); const [status,setStatus]=useState("");
+  const [f,setF]=useState({title:"",type:"Incident",severity:"LOW",status:"REPORTED",location:"",occurredAt:"",description:"",corrective:""}); const [edit,setEdit]=useState(null);
+  const load=async()=>{setLoading(true);try{const [r,s]=await Promise.all([api.get("/ehs/incidents"),api.get("/ehs/summary")]);setItems(r||[]);setSummary(s||null);}catch(e){setErr(e.message);}finally{setLoading(false);}};
+  useEffect(()=>{load();},[]);
+  const flash=(m)=>{setMsg(m);setTimeout(()=>setMsg(""),3000);};
+  const filtered=useMemo(()=>items.filter(i=> (!status||i.status===status) && (!q||[i.incidentNo,i.title,i.type,i.location,i.reportedBy].some(x=>String(x||"").toLowerCase().includes(q.toLowerCase())))),[items,q,status]);
+  const save=async(e)=>{e.preventDefault();try{const p={...f,occurredAt:f.occurredAt||null}; if(edit){await api.put(`/ehs/incidents/${edit.id}`,p);flash("Updated");}else{await api.post("/ehs/incidents",p);flash("Incident reported");} setF({title:"",type:"Incident",severity:"LOW",status:"REPORTED",location:"",occurredAt:"",description:"",corrective:""}); setEdit(null); load();}catch(e){setErr(e.message);}};
+  const del=async(id)=>{if(!window.confirm("Delete incident?"))return;try{await api.delete(`/ehs/incidents/${id}`);flash("Deleted");load();}catch(e){setErr(e.message);}};
+  const sev=(s)=>({CRITICAL:"danger",HIGH:"warning text-dark",MEDIUM:"info text-dark",LOW:"secondary"}[s]||"secondary");
+  return <div className="container-fluid p-3 p-lg-4">
+    <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2"><div><h3 className="mb-0" style={{color:"#0B2545"}}>EHS / Safety Management</h3><div className="text-muted small">Incidents, hazards, investigations and corrective/preventive actions</div></div><div className="d-flex gap-2"><button className="btn btn-outline-primary btn-sm" onClick={()=>downloadFromApi("/ehs/export","ehs-incidents.csv").catch(e=>setErr(e.message))}>Export</button><button className="btn btn-outline-secondary btn-sm" onClick={load}>Refresh</button></div></div>
+    {msg&&<div className="alert alert-success py-2">{msg}</div>}{err&&<div className="alert alert-danger py-2">{err}</div>}
+    {loading?<div>Loading...</div>:<>
+      <div className="row g-3 mb-3">{[["Total",summary?.total||0],["Open",summary?.open||0],["Critical/High Open",summary?.critical||0],["Resolved/Closed",summary?.resolved||0]].map(([l,v])=><div key={l} className="col-6 col-lg-3"><div className="card h-100"><div className="card-body"><div className="text-muted small">{l}</div><div className="fs-4 fw-bold" style={{color:l.includes("Critical")&&v?"#dc3545":"#0B2545"}}>{v}</div></div></div></div>)}</div>
+      <div className="row g-3"><div className="col-lg-4"><div className="card"><div className="card-body"><h6>{edit?"Edit Record":"Report Incident / Hazard"}</h6><form className="d-grid gap-2" onSubmit={save}>
+        <input className="form-control" placeholder="Title *" value={f.title} onChange={e=>setF({...f,title:e.target.value})} required/>
+        <div className="d-flex gap-2"><select className="form-select" value={f.type} onChange={e=>setF({...f,type:e.target.value})}><option>Incident</option><option>Near-miss</option><option>Hazard</option><option>Observation</option></select><select className="form-select" value={f.severity} onChange={e=>setF({...f,severity:e.target.value})}><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select></div>
+        <input className="form-control" placeholder="Location" value={f.location} onChange={e=>setF({...f,location:e.target.value})}/>
+        <input className="form-control" type="datetime-local" value={f.occurredAt} onChange={e=>setF({...f,occurredAt:e.target.value})}/>
+        <textarea className="form-control" rows={2} placeholder="Description" value={f.description} onChange={e=>setF({...f,description:e.target.value})}/>
+        <textarea className="form-control" rows={2} placeholder="Corrective / preventive action" value={f.corrective} onChange={e=>setF({...f,corrective:e.target.value})}/>
+        <select className="form-select" value={f.status} onChange={e=>setF({...f,status:e.target.value})}><option>REPORTED</option><option>INVESTIGATING</option><option>RESOLVED</option><option>CLOSED</option></select>
+        <div className="d-flex gap-2"><button className="btn btn-primary flex-fill" style={{background:"#0B2545",borderColor:"#0B2545"}}>{edit?"Update":"Report"}</button>{edit&&<button type="button" className="btn btn-outline-secondary" onClick={()=>{setEdit(null);setF({title:"",type:"Incident",severity:"LOW",status:"REPORTED",location:"",occurredAt:"",description:"",corrective:""});}}>Cancel</button>}</div>
+      </form></div></div></div>
+      <div className="col-lg-8"><div className="card"><div className="card-body"><div className="d-flex gap-2 justify-content-between mb-2"><h6 className="mb-0">Incidents & Hazards ({filtered.length})</h6><div className="d-flex gap-2"><select className="form-select form-select-sm" value={status} onChange={e=>setStatus(e.target.value)}><option value="">All</option><option>REPORTED</option><option>INVESTIGATING</option><option>RESOLVED</option><option>CLOSED</option></select><input className="form-control form-control-sm" placeholder="Search..." value={q} onChange={e=>setQ(e.target.value)}/></div></div>
+        <div className="table-responsive"><table className="table table-sm align-middle"><thead><tr><th>#</th><th>Title</th><th>Type</th><th>Severity</th><th>Status</th><th></th></tr></thead>
+        <tbody>{filtered.map(i=><tr key={i.id}><td className="small">{i.incidentNo}</td><td className="fw-semibold">{i.title}<div className="small text-muted">{i.location||""} {i.occurredAt?`· ${new Date(i.occurredAt).toLocaleString()}`:""}</div></td><td>{i.type||"-"}</td><td><span className={`badge bg-${sev(i.severity)}`}>{i.severity}</span></td><td><select className="form-select form-select-sm" value={i.status} onChange={e=>api.put(`/ehs/incidents/${i.id}`,{status:e.target.value}).then(load).catch(er=>setErr(er.message))}><option>REPORTED</option><option>INVESTIGATING</option><option>RESOLVED</option><option>CLOSED</option></select></td><td className="text-nowrap"><button className="btn btn-sm btn-link p-0 me-2" onClick={()=>{setEdit(i);setF({title:i.title||"",type:i.type||"Incident",severity:i.severity||"LOW",status:i.status||"REPORTED",location:i.location||"",occurredAt:i.occurredAt?new Date(i.occurredAt).toISOString().slice(0,16):"",description:i.description||"",corrective:i.corrective||""});}}>Edit</button><button className="btn btn-sm btn-link text-danger p-0" onClick={()=>del(i.id)}>Del</button></td></tr>)}{!filtered.length&&<tr><td colSpan={6} className="text-muted">No incidents</td></tr>}</tbody></table></div>
+      </div></div></div></div>
+    </>}
+  </div>;
+}

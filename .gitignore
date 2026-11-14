@@ -35,4 +35,17 @@ recordings/
 
 # Local phase backups and diagnostics
 _phase1_backup_*/
+_saas_backup_*/
+_bems_*
+_context_backup_*
+_hardening_backup_*
+_fullhardening_backup_*
+_bems_rename_backup_*
+_allrecs_backup_*
+_newmodules_backup_*
+_tier23_backup_*
+_backend_start.*
+_dev_processes.json
+_table_counts.txt
+backend/_count_tables.*
 _diagnostic_report.txt

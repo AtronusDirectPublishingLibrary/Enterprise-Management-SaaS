@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { prisma } from "../lib/prisma";
-import { COOKIE_NAME } from "../lib/jwt";
+import { COOKIE_NAME, COOKIE_OPTS, signToken } from "../lib/jwt";
 import { requireAuth } from "../middleware/auth";
 import { generateMfaSecret, otpauthUrl, verifyTotp } from "../lib/totp";
 import { logAudit } from "../lib/audit";
@@ -16,6 +16,8 @@ import {
   issueRecoveryCodes,
 } from "../lib/mfaRecovery";
 import { turnstileConfig, verifyTurnstile } from "../lib/turnstile";
+import { runAsPlatform, runWithTenantContext } from "../lib/tenantContext";
+import { getEffectiveEnabledModules } from "../lib/moduleGate";
 
 const router = Router();
 
@@ -24,6 +26,7 @@ const LoginSchema = z.object({
   password: z.string().min(1),
   token: z.string().optional(),
   turnstileToken: z.string().optional(),
+  slug: z.string().optional(),
 });
 
 // Issues the readable half of the double-submit CSRF pair. Safe to call before
@@ -76,20 +79,53 @@ const loginLongLimiter = rateLimit({
 
 router.post("/login", loginShortLimiter, loginLongLimiter, async (req, res, next) => {
   try {
-    const { username, password, token: mfaToken, turnstileToken } = LoginSchema.parse(req.body);
+    const { username, password, token: mfaToken, turnstileToken, slug } = LoginSchema.parse(req.body);
     const ip = clientIp(req);
     const userAgent = String(req.headers["user-agent"] || "unknown");
-    const user = await prisma.user.findUnique({ where: { username } });
+    const identifier = String(username || "").trim();
+
+    let loginTenant: any = null;
+    let normSlug: string | null = null;
+    if (slug && String(slug).trim()) {
+      normSlug = String(slug).trim().toLowerCase() === "ethiobiopharma" ? "ethio-biopharma" : String(slug).trim().toLowerCase();
+      loginTenant = await runAsPlatform(async () => prisma.tenant.findUnique({ where: { slug: normSlug! }, select: { id: true, slug: true, status: true } }));
+      if (!loginTenant) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      if (loginTenant.status !== "ACTIVE" && loginTenant.status !== "TRIAL") {
+        return res.status(402).json({ message: `Your subscription is ${loginTenant.status}. Contact billing.`, status: loginTenant.status });
+      }
+    }
+
+    // Pre-auth lookup: tenant not yet known in generic flows, so bypass request scoping.
+    // Accept username or email (email preferred within slug tenant when provided).
+    let user = await runAsPlatform(async () => prisma.user.findUnique({ where: { username: identifier } }));
+    if (!user) {
+      const emailWhere: any = { email: { equals: identifier, mode: "insensitive" } };
+      if (loginTenant?.id) emailWhere.tenantId = loginTenant.id;
+      user = await runAsPlatform(async () => prisma.user.findFirst({ where: emailWhere }));
+    }
+
+    if (user && loginTenant && user.tenantId !== loginTenant.id) {
+      await runAsPlatform(async () =>
+        logAudit("AUTH", "AUTH_LOGIN_FAILED", user.username, { username: identifier, ip, userAgent, reason: "TENANT_MISMATCH", slug: normSlug, tenantId: user.tenantId }),
+      );
+      return res.status(403).json({ message: "You do not have access to this organization" });
+    }
 
     if (!user) {
       await bcrypt.compare(password, DUMMY_HASH).catch(() => false);
-      await logAudit("AUTH", "AUTH_LOGIN_FAILED", "unknown", { username, ip, userAgent, reason: "UNKNOWN_USER" });
+      await runAsPlatform(async () =>
+        logAudit("AUTH", "AUTH_LOGIN_FAILED", "unknown", { username: identifier, ip, userAgent, reason: "UNKNOWN_USER" }),
+      );
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const now = new Date();
     if (user.lockedUntil && user.lockedUntil > now) {
-      await logAudit("AUTH", "AUTH_LOGIN_BLOCKED", user.username, { username, ip, userAgent });
+      await runWithTenantContext({ tenantId: user.tenantId, userId: user.id }, async () =>
+        logAudit("AUTH", "AUTH_LOGIN_BLOCKED", user.username, { username, ip, userAgent, tenantId: user.tenantId }),
+      );
       return res.status(423).json({
         error: `Account locked. Try again after ${lockLabel(user.lockedUntil)}.`,
         message: `Account locked until ${lockLabel(user.lockedUntil)} — contact IT if unexpected.`,
@@ -103,7 +139,9 @@ router.post("/login", loginShortLimiter, loginLongLimiter, async (req, res, next
     if (captchaRequired) {
       const captchaOk = await verifyTurnstile(turnstileToken, ip);
       if (!captchaOk) {
-        await logAudit("AUTH", "AUTH_CAPTCHA_FAILED", user.username, { username, ip, userAgent });
+        await runWithTenantContext({ tenantId: user.tenantId, userId: user.id }, async () =>
+          logAudit("AUTH", "AUTH_CAPTCHA_FAILED", user.username, { username, ip, userAgent, tenantId: user.tenantId }),
+        );
         return res.status(400).json({ error: "CAPTCHA verification failed", message: "CAPTCHA verification failed" });
       }
     }
@@ -114,23 +152,26 @@ router.post("/login", loginShortLimiter, loginLongLimiter, async (req, res, next
       const inWindow = now.getTime() - windowStart <= ATTEMPT_WINDOW_MS;
       const attempts = (inWindow ? user.failedLoginAttempts : 0) + 1;
       const lockedUntil = attempts >= MAX_FAILED_ATTEMPTS ? new Date(now.getTime() + LOCK_MS) : null;
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: attempts,
-          lastFailedLoginAt: now,
-          ...(lockedUntil ? { lockedUntil } : {}),
-        },
-      });
-      await logAudit("AUTH", "AUTH_LOGIN_FAILED", user.username, { username, ip, userAgent, reason });
-      if (lockedUntil) {
-        await logAudit("AUTH", "AUTH_ACCOUNT_LOCKED", user.username, {
-          username,
-          ip,
-          userAgent,
-          lockedUntil: lockedUntil.toISOString(),
+      await runWithTenantContext({ tenantId: user.tenantId, userId: user.id }, async () => {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginAttempts: attempts,
+            lastFailedLoginAt: now,
+            ...(lockedUntil ? { lockedUntil } : {}),
+          },
         });
-      }
+        await logAudit("AUTH", "AUTH_LOGIN_FAILED", user.username, { username, ip, userAgent, reason, tenantId: user.tenantId });
+        if (lockedUntil) {
+          await logAudit("AUTH", "AUTH_ACCOUNT_LOCKED", user.username, {
+            username,
+            ip,
+            userAgent,
+            lockedUntil: lockedUntil.toISOString(),
+            tenantId: user.tenantId,
+          });
+        }
+      });
     };
 
     if (!ok) {
@@ -150,7 +191,7 @@ router.post("/login", loginShortLimiter, loginLongLimiter, async (req, res, next
       }
       if (/^\d{6}$/.test(mfaToken.trim()) && verifyTotp(user.mfaSecret, mfaToken.trim())) {
         mfaMethod = "TOTP";
-      } else if (await consumeRecoveryCode(user.id, mfaToken)) {
+      } else if (await runWithTenantContext({ tenantId: user.tenantId, userId: user.id }, async () => consumeRecoveryCode(user.id, mfaToken))) {
         mfaMethod = "RECOVERY";
       } else {
         await registerFailure("MFA");
@@ -161,19 +202,31 @@ router.post("/login", loginShortLimiter, loginLongLimiter, async (req, res, next
       }
     }
 
-    const passkeyCount = await prisma.webAuthnCredential.count({ where: { userId: user.id } });
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { failedLoginAttempts: 0, lockedUntil: null, lastFailedLoginAt: null, lastLogin: new Date() },
-    });
-    await logAudit("AUTH", "AUTH_LOGIN_SUCCESS", user.username, { username, ip, userAgent });
+    const tenantCtx = { tenantId: user.tenantId, userId: user.id, isPlatformAdmin: Boolean((user as any).isPlatformAdmin) };
+    const passkeyCount = await runWithTenantContext(tenantCtx, async () =>
+      prisma.webAuthnCredential.count({ where: { userId: user.id } }),
+    );
+    await runWithTenantContext(tenantCtx, async () =>
+      prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockedUntil: null, lastFailedLoginAt: null, lastLogin: new Date() },
+      }),
+    );
+    await runWithTenantContext(tenantCtx, async () =>
+      logAudit("AUTH", "AUTH_LOGIN_SUCCESS", user.username, { username, ip, userAgent, tenantId: user.tenantId }),
+    );
     if (mfaMethod === "RECOVERY") {
-      await logAudit("AUTH", "AUTH_MFA_RECOVERY_USED", user.username, { ip, userAgent });
+      await runWithTenantContext(tenantCtx, async () =>
+        logAudit("AUTH", "AUTH_MFA_RECOVERY_USED", user.username, { ip, userAgent, tenantId: user.tenantId }),
+      );
     }
 
-    res.json(issueSession(res, user, {
+    const effectiveTenantId = (req as any).user?.tenantId ?? user.tenantId;
+    const enabledModules = await getEffectiveEnabledModules(effectiveTenantId);
+    res.json(issueSession(res, { ...user, tenantId: effectiveTenantId } as any, {
       passkeyCount,
       mfaEnrollmentRequired: mfaRequiredFor(user) && !user.mfaEnabled,
+      enabledModules,
     }));
   } catch (e) { next(e); }
 });
@@ -206,10 +259,17 @@ router.get("/me", requireAuth, async (req, res, next) => {
       prisma.webAuthnCredential.count({ where: { userId: user.id } }),
       countUnusedRecoveryCodes(user.id),
     ]);
+    const reqUser: any = (req as any).user || {};
+    const effectiveTenantId = reqUser.tenantId ?? user.tenantId;
+    const enabledModules = await getEffectiveEnabledModules(effectiveTenantId);
     res.json({
-      ...sessionResponse(user, {
+      ...sessionResponse({ ...user, tenantId: effectiveTenantId } as any, {
         passkeyCount,
         mfaEnrollmentRequired: mfaRequiredFor(user) && !user.mfaEnabled,
+        enabledModules,
+        impersonatingTenantId: reqUser.impersonatingTenantId ?? null,
+        impersonatedBy: reqUser.impersonatedBy ?? null,
+        impersonatedByUsername: reqUser.impersonatedByUsername ?? null,
       }),
       recoveryCodesRemaining,
       mfaRequired: mfaRequiredFor(user),
@@ -346,6 +406,65 @@ router.post("/change-password", requireAuth, async (req, res, next) => {
     res.clearCookie(COOKIE_NAME, { path: "/" });
     res.clearCookie(CSRF_COOKIE, { path: "/" });
     res.json({ success: true, reauthenticate: true, message: "Password changed. Sign in again." });
+  } catch (e) { next(e); }
+});
+
+// List tenants the current user can access (own + all if platform admin)
+router.get("/my-tenants", requireAuth, async (req: any, res, next) => {
+  try {
+    const me = await prisma.user.findUnique({ where: { id: req.user.sub }, select: { id: true, tenantId: true, isPlatformAdmin: true } });
+    if (!me) return res.status(404).json({ message: "User not found" });
+    let tenants: any[] = [];
+    if (me.isPlatformAdmin) {
+      tenants = await runAsPlatform(async () => prisma.tenant.findMany({ select: { id: true, name: true, slug: true, status: true, type: true } , orderBy: { name: "asc" } }));
+    } else {
+      tenants = await runAsPlatform(async () => prisma.tenant.findMany({ where: { id: me.tenantId }, select: { id: true, name: true, slug: true, status: true, type: true } }));
+    }
+    res.json({ tenants, currentTenantId: req.user.tenantId, isPlatformAdmin: Boolean(me.isPlatformAdmin) });
+  } catch (e) { next(e); }
+});
+
+// Switch tenant context (issues new JWT). Platform admins can switch to any tenant; others only to own.
+router.post("/switch-tenant", requireAuth, async (req: any, res, next) => {
+  try {
+    const { tenantId } = z.object({ tenantId: z.string().min(1) }).parse(req.body);
+    const me = await runAsPlatform(async () => prisma.user.findUnique({ where: { id: req.user.sub } }));
+    if (!me) return res.status(404).json({ message: "User not found" });
+    if (!me.isPlatformAdmin && me.tenantId !== tenantId) {
+      return res.status(403).json({ message: "You do not have access to this tenant" });
+    }
+    const tenant = await runAsPlatform(async () => prisma.tenant.findUnique({ where: { id: tenantId } }));
+    if (!tenant) return res.status(404).json({ message: "Tenant not found" });
+    if (!["ACTIVE", "TRIAL"].includes(tenant.status) && !me.isPlatformAdmin) {
+      return res.status(402).json({ message: `Tenant is ${tenant.status}` });
+    }
+    const passkeyCount = await runWithTenantContext({ tenantId, userId: me.id, isPlatformAdmin: Boolean(me.isPlatformAdmin) }, async () =>
+      prisma.webAuthnCredential.count({ where: { userId: me.id } }).catch(() => 0)
+    );
+    const enabledModules = await getEffectiveEnabledModules(tenantId);
+    const isImpersonating = Boolean(me.isPlatformAdmin && me.tenantId !== tenantId);
+    const token = signToken({
+      sub: me.id,
+      username: me.username,
+      role: me.role,
+      position: me.position,
+      tenantId,
+      tokenVersion: me.tokenVersion ?? 0,
+      isPlatformAdmin: Boolean(me.isPlatformAdmin),
+      ...(isImpersonating ? { impersonatingTenantId: tenantId, impersonatedBy: me.id, impersonatedByUsername: me.username } : {}),
+    } as any, isImpersonating ? { expiresIn: "1h" } : undefined);
+    res.cookie(COOKIE_NAME, token, isImpersonating ? { ...COOKIE_OPTS, maxAge: 60 * 60 * 1000 } : COOKIE_OPTS);
+    setCsrfCookie(res);
+    const session = sessionResponse({ ...me, tenantId } as any, {
+      passkeyCount,
+      mfaEnrollmentRequired: mfaRequiredFor(me) && !me.mfaEnabled,
+      enabledModules,
+      ...(isImpersonating ? { impersonatingTenantId: tenantId, impersonatedBy: me.id, impersonatedByUsername: me.username } : {}),
+    });
+    if (isImpersonating) {
+      await runAsPlatform(async () => logAudit("PLATFORM", "PLATFORM_IMPERSONATION", me.username || "platform", { tenantId, impersonatedBy: me.id, via: "switch-tenant" }));
+    }
+    res.json({ ...session, switched: true });
   } catch (e) { next(e); }
 });
 

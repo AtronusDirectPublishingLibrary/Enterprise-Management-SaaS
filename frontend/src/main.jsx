@@ -20,6 +20,8 @@ import { AuthProvider } from "./lib/auth";
 import { NotificationProvider } from "./lib/notifications";
 import { LanguageProvider } from "./lib/language";
 import { ThemeProvider } from "./lib/theme";
+import { BrandingProvider } from "./components/BrandingProvider";
+import { TenantContextProvider } from "./lib/tenantContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -30,9 +32,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <NotificationProvider>
-                <App />
-              </NotificationProvider>
+              <BrandingProvider>
+                <TenantContextProvider>
+                  <NotificationProvider>
+                    <App />
+                  </NotificationProvider>
+                </TenantContextProvider>
+              </BrandingProvider>
             </AuthProvider>
           </LanguageProvider>
           </ThemeProvider>

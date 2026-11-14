@@ -65,7 +65,7 @@ async function deliverSchedule(schedule: {
         <p>The scheduled consolidated report is ready.</p>
         <p><strong>${title}</strong><br/>Period: ${period}<br/>Overall delivery: ${completion}</p>
         <p><a href="${link}">Open the report</a></p>
-        <p style="color:#666;font-size:12px">Sent automatically by the Ethio-Biopharma planning system.</p>
+        <p style="color:#666;font-size:12px">Sent automatically by the BEMS planning system.</p>
       `,
       text: `${title} (${period}) — overall delivery ${completion}. Open: ${link}`,
     });

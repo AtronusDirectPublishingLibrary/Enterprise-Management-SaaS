@@ -8,6 +8,7 @@ datasource db {
 }
 
 model Project {
+  tenantId      String?  @map("tenant_id")
   id            String   @id @default(cuid())
   projectId     String   @unique
   title         String
@@ -45,13 +46,15 @@ model Project {
   timeEntries     TimeEntry[]
   milestones      Milestone[]
   activities      Activity[]
-  plan            Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  plan            Plan?            @relation(fields: [planId], references: [id], onDelete: SetNull)
 
-  @@map("Project")
+  @@index([tenantId])
   @@index([planId])
+  @@map("Project")
 }
 
 model WorkPackage {
+  tenantId      String?  @map("tenant_id")
   id            String   @id @default(cuid())
   projectId     String
   workPackageId String   @unique
@@ -74,10 +77,12 @@ model WorkPackage {
   project    Project    @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
   activities Activity[]
 
+  @@index([tenantId])
   @@map("WorkPackage")
 }
 
 model Milestone {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   projectId    String
   milestoneId  String   @unique
@@ -100,10 +105,12 @@ model Milestone {
 
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
+  @@index([tenantId])
   @@map("Milestone")
 }
 
 model Activity {
+  tenantId          String?  @map("tenant_id")
   id                String   @id @default(cuid())
   projectId         String
   workPackageId     String?
@@ -136,53 +143,59 @@ model Activity {
   predecessors Activity[] @relation("ActivityDependencies")
   successors   Activity[] @relation("ActivityDependencies")
 
+  @@index([tenantId])
   @@map("Activity")
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  firstName          String?   @map("first_name")
-  lastName           String?   @map("last_name")
-  username           String    @unique
-  passwordHash       String    @map("password_hash")
-  role               String    @default("viewer")
-  associatedGrants   String[]  @default([]) @map("associated_grants")
-  department         String?   @map("department")
-  subDepartment      String?   @map("sub_department")
-  piName             String?   @map("pi_name")
-  coPiName           String?   @map("co_pi_name")
-  email              String?
-  lastLogin          DateTime? @map("last_login")
-  tokenVersion       Int       @default(0) @map("token_version")
-  failedLoginAttempts Int      @default(0) @map("failed_login_attempts")
+  id                  String    @id @default(cuid())
+  // Multi-tenant scope. Backfilled to the default tenant in S2.
+  tenantId            String    @map("tenant_id")
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  isTenantAdmin       Boolean   @default(false) @map("is_tenant_admin")
+  isPlatformAdmin     Boolean   @default(false) @map("is_platform_admin")
+  firstName           String?   @map("first_name")
+  lastName            String?   @map("last_name")
+  username            String    @unique
+  passwordHash        String    @map("password_hash")
+  role                String    @default("viewer")
+  associatedGrants    String[]  @default([]) @map("associated_grants")
+  department          String?   @map("department")
+  subDepartment       String?   @map("sub_department")
+  piName              String?   @map("pi_name")
+  coPiName            String?   @map("co_pi_name")
+  email               String?
+  lastLogin           DateTime? @map("last_login")
+  tokenVersion        Int       @default(0) @map("token_version")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
   lastFailedLoginAt   DateTime? @map("last_failed_login_at")
-  createdDate        DateTime  @default(now()) @map("created_date")
-  forceChange        Boolean   @default(false) @map("force_change")
-  mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
-  mfaSecret          String?   @map("mfa_secret")
+  createdDate         DateTime  @default(now()) @map("created_date")
+  forceChange         Boolean   @default(false) @map("force_change")
+  mfaEnabled          Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret           String?   @map("mfa_secret")
   // Staff self-service profile
-  profession         String?
-  requiresLicence    Boolean   @default(false) @map("requires_licence")
-  profileCompletedAt DateTime? @map("profile_completed_at")
+  profession          String?
+  requiresLicence     Boolean   @default(false) @map("requires_licence")
+  profileCompletedAt  DateTime? @map("profile_completed_at")
   // Optional e-signature assets. A typed name is always accepted at signing;
   // these images are stamped onto signed records when the person has uploaded them.
-  signatureUrl       String?   @map("signature_url")
-  initialsUrl        String?   @map("initials_url")
-  initialsText       String?   @map("initials_text")
-  signatureUpdatedAt DateTime? @map("signature_updated_at")
-  avatarUrl          String?   @map("avatar_url")
-  avatarUpdatedAt    DateTime? @map("avatar_updated_at")
-  employeeNo         String?   @unique @map("employee_no")
-  jobTitle           String?   @map("job_title")
+  signatureUrl        String?   @map("signature_url")
+  initialsUrl         String?   @map("initials_url")
+  initialsText        String?   @map("initials_text")
+  signatureUpdatedAt  DateTime? @map("signature_updated_at")
+  avatarUrl           String?   @map("avatar_url")
+  avatarUpdatedAt     DateTime? @map("avatar_updated_at")
+  employeeNo          String?   @unique @map("employee_no")
+  jobTitle            String?   @map("job_title")
   // Canonical position from the HR position list (or a free-text "Other" value).
-  position           String?   @map("position")
-  phone              String?
-  hireDate           DateTime? @map("hire_date")
-  probationEnd       DateTime? @map("probation_end")
-  contractEnd        DateTime? @map("contract_end")
+  position            String?   @map("position")
+  phone               String?
+  hireDate            DateTime? @map("hire_date")
+  probationEnd        DateTime? @map("probation_end")
+  contractEnd         DateTime? @map("contract_end")
   // Regular | Contract | Part-time | Other: <specify>
-  employmentType     String?   @map("employment_type")
+  employmentType      String?   @map("employment_type")
   // HR Utility relations
 
   immediateSupervisorId String? @map("immediate_supervisor_id")
@@ -244,8 +257,8 @@ model User {
   qmsChangesOwned       QmsChangeControl[] @relation("QmsChangeOwner")
   qmsChangesApproved    QmsChangeControl[] @relation("QmsChangeApprover")
 
-  mfaRecoveryCodes      MfaRecoveryCode[]  @relation("UserRecoveryCodes")
-  webauthnCredentials   WebAuthnCredential[] @relation("UserWebAuthnCredentials")
+  mfaRecoveryCodes    MfaRecoveryCode[]    @relation("UserRecoveryCodes")
+  webauthnCredentials WebAuthnCredential[] @relation("UserWebAuthnCredentials")
 
   @@map("users")
 }
@@ -253,6 +266,7 @@ model User {
 // One-time recovery codes are stored as SHA-256 digests. The plaintext is
 // returned exactly once at generation time and is never readable afterwards.
 model MfaRecoveryCode {
+  tenantId  String?   @map("tenant_id")
   id        String    @id @default(cuid())
   userId    String    @map("user_id")
   codeHash  String    @map("code_hash")
@@ -262,12 +276,14 @@ model MfaRecoveryCode {
 
   @@unique([userId, codeHash])
   @@index([userId, usedAt])
+  @@index([tenantId])
   @@map("mfa_recovery_code")
 }
 
 // Registered WebAuthn/passkey credentials. Public keys are base64url encoded;
 // the private key never leaves the authenticator.
 model WebAuthnCredential {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   userId       String    @map("user_id")
   credentialId String    @unique @map("credential_id")
@@ -282,12 +298,14 @@ model WebAuthnCredential {
   user         User      @relation("UserWebAuthnCredentials", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([tenantId])
   @@map("webauthn_credential")
 }
 
 // Short-lived challenges with an opaque id returned to the browser. Storing
 // them server-side prevents a client from choosing or replaying a challenge.
 model WebAuthnChallenge {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   challenge String   @unique
   userId    String?  @map("user_id")
@@ -296,12 +314,15 @@ model WebAuthnChallenge {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([expiresAt])
+  @@index([tenantId])
   @@map("webauthn_challenge")
 }
 
 model AuditLog {
   id           BigInt   @id @default(autoincrement())
   timestamp    DateTime @default(now())
+  // Tenant scope. Null for pre-SaaS legacy rows and platform-level events.
+  tenantId     String?  @map("tenant_id")
   grantId      String?  @map("grant_id")
   action       String
   user         String
@@ -313,12 +334,14 @@ model AuditLog {
   eventHash    String?  @map("event_hash")
   prevHash     String?  @map("prev_hash")
 
-  @@map("audit_log")
   @@unique([eventHash])
   @@unique([prevHash])
+  @@index([tenantId, timestamp])
+  @@map("audit_log")
 }
 
 model AuditVerification {
+  tenantId     String?  @map("tenant_id")
   id           BigInt   @id @default(autoincrement())
   checkedAt    DateTime @default(now()) @map("checked_at")
   checkedBy    String   @map("checked_by")
@@ -330,6 +353,7 @@ model AuditVerification {
   truncated    Boolean  @default(false)
 
   @@index([checkedAt])
+  @@index([tenantId])
   @@map("audit_verification")
 }
 
@@ -337,6 +361,7 @@ model AuditVerification {
 // coarse audit event. Values are stored as text so a record can be compared
 // without losing null/empty distinctions.
 model FieldChange {
+  tenantId      String?  @map("tenant_id")
   id            String   @id @default(cuid())
   entityType    String   @map("entity_type")
   entityId      String   @map("entity_id")
@@ -350,6 +375,7 @@ model FieldChange {
 
   @@index([entityType, entityId, changedAt])
   @@index([changedById, changedAt])
+  @@index([tenantId])
   @@map("field_change")
 }
 
@@ -369,24 +395,27 @@ model JobLock {
 // in the deployment secret store; the public key is used by auditors to verify
 // that an exported range has not been rewritten.
 model AuditCheckpoint {
-  id                 String   @id @default(cuid())
-  headId             BigInt   @map("head_id")
-  headHash           String   @map("head_hash")
-  checkedCount       Int      @map("checked_count")
-  previousHash       String?  @map("previous_hash")
-  algorithm          String   @default("Ed25519")
-  keyId              String   @map("key_id")
-  publicKeyPem       String   @map("public_key_pem")
-  publicKeySha256    String   @map("public_key_sha256")
-  signature          String
-  payload            Json
-  createdAt          DateTime @default(now()) @map("created_at")
+  tenantId        String?  @map("tenant_id")
+  id              String   @id @default(cuid())
+  headId          BigInt   @map("head_id")
+  headHash        String   @map("head_hash")
+  checkedCount    Int      @map("checked_count")
+  previousHash    String?  @map("previous_hash")
+  algorithm       String   @default("Ed25519")
+  keyId           String   @map("key_id")
+  publicKeyPem    String   @map("public_key_pem")
+  publicKeySha256 String   @map("public_key_sha256")
+  signature       String
+  payload         Json
+  createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([createdAt])
+  @@index([tenantId])
   @@map("audit_checkpoint")
 }
 
 model Document {
+  tenantId         String?   @map("tenant_id")
   id               String    @id @default(cuid())
   title            String
   docNumber        String?   @unique @map("doc_number")
@@ -415,20 +444,24 @@ model Document {
   project Project? @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
   @@index([projectId, uploadDate])
+  @@index([tenantId])
   @@map("Document")
 }
 
 model HeroImage {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   url       String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([tenantId])
   @@map("HeroImage")
 }
 
 // A hero slide: copy + the image it transitions with, plus optional CTA.
 model HeroText {
+  tenantId   String?  @map("tenant_id")
   id         String   @id @default(cuid())
   title      String
   titleAm    String?  @map("title_am")
@@ -446,21 +479,25 @@ model HeroText {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
+  @@index([tenantId])
   @@map("HeroText")
 }
 
 model DropdownOption {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   category  String
   value     String
   createdAt DateTime @default(now()) @map("created_at")
 
   @@unique([category, value])
+  @@index([tenantId])
   @@map("DropdownOption")
 }
 
 // ─── Collaboration ─────────────────────────────────────────────────────────────
 model Comment {
+  tenantId   String?  @map("tenant_id")
   id         String   @id @default(cuid())
   targetType String // "PROJECT" | "ACTIVITY" | "MILESTONE" | "DOCUMENT"
   targetId   String
@@ -475,10 +512,12 @@ model Comment {
 
   @@index([targetType, targetId])
   @@index([author])
+  @@index([tenantId])
   @@map("comment")
 }
 
 model Reaction {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   commentId String
   emoji     String
@@ -488,10 +527,12 @@ model Reaction {
   comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([commentId, emoji, author])
+  @@index([tenantId])
   @@map("reaction")
 }
 
 model ProjectMessage {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   projectId String
   title     String
@@ -504,10 +545,12 @@ model ProjectMessage {
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
   @@index([projectId, createdAt])
+  @@index([tenantId])
   @@map("project_message")
 }
 
 model ProjectBrief {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   projectId String   @unique
   content   String
@@ -518,10 +561,12 @@ model ProjectBrief {
 
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
+  @@index([tenantId])
   @@map("project_brief")
 }
 
 model ProjectMember {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   projectId String
   username  String
@@ -533,10 +578,12 @@ model ProjectMember {
 
   @@unique([projectId, username])
   @@index([username])
+  @@index([tenantId])
   @@map("project_member")
 }
 
 model Notification {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   recipient String
   type      String // "COMMENT" | "MENTION" | "ASSIGNMENT" | "DEADLINE" | "STATUS_CHANGE"
@@ -547,10 +594,12 @@ model Notification {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([recipient, read, createdAt])
+  @@index([tenantId])
   @@map("notification")
 }
 
 model AutomationRule {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   projectId    String
   name         String
@@ -565,31 +614,35 @@ model AutomationRule {
 
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
+  @@index([tenantId])
   @@map("automation_rule")
 }
 
 model Goal {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  targetDate  DateTime
-  status      String   @default("On Track")
-  progress    Int      @default(0)
-  createdBy   String
-  createdAt   DateTime @default(now()) @map("created_at")
+  tenantId           String?   @map("tenant_id")
+  id                 String    @id @default(cuid())
+  title              String
+  description        String?
+  targetDate         DateTime
+  status             String    @default("On Track")
+  progress           Int       @default(0)
+  createdBy          String
+  createdAt          DateTime  @default(now()) @map("created_at")
   // The corporate objective (a plan item in the AOP, Strategic Plan or
   // Roadmap) that this delivery-level project objective contributes to.
-  planItemId  String?  @map("plan_item_id")
+  planItemId         String?   @map("plan_item_id")
   corporateObjective PlanItem? @relation("GoalCorporateObjective", fields: [planItemId], references: [id], onDelete: SetNull)
 
   projects ProjectGoal[]
 
-  @@map("goal")
+  @@index([tenantId])
   @@index([planItemId])
+  @@map("goal")
 }
 
 model ProjectGoal {
-  id        String @id @default(cuid())
+  tenantId  String? @map("tenant_id")
+  id        String  @id @default(cuid())
   goalId    String
   projectId String
 
@@ -597,10 +650,12 @@ model ProjectGoal {
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
   @@unique([goalId, projectId])
+  @@index([tenantId])
   @@map("project_goal")
 }
 
 model TimeEntry {
+  tenantId    String?  @map("tenant_id")
   id          String   @id @default(cuid())
   projectId   String
   activityId  String?
@@ -613,10 +668,12 @@ model TimeEntry {
   project Project @relation(fields: [projectId], references: [projectId], onDelete: Cascade)
 
   @@index([projectId, username])
+  @@index([tenantId])
   @@map("time_entry")
 }
 
 model Translation {
+  tenantId  String?            @map("tenant_id")
   id        String             @id @default(cuid())
   key       String             @unique
   en        String
@@ -624,12 +681,14 @@ model Translation {
   updatedAt DateTime           @updatedAt @map("updated_at")
   values    TranslationValue[]
 
+  @@index([tenantId])
   @@map("translation")
 }
 
 // A language available in the public toggle. Adding a row (or importing a CSV
 // column) adds it to Language & Translations without a schema migration.
 model Language {
+  tenantId   String?            @map("tenant_id")
   code       String             @id // en, am, om, so, ti, aa, ...
   name       String
   nativeName String?            @map("native_name")
@@ -639,12 +698,14 @@ model Language {
   updatedAt  DateTime           @updatedAt @map("updated_at")
   values     TranslationValue[]
 
+  @@index([tenantId])
   @@map("language")
 }
 
 // Per-language text for a translation key (en/am stay on Translation for
 // backward compatibility; every other language lives here).
 model TranslationValue {
+  tenantId      String?     @map("tenant_id")
   id            String      @id @default(cuid())
   translationId String      @map("translation_id")
   lang          String
@@ -654,10 +715,12 @@ model TranslationValue {
   language      Language    @relation(fields: [lang], references: [code], onDelete: Cascade)
 
   @@unique([translationId, lang])
+  @@index([tenantId])
   @@map("translation_value")
 }
 
 model News {
+  tenantId      String?      @map("tenant_id")
   id            String       @id @default(cuid())
   title         String
   content       String
@@ -674,12 +737,14 @@ model News {
   updatedAt     DateTime     @updatedAt @map("updated_at")
   socialPosts   SocialPost[]
 
+  @@index([tenantId])
   @@map("news")
 }
 
 // â”€â”€â”€ Corporate planning: Strategic Plan / Roadmap / AOP by period â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 model Plan {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   type         String // "STRATEGIC" | "ROADMAP" | "AOP"
   title        String
@@ -718,6 +783,7 @@ model Plan {
   @@unique([type, periodLabel])
   @@index([type, status])
   @@index([parentPlanId])
+  @@index([tenantId])
   @@map("plan")
 }
 
@@ -725,6 +791,7 @@ model Plan {
 // carries the cycle position (sequence), its place in the hierarchy of periods
 // and a link to its successor so every period can renew into the next one.
 model PlanPeriod {
+  tenantId       String?   @map("tenant_id")
   id             String    @id @default(cuid())
   type           String // "STRATEGIC" | "ROADMAP" | "AOP"
   sequence       Int // 1, 2, 3 ... never reused within a type
@@ -753,12 +820,14 @@ model PlanPeriod {
   @@unique([type, sequence])
   @@unique([type, label])
   @@index([type, state, startDate])
+  @@index([tenantId])
   @@map("plan_period")
 }
 
 // Append-only ledger of every lifecycle action, so the daily job is idempotent
 // and every automatic decision on a period can be explained later.
 model PeriodTransition {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   periodId  String   @map("period_id")
   action    String // PREPARE | ACTIVATE | CLOSE | ARCHIVE | AMEND | NOTIFY
@@ -770,12 +839,14 @@ model PeriodTransition {
   period PlanPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
   @@index([periodId, createdAt])
+  @@index([tenantId])
   @@map("period_transition")
 }
 
 // Single adjacency-list tree so a plan can hold pillars, goals, objectives,
 // strategies, activities, KPIs and milestones at any depth without migrations.
 model PlanItem {
+  tenantId     String? @map("tenant_id")
   id           String  @id @default(cuid())
   planId       String  @map("plan_id")
   parentId     String? @map("parent_id")
@@ -819,11 +890,13 @@ model PlanItem {
 
   @@index([planId, parentId, sortOrder])
   @@index([linkedItemId])
+  @@index([tenantId])
   @@map("plan_item")
 }
 
 // Year-by-year (or quarter-by-quarter) target/actual readings for a KPI.
 model PlanKpiTarget {
+  tenantId    String? @map("tenant_id")
   id          String  @id @default(cuid())
   itemId      String  @map("item_id")
   periodLabel String  @map("period_label") // "2026", "Q4 2028"
@@ -835,6 +908,7 @@ model PlanKpiTarget {
   item PlanItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([itemId, periodLabel])
+  @@index([tenantId])
   @@map("plan_kpi_target")
 }
 
@@ -842,6 +916,7 @@ model PlanKpiTarget {
 // A task owner's narrative + percentage update on a plan item for a period.
 // The consolidated annual/strategic/roadmap reports read the latest of these.
 model ProgressUpdate {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   reference    String?   @unique
   planId       String    @map("plan_id")
@@ -870,10 +945,12 @@ model ProgressUpdate {
   @@index([planId, periodLabel])
   @@index([periodId, status])
   @@index([authorId, status])
+  @@index([tenantId])
   @@map("progress_update")
 }
 
 model PlanReport {
+  tenantId    String?   @map("tenant_id")
   id          String    @id @default(cuid())
   planId      String    @map("plan_id")
   title       String
@@ -893,11 +970,13 @@ model PlanReport {
 
   @@index([planId, dueDate])
   @@index([status, dueDate])
+  @@index([tenantId])
   @@map("plan_report")
 }
 
 // Target-performance or reporting-deadline alert raised by the watch run.
 model PlanAlert {
+  tenantId       String?   @map("tenant_id")
   id             String    @id @default(cuid())
   planId         String    @map("plan_id")
   itemId         String?   @map("item_id")
@@ -925,11 +1004,13 @@ model PlanAlert {
 
   @@index([planId, status, createdAt])
   @@index([status, createdAt])
+  @@index([tenantId])
   @@map("plan_alert")
 }
 
 // Audit trail of every alert email attempt (SENT / SKIPPED / FAILED).
 model PlanAlertMail {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   alertId   String   @map("alert_id")
   to        String
@@ -941,11 +1022,13 @@ model PlanAlertMail {
   alert PlanAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
+  @@index([tenantId])
   @@map("plan_alert_mail")
 }
 
 // Immutable snapshot captured at approval/publish (or manually).
 model PlanRevision {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   planId    String   @map("plan_id")
   revision  Int
@@ -958,11 +1041,13 @@ model PlanRevision {
   plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@index([planId, createdAt])
+  @@index([tenantId])
   @@map("plan_revision")
 }
 
 // A restricted, token-based read-only link to one plan, with a comment channel.
 model PlanShare {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   planId       String    @map("plan_id")
   token        String    @unique
@@ -978,10 +1063,12 @@ model PlanShare {
   comments PlanShareComment[]
 
   @@index([planId])
+  @@index([tenantId])
   @@map("plan_share")
 }
 
 model PlanShareComment {
+  tenantId    String?  @map("tenant_id")
   id          String   @id @default(cuid())
   shareId     String   @map("share_id")
   planId      String   @map("plan_id")
@@ -995,27 +1082,34 @@ model PlanShareComment {
   share PlanShare @relation(fields: [shareId], references: [id], onDelete: Cascade)
 
   @@index([planId, isRead, createdAt])
+  @@index([tenantId])
   @@map("plan_share_comment")
 }
 
 // Admin-editable runtime configuration (alert thresholds, recipients, etc.)
 model AppSetting {
+  tenantId  String?  @map("tenant_id")
   key       String   @id
   value     Json
   updatedBy String?  @map("updated_by")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([tenantId])
   @@map("app_setting")
 }
 
 model VisitorLog {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   ip        String
   visitedAt DateTime @default(now())
+
+  @@index([tenantId])
 }
 
 // Video items shown in the public "Media" section, managed from the admin panel.
 model MediaVideo {
+  tenantId    String?  @map("tenant_id")
   id          String   @id @default(cuid())
   title       String
   titleAm     String?  @map("title_am")
@@ -1030,12 +1124,14 @@ model MediaVideo {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
+  @@index([tenantId])
   @@map("media_video")
 }
 
 // --- PHASE 2 HR MODELS ---
 
 model Training {
+  tenantId       String?   @map("tenant_id")
   id             String    @id @default(cuid())
   userId         String
   title          String
@@ -1051,9 +1147,11 @@ model Training {
   user           User      @relation("UserTraining", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, completedAt])
+  @@index([tenantId])
 }
 
 model LeaveRequest {
+  tenantId        String?  @map("tenant_id")
   id              String   @id @default(cuid())
   userId          String
   user            User     @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
@@ -1069,9 +1167,12 @@ model LeaveRequest {
   approvedBy      User?    @relation("LeaveApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   createdAt       DateTime @default(now())
   // (removed duplicate user relation)
+
+  @@index([tenantId])
 }
 
 model AttendanceLog {
+  tenantId String?   @map("tenant_id")
   id       String    @id @default(cuid())
   userId   String
   date     DateTime
@@ -1079,11 +1180,14 @@ model AttendanceLog {
   clockOut DateTime?
   status   String // PRESENT | ABSENT | LATE | HOLIDAY
   user     User      @relation("UserAttendance", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 // --- LEAVE BALANCE MODELS ---
 
 model LeaveType {
+  tenantId         String?  @map("tenant_id")
   id               String   @id @default(cuid())
   name             String   @unique // e.g., "Annual Leave", "Sick Leave"
   code             String   @unique // e.g., "ANNUAL", "SICK"
@@ -1093,25 +1197,30 @@ model LeaveType {
   rolloverExpireYr Int      @default(1)
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
+
+  @@index([tenantId])
 }
 
 model LeaveBalance {
-  id           String @id @default(cuid())
+  tenantId     String? @map("tenant_id")
+  id           String  @id @default(cuid())
   userId       String
   year         Int
-  leaveType    String @default("ANNUAL")
-  entitledDays Float  @default(0)
-  usedDays     Float  @default(0)
-  rolloverDays Float  @default(0)
+  leaveType    String  @default("ANNUAL")
+  entitledDays Float   @default(0)
+  usedDays     Float   @default(0)
+  rolloverDays Float   @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, year, leaveType])
+  @@index([tenantId])
 }
 
 // --- ANNUAL LEAVE PLANNING MODELS ---
 
 model AnnualLeavePlan {
+  tenantId        String?   @map("tenant_id")
   id              String    @id @default(cuid())
   userId          String
   year            Int
@@ -1128,9 +1237,11 @@ model AnnualLeavePlan {
   items AnnualLeavePlanItem[]
 
   @@unique([userId, year])
+  @@index([tenantId])
 }
 
 model AnnualLeavePlanItem {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   planId    String
   startDate DateTime
@@ -1140,20 +1251,26 @@ model AnnualLeavePlanItem {
   notes     String?
 
   plan AnnualLeavePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 // --- PUBLIC HOLIDAYS MODEL ---
 model PublicHoliday {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   name      String
   date      DateTime @unique
   year      Int // Ethiopian Fiscal Year or Gregorian Year depending on preference
   createdAt DateTime @default(now())
+
+  @@index([tenantId])
 }
 
 // --- TIMESHEET MODELS ---
 
 model Timesheet {
+  tenantId        String?   @map("tenant_id")
   id              String    @id @default(cuid())
   userId          String
   user            User      @relation("UserTimesheets", fields: [userId], references: [id], onDelete: Cascade)
@@ -1172,9 +1289,11 @@ model Timesheet {
   entries TimesheetEntry[]
 
   @@unique([userId, month, year])
+  @@index([tenantId])
 }
 
 model TimesheetEntry {
+  tenantId    String?   @map("tenant_id")
   id          String    @id @default(cuid())
   timesheetId String
   timesheet   Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
@@ -1184,16 +1303,22 @@ model TimesheetEntry {
   projectId   String? // Optional link to Project
   projectName String?   @map("project_name")
   description String?
+
+  @@index([tenantId])
 }
 
 model TimesheetSetting {
+  tenantId      String?  @map("tenant_id")
   id            String   @id @default(cuid())
   submissionDay Int      @default(25) // Day of month deadline
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // --- RECRUITMENT MODELS ---
 model JobPosting {
+  tenantId           String?             @map("tenant_id")
   id                 String              @id @default(cuid())
   title              String
   department         String
@@ -1211,9 +1336,12 @@ model JobPosting {
   createdAt          DateTime            @default(now())
   applicants         Applicant[]
   recruitmentRequest RecruitmentRequest?
+
+  @@index([tenantId])
 }
 
 model Applicant {
+  tenantId        String?    @map("tenant_id")
   id              String     @id @default(cuid())
   jobId           String
   job             JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -1232,10 +1360,13 @@ model Applicant {
   userId          String?    @map("user_id")
   stageUpdatedAt  DateTime   @default(now()) @map("stage_updated_at")
   createdAt       DateTime   @default(now())
+
+  @@index([tenantId])
 }
 
 // A monthly payslip snapshot generated from the payroll register.
 model Payslip {
+  tenantId        String?   @map("tenant_id")
   id              String    @id @default(cuid())
   userId          String    @map("user_id")
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1257,11 +1388,13 @@ model Payslip {
 
   @@unique([userId, year, month])
   @@index([year, month])
+  @@index([tenantId])
   @@map("payslip")
 }
 
 // --- PAYROLL MODEL ---
 model SalaryRecord {
+  tenantId        String?   @map("tenant_id")
   id              String    @id @default(cuid())
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1280,10 +1413,12 @@ model SalaryRecord {
   approvalNote    String?   @map("approval_note")
 
   @@index([approvalStatus, effectiveAt])
+  @@index([tenantId])
 }
 
 // Audit trail for bulk CSV imports, including enough snapshot data to roll back.
 model ImportBatch {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   module       String
   planId       String?   @map("plan_id")
@@ -1297,12 +1432,14 @@ model ImportBatch {
 
   @@index([module, createdAt])
   @@index([planId, createdAt])
+  @@index([tenantId])
   @@map("import_batch")
 }
 
 // Recurring consolidated-report distribution. The server's daily maintenance
 // job checks nextRunAt and emails the report link when SMTP is configured.
 model ReportSchedule {
+  tenantId   String?   @map("tenant_id")
   id         String    @id @default(cuid())
   type       String
   planId     String?   @map("plan_id")
@@ -1315,12 +1452,14 @@ model ReportSchedule {
   createdAt  DateTime  @default(now()) @map("created_at")
 
   @@index([enabled, nextRunAt])
+  @@index([tenantId])
   @@map("report_schedule")
 }
 
 // --- STAFF SELF-SERVICE: TASKS & DOCUMENTS ---
 
 model StaffTask {
+  tenantId       String?           @map("tenant_id")
   id             String            @id @default(cuid())
   userId         String            @map("user_id")
   user           User              @relation("UserStaffTasks", fields: [userId], references: [id], onDelete: Cascade)
@@ -1342,12 +1481,14 @@ model StaffTask {
 
   @@index([userId, status, dueAt])
   @@index([assignedById, status])
+  @@index([tenantId])
   @@map("staff_task")
 }
 
 // A timestamped progress note on a task, visible to the assignee and the
 // supervisor who assigned it. The task keeps the latest note for list views.
 model StaffTaskUpdate {
+  tenantId   String?   @map("tenant_id")
   id         String    @id @default(cuid())
   taskId     String    @map("task_id")
   task       StaffTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
@@ -1359,10 +1500,12 @@ model StaffTaskUpdate {
   createdAt  DateTime  @default(now()) @map("created_at")
 
   @@index([taskId, createdAt])
+  @@index([tenantId])
   @@map("staff_task_update")
 }
 
 model StaffDocument {
+  tenantId      String?   @map("tenant_id")
   id            String    @id @default(cuid())
   userId        String    @map("user_id")
   user          User      @relation("UserStaffDocuments", fields: [userId], references: [id], onDelete: Cascade)
@@ -1378,6 +1521,7 @@ model StaffDocument {
   createdAt     DateTime  @default(now()) @map("created_at")
 
   @@index([userId, expiresAt])
+  @@index([tenantId])
   @@map("staff_document")
 }
 
@@ -1385,6 +1529,7 @@ model StaffDocument {
 // on first use, then incremented inside a transaction so two simultaneous
 // uploads can never receive the same number.
 model NumberSequence {
+  tenantId  String?  @map("tenant_id")
   id        String   @id @default(cuid())
   scope     String
   year      Int
@@ -1392,12 +1537,14 @@ model NumberSequence {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([scope, year])
+  @@index([tenantId])
   @@map("number_sequence")
 }
 
 // --- INDUCTION ---
 
 model Induction {
+  tenantId    String?         @map("tenant_id")
   id          String          @id @default(cuid())
   userId      String          @map("user_id")
   user        User            @relation("UserInduction", fields: [userId], references: [id], onDelete: Cascade)
@@ -1408,10 +1555,12 @@ model Induction {
   tasks       InductionTask[]
 
   @@index([userId])
+  @@index([tenantId])
   @@map("induction")
 }
 
 model InductionTask {
+  tenantId    String?   @map("tenant_id")
   id          String    @id @default(cuid())
   inductionId String    @map("induction_id")
   induction   Induction @relation(fields: [inductionId], references: [id], onDelete: Cascade)
@@ -1422,12 +1571,14 @@ model InductionTask {
   notes       String?
   sortOrder   Int       @default(0) @map("sort_order")
 
+  @@index([tenantId])
   @@map("induction_task")
 }
 
 // --- RECRUITMENT REQUISITIONS, JOB DESCRIPTIONS & E-SIGNATURES ---
 
 model RecruitmentRequest {
+  tenantId        String?     @map("tenant_id")
   id              String      @id @default(cuid())
   requestNumber   String      @unique @map("request_number")
   requestedById   String      @map("requested_by_id")
@@ -1453,10 +1604,12 @@ model RecruitmentRequest {
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
   @@index([status, createdAt])
+  @@index([tenantId])
   @@map("recruitment_request")
 }
 
 model JobDescription {
+  tenantId      String?                    @map("tenant_id")
   id            String                     @id @default(cuid())
   title         String
   department    String?
@@ -1476,10 +1629,12 @@ model JobDescription {
   assignments   JobDescriptionAssignment[]
 
   @@index([status, createdAt])
+  @@index([tenantId])
   @@map("job_description")
 }
 
 model JobDescriptionAssignment {
+  tenantId         String?        @map("tenant_id")
   id               String         @id @default(cuid())
   jobDescriptionId String         @map("job_description_id")
   jobDescription   JobDescription @relation(fields: [jobDescriptionId], references: [id], onDelete: Cascade)
@@ -1493,10 +1648,12 @@ model JobDescriptionAssignment {
 
   @@unique([jobDescriptionId, userId])
   @@index([userId, acknowledgedAt])
+  @@index([tenantId])
   @@map("job_description_assignment")
 }
 
 model SignatureRecord {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   userId       String   @map("user_id")
   user         User     @relation("UserSignatures", fields: [userId], references: [id], onDelete: Cascade)
@@ -1512,12 +1669,14 @@ model SignatureRecord {
 
   @@index([entityType, entityId])
   @@index([userId, signedAt])
+  @@index([tenantId])
   @@map("signature_record")
 }
 
 // --- OFFBOARDING / EXIT MANAGEMENT ---
 
 model OffboardingCase {
+  tenantId               String?           @map("tenant_id")
   id                     String            @id @default(cuid())
   userId                 String            @map("user_id")
   user                   User              @relation("UserOffboarding", fields: [userId], references: [id], onDelete: Cascade)
@@ -1550,10 +1709,12 @@ model OffboardingCase {
 
   @@index([userId, status])
   @@index([status, lastWorkingDay])
+  @@index([tenantId])
   @@map("offboarding_case")
 }
 
 model OffboardingTask {
+  tenantId    String?         @map("tenant_id")
   id          String          @id @default(cuid())
   caseId      String          @map("case_id")
   case        OffboardingCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
@@ -1567,12 +1728,14 @@ model OffboardingTask {
   sortOrder   Int             @default(0) @map("sort_order")
 
   @@index([caseId, sortOrder])
+  @@index([tenantId])
   @@map("offboarding_task")
 }
 
 // --- PERFORMANCE MANAGEMENT ---
 
 model Appraisal {
+  tenantId       String?         @map("tenant_id")
   id             String          @id @default(cuid())
   userId         String          @map("user_id")
   user           User            @relation("UserAppraisals", fields: [userId], references: [id], onDelete: Cascade)
@@ -1591,10 +1754,12 @@ model Appraisal {
   items          AppraisalItem[]
 
   @@unique([userId, cycle])
+  @@index([tenantId])
   @@map("appraisal")
 }
 
 model AppraisalItem {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   appraisalId  String    @map("appraisal_id")
   appraisal    Appraisal @relation(fields: [appraisalId], references: [id], onDelete: Cascade)
@@ -1608,12 +1773,14 @@ model AppraisalItem {
   comment      String?
   sortOrder    Int       @default(0) @map("sort_order")
 
+  @@index([tenantId])
   @@map("appraisal_item")
 }
 
 // HR-configurable appraisal framework. Changes apply to newly opened cycles;
 // existing appraisal items keep their snapshot so historic scores never move.
 model AppraisalCriterion {
+  tenantId            String?  @map("tenant_id")
   id                  String   @id @default(cuid())
   title               String
   description         String?
@@ -1628,6 +1795,7 @@ model AppraisalCriterion {
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@index([isActive, sortOrder])
+  @@index([tenantId])
   @@map("appraisal_criterion")
 }
 
@@ -1638,6 +1806,7 @@ model AppraisalCriterion {
 // ============================================================
 
 model Vehicle {
+  tenantId         String?   @map("tenant_id")
   id               String    @id @default(cuid())
   vehicleCode      String    @unique // "V001"
   type             String // Sedan | 4x4 | Minibus | Ambulance | Truck | Motorcycle
@@ -1661,10 +1830,12 @@ model Vehicle {
   tyres              TyreRecord[]
 
   @@index([status])
+  @@index([tenantId])
   @@map("vehicle")
 }
 
 model Driver {
+  tenantId      String?   @map("tenant_id")
   id            String    @id @default(cuid())
   driverCode    String    @unique // "D001"
   name          String
@@ -1682,10 +1853,12 @@ model Driver {
   fuelLogs FuelLog[]        @relation("FuelLogDriver")
 
   @@index([status])
+  @@index([tenantId])
   @@map("driver")
 }
 
 model VehicleRequest {
+  tenantId             String?   @map("tenant_id")
   id                   String    @id @default(cuid())
   requestCode          String    @unique // "REQ-20261110-0001"
   requesterId          String    @map("requester_id")
@@ -1727,10 +1900,12 @@ model VehicleRequest {
   @@index([status, departureDate])
   @@index([requesterId, requestedAt])
   @@index([supervisorId, status])
+  @@index([tenantId])
   @@map("vehicle_request")
 }
 
 model RideProvider {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   name         String   @unique // "Ride", "ZayRide", "Feres", etc.
   contactName  String?  @map("contact_name")
@@ -1742,10 +1917,12 @@ model RideProvider {
 
   rideRequests RideRequest[]
 
+  @@index([tenantId])
   @@map("ride_provider")
 }
 
 model RideRequest {
+  tenantId               String?         @map("tenant_id")
   id                     String          @id @default(cuid())
   requestCode            String          @unique // "RIDE-20261110-0001"
   requesterId            String          @map("requester_id")
@@ -1779,15 +1956,18 @@ model RideRequest {
   @@index([status, departureDate])
   @@index([requesterId, requestedAt])
   @@index([supervisorId, status])
+  @@index([tenantId])
   @@map("ride_request")
 }
 
 model FleetSetting {
+  tenantId    String?  @map("tenant_id")
   key         String   @id
   value       String
   description String?
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([tenantId])
   @@map("fleet_setting")
 }
 
@@ -1798,6 +1978,7 @@ model FleetSetting {
 // ============================================================
 
 model FuelLog {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   vehicleId    String   @map("vehicle_id")
   vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -1819,10 +2000,12 @@ model FuelLog {
 
   @@index([vehicleId, date])
   @@index([date])
+  @@index([tenantId])
   @@map("fleet_fuel_log")
 }
 
 model MaintenanceRecord {
+  tenantId            String?   @map("tenant_id")
   id                  String    @id @default(cuid())
   vehicleId           String    @map("vehicle_id")
   vehicle             Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -1847,10 +2030,12 @@ model MaintenanceRecord {
 
   @@index([vehicleId, scheduledDate])
   @@index([status, scheduledDate])
+  @@index([tenantId])
   @@map("fleet_maintenance")
 }
 
 model SparePartRecord {
+  tenantId      String?  @map("tenant_id")
   id            String   @id @default(cuid())
   vehicleId     String   @map("vehicle_id")
   vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -1869,10 +2054,12 @@ model SparePartRecord {
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([vehicleId, date])
+  @@index([tenantId])
   @@map("fleet_spare_part")
 }
 
 model TyreRecord {
+  tenantId     String?  @map("tenant_id")
   id           String   @id @default(cuid())
   vehicleId    String   @map("vehicle_id")
   vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -1893,6 +2080,7 @@ model TyreRecord {
 
   @@index([vehicleId, date])
   @@index([position])
+  @@index([tenantId])
   @@map("fleet_tyre")
 }
 
@@ -1900,6 +2088,7 @@ model TyreRecord {
 // retry history, so a failed Facebook or LinkedIn call never blocks the news
 // article from being published on the website.
 model SocialPost {
+  tenantId     String?   @map("tenant_id")
   id           String    @id @default(cuid())
   newsId       String    @map("news_id")
   news         News      @relation(fields: [newsId], references: [id], onDelete: Cascade)
@@ -1917,6 +2106,7 @@ model SocialPost {
 
   @@unique([newsId, channel])
   @@index([status, scheduledFor])
+  @@index([tenantId])
   @@map("social_post")
 }
 
@@ -1926,6 +2116,7 @@ model SocialPost {
 // ============================================================
 
 model QmsDocument {
+  tenantId        String?       @map("tenant_id")
   id              String        @id @default(cuid())
   code            String // "SOP-QA-001" (document family; unique per version)
   title           String
@@ -1962,6 +2153,7 @@ model QmsDocument {
   @@index([department])
   @@index([ownerId])
   @@index([effectiveDate])
+  @@index([tenantId])
   @@map("qms_document")
 }
 
@@ -1971,6 +2163,7 @@ model QmsDocument {
 // ============================================================
 
 model QmsDeviation {
+  tenantId        String?   @map("tenant_id")
   id              String    @id @default(cuid())
   code            String    @unique
   title           String
@@ -2001,10 +2194,12 @@ model QmsDeviation {
   @@index([department])
   @@index([ownerId])
   @@index([detectedAt])
+  @@index([tenantId])
   @@map("qms_deviation")
 }
 
 model QmsCapa {
+  tenantId           String?       @map("tenant_id")
   id                 String        @id @default(cuid())
   code               String        @unique
   title              String
@@ -2032,10 +2227,12 @@ model QmsCapa {
   @@index([status, dueAt])
   @@index([ownerId])
   @@index([deviationId])
+  @@index([tenantId])
   @@map("qms_capa")
 }
 
 model QmsChangeControl {
+  tenantId           String?   @map("tenant_id")
   id                 String    @id @default(cuid())
   code               String    @unique
   title              String
@@ -2065,5 +2262,757 @@ model QmsChangeControl {
   @@index([department])
   @@index([ownerId])
   @@index([effectiveDate])
+  @@index([tenantId])
   @@map("qms_change_control")
+}
+
+// ============================================================
+// SaaS / MULTI-TENANCY (S1 - schema additions, no migration yet)
+// ============================================================
+
+model Tenant {
+  id                   String    @id @default(cuid())
+  slug                 String    @unique
+  name                 String
+  type                 String    @default("PROFIT") // PROFIT | NON_PROFIT
+  legalName            String?   @map("legal_name")
+  taxId                String?   @map("tax_id")
+  country              String?   @default("ET")
+  timezone             String    @default("Africa/Addis_Ababa")
+  primaryEmail         String    @map("primary_email")
+  primaryPhone         String?   @map("primary_phone")
+  status               String    @default("TRIAL") // TRIAL | ACTIVE | PAST_DUE | SUSPENDED | CANCELLED
+  trialEndsAt          DateTime? @map("trial_ends_at")
+  stripeCustomerId     String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  onboardingComplete   Boolean   @default(false) @map("onboarding_complete")
+  // Optional per-tenant module override. Empty => inherit subscription plan modules.
+  enabledModules       String[]  @default([]) @map("enabled_modules")
+  // Foundational onboarding/profile context
+  profile              Json?
+  industryType         String?   @map("industry_type")
+  orgSize              String?   @map("org_size")
+  primaryMarket        String?   @map("primary_market")
+  languages            String[]  @default(["en"])
+  defaultTimezone      String    @default("Africa/Addis_Ababa") @map("default_timezone")
+  fiscalYearStart      Int       @default(1) @map("fiscal_year_start")
+  currency             String    @default("ETB")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  users              User[]
+  subscriptionPlan   SubscriptionPlan?       @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlanId String?                 @map("subscription_plan_id")
+  settings           TenantSetting[]
+  customFields       CustomFieldDefinition[]
+
+  @@map("tenant")
+}
+
+model SubscriptionPlan {
+  id                   String   @id @default(cuid())
+  code                 String   @unique // STARTER, PROFESSIONAL, ENTERPRISE, NONPROFIT_BASIC
+  name                 String
+  description          String?
+  priceMonthly         Float    @map("price_monthly")
+  priceYearly          Float    @map("price_yearly")
+  currency             String   @default("USD")
+  trialDays            Int      @default(14) @map("trial_days")
+  enabledModules       String[] @default([]) @map("enabled_modules")
+  defaultIndustries    String[] @default([]) @map("default_industries")
+  maxUsers             Int      @default(10) @map("max_users")
+  maxStorageGb         Int      @default(5) @map("max_storage_gb")
+  forNonProfit         Boolean  @default(false) @map("for_non_profit")
+  isActive             Boolean  @default(true) @map("is_active")
+  stripePriceIdMonthly String?  @unique @map("stripe_price_id_monthly")
+  stripePriceIdYearly  String?  @unique @map("stripe_price_id_yearly")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  tenants Tenant[]
+
+  @@map("subscription_plan")
+}
+
+model TenantSetting {
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key       String
+  value     Json
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, key])
+  @@map("tenant_setting")
+}
+
+model CustomFieldDefinition {
+  id           String             @id @default(cuid())
+  tenantId     String             @map("tenant_id")
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entityType   String             @map("entity_type")
+  fieldKey     String             @map("field_key")
+  fieldLabel   String             @map("field_label")
+  fieldLabelAm String?            @map("field_label_am")
+  fieldType    String             @map("field_type") // text | number | date | select | textarea | boolean
+  options      String[]           @default([])
+  required     Boolean            @default(false)
+  placeholder  String?
+  helpText     String?            @map("help_text")
+  sortOrder    Int                @default(0) @map("sort_order")
+  isActive     Boolean            @default(true) @map("is_active")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  values       CustomFieldValue[]
+
+  @@unique([tenantId, entityType, fieldKey])
+  @@index([tenantId, entityType, isActive, sortOrder])
+  @@map("custom_field_definition")
+}
+
+model CustomFieldValue {
+  id           String                @id @default(cuid())
+  tenantId     String                @map("tenant_id")
+  definitionId String                @map("definition_id")
+  definition   CustomFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  entityType   String                @map("entity_type")
+  entityId     String                @map("entity_id")
+  value        Json?
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  @@unique([definitionId, entityId])
+  @@index([tenantId, entityType, entityId])
+  @@map("custom_field_value")
+}
+
+model Invoice {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  stripeInvoiceId String    @unique @map("stripe_invoice_id")
+  amountDue       Float     @map("amount_due")
+  amountPaid      Float     @default(0) @map("amount_paid")
+  currency        String    @default("USD")
+  status          String
+  periodStart     DateTime  @map("period_start")
+  periodEnd       DateTime  @map("period_end")
+  invoicePdfUrl   String?   @map("invoice_pdf_url")
+  paidAt          DateTime? @map("paid_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([tenantId, status])
+  @@map("invoice")
+}
+
+// ============================================================
+// TIER 1 — PROCUREMENT & VENDOR MANAGEMENT (MVP)
+// ============================================================
+
+model Vendor {
+  id             String          @id @default(cuid())
+  tenantId       String          @map("tenant_id")
+  code           String?
+  name           String
+  contactName    String?         @map("contact_name")
+  email          String?
+  phone          String?
+  address        String?
+  category       String?
+  status         String          @default("ACTIVE") // ACTIVE | INACTIVE | BLACKLISTED
+  rating         Int?            @default(0)
+  paymentTerms   String?         @map("payment_terms")
+  notes          String?
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  purchaseOrders PurchaseOrder[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, name])
+  @@map("vendor")
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  tenantId    String              @map("tenant_id")
+  poNumber    String              @map("po_number")
+  vendorId    String              @map("vendor_id")
+  vendor      Vendor              @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  status      String              @default("DRAFT") // DRAFT | SUBMITTED | APPROVED | ORDERED | RECEIVED | CLOSED | CANCELLED
+  orderDate   DateTime?           @map("order_date")
+  expectedAt  DateTime?           @map("expected_at")
+  currency    String              @default("ETB")
+  subtotal    Float               @default(0)
+  tax         Float               @default(0)
+  total       Float               @default(0)
+  notes       String?
+  requestedBy String?             @map("requested_by")
+  approvedBy  String?             @map("approved_by")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  items       PurchaseOrderItem[]
+
+  @@unique([tenantId, poNumber])
+  @@index([tenantId, status])
+  @@index([tenantId, vendorId])
+  @@map("purchase_order")
+}
+
+model PurchaseOrderItem {
+  id          String        @id @default(cuid())
+  tenantId    String        @map("tenant_id")
+  orderId     String        @map("order_id")
+  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  description String
+  sku         String?
+  quantity    Float         @default(1)
+  unit        String?       @default("unit")
+  unitPrice   Float         @default(0) @map("unit_price")
+  total       Float         @default(0)
+  receivedQty Float         @default(0) @map("received_qty")
+
+  @@index([tenantId, orderId])
+  @@map("purchase_order_item")
+}
+
+// ============================================================
+// TIER 1 — INVENTORY & WAREHOUSE MANAGEMENT (WMS, MVP)
+// ============================================================
+
+model Warehouse {
+  id        String          @id @default(cuid())
+  tenantId  String          @map("tenant_id")
+  code      String
+  name      String
+  location  String?
+  type      String?         @default("MAIN") // MAIN | STORE | DISTRIBUTION
+  status    String          @default("ACTIVE")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  items     InventoryItem[]
+  movements StockMovement[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("warehouse")
+}
+
+model InventoryItem {
+  id           String          @id @default(cuid())
+  tenantId     String          @map("tenant_id")
+  warehouseId  String          @map("warehouse_id")
+  warehouse    Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  sku          String
+  name         String
+  category     String?
+  unit         String?         @default("unit")
+  quantity     Float           @default(0)
+  minLevel     Float           @default(0) @map("min_level")
+  reorderPoint Float           @default(0) @map("reorder_point")
+  unitCost     Float           @default(0) @map("unit_cost")
+  status       String          @default("ACTIVE")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  movements    StockMovement[]
+
+  @@unique([tenantId, warehouseId, sku])
+  @@index([tenantId, warehouseId])
+  @@index([tenantId, name])
+  @@map("inventory_item")
+}
+
+model StockMovement {
+  id          String        @id @default(cuid())
+  tenantId    String        @map("tenant_id")
+  warehouseId String        @map("warehouse_id")
+  warehouse   Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  itemId      String        @map("item_id")
+  item        InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type        String // IN | OUT | ADJUST | TRANSFER
+  quantity    Float
+  reference   String?
+  reason      String?
+  performedBy String?       @map("performed_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([tenantId, warehouseId, createdAt])
+  @@index([tenantId, itemId])
+  @@map("stock_movement")
+}
+
+// ============================================================
+// TIER 1 — ACCOUNTING & FINANCIALS (GL/AP/AR, MVP)
+// ============================================================
+
+model GLAccount {
+  id           String        @id @default(cuid())
+  tenantId     String        @map("tenant_id")
+  code         String
+  name         String
+  type         String // ASSET | LIABILITY | EQUITY | REVENUE | EXPENSE
+  category     String?
+  parentId     String?       @map("parent_id")
+  parent       GLAccount?    @relation("GLHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     GLAccount[]   @relation("GLHierarchy")
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  journalLines JournalLine[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, type])
+  @@map("gl_account")
+}
+
+model JournalEntry {
+  id          String        @id @default(cuid())
+  tenantId    String        @map("tenant_id")
+  entryNo     String        @map("entry_no")
+  date        DateTime
+  memo        String?
+  source      String?       @default("MANUAL")
+  status      String        @default("DRAFT") // DRAFT | POSTED | VOID
+  totalDebit  Float         @default(0) @map("total_debit")
+  totalCredit Float         @default(0) @map("total_credit")
+  createdBy   String?       @map("created_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  lines       JournalLine[]
+
+  @@unique([tenantId, entryNo])
+  @@index([tenantId, date])
+  @@index([tenantId, status])
+  @@map("journal_entry")
+}
+
+model JournalLine {
+  id        String       @id @default(cuid())
+  tenantId  String       @map("tenant_id")
+  entryId   String       @map("entry_id")
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountId String       @map("account_id")
+  account   GLAccount    @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  debit     Float        @default(0)
+  credit    Float        @default(0)
+  memo      String?
+
+  @@index([tenantId, entryId])
+  @@index([tenantId, accountId])
+  @@map("journal_line")
+}
+
+model VendorBill {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  billNo     String    @map("bill_no")
+  vendorName String    @map("vendor_name")
+  vendorId   String?   @map("vendor_id")
+  issueDate  DateTime  @map("issue_date")
+  dueDate    DateTime? @map("due_date")
+  currency   String    @default("ETB")
+  amount     Float
+  balance    Float
+  status     String    @default("OPEN") // OPEN | PARTIAL | PAID | VOID
+  reference  String?
+  notes      String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, billNo])
+  @@index([tenantId, status])
+  @@map("vendor_bill")
+}
+
+model CustomerInvoice {
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  invoiceNo    String    @map("invoice_no")
+  customerName String    @map("customer_name")
+  issueDate    DateTime  @map("issue_date")
+  dueDate      DateTime? @map("due_date")
+  currency     String    @default("ETB")
+  amount       Float
+  balance      Float
+  status       String    @default("OPEN") // OPEN | PARTIAL | PAID | VOID
+  reference    String?
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, invoiceNo])
+  @@index([tenantId, status])
+  @@map("customer_invoice")
+}
+
+// ============================================================
+// TIER 1 — ASSET & MAINTENANCE MANAGEMENT (EAM/CMMS, MVP)
+// ============================================================
+
+model Asset {
+  id             String                 @id @default(cuid())
+  tenantId       String                 @map("tenant_id")
+  assetTag       String                 @map("asset_tag")
+  name           String
+  category       String?
+  location       String?
+  custodian      String?
+  status         String                 @default("ACTIVE") // ACTIVE | IN_MAINTENANCE | RETIRED | DISPOSED
+  purchaseDate   DateTime?              @map("purchase_date")
+  purchaseCost   Float?                 @map("purchase_cost")
+  warrantyExpiry DateTime?              @map("warranty_expiry")
+  serialNo       String?                @map("serial_no")
+  notes          String?
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  workOrders     MaintenanceWorkOrder[]
+
+  @@unique([tenantId, assetTag])
+  @@index([tenantId, status])
+  @@index([tenantId, category])
+  @@map("asset")
+}
+
+model MaintenanceWorkOrder {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  workOrderNo   String    @map("work_order_no")
+  assetId       String?   @map("asset_id")
+  asset         Asset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  assetName     String?   @map("asset_name")
+  type          String    @default("CORRECTIVE") // PREVENTIVE | CORRECTIVE | INSPECTION
+  priority      String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  status        String    @default("OPEN") // OPEN | IN_PROGRESS | ON_HOLD | COMPLETED | CANCELLED
+  description   String?
+  reportedBy    String?   @map("reported_by")
+  assignedTo    String?   @map("assigned_to")
+  scheduledAt   DateTime? @map("scheduled_at")
+  completedAt   DateTime? @map("completed_at")
+  laborCost     Float     @default(0) @map("labor_cost")
+  partsCost     Float     @default(0) @map("parts_cost")
+  downtimeHours Float     @default(0) @map("downtime_hours")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, workOrderNo])
+  @@index([tenantId, status])
+  @@index([tenantId, assetId])
+  @@map("maintenance_work_order")
+}
+
+// ============================================================
+// TIER 2 — CRM & SALES / ORDER MANAGEMENT (MVP)
+// ============================================================
+
+model CrmAccount {
+  id          String       @id @default(cuid())
+  tenantId    String       @map("tenant_id")
+  name        String
+  type        String       @default("CUSTOMER") // CUSTOMER | PROSPECT | PARTNER
+  industry    String?
+  email       String?
+  phone       String?
+  owner       String?
+  status      String       @default("ACTIVE")
+  notes       String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  contacts    CrmContact[]
+  deals       CrmDeal[]
+  orders      SalesOrder[]
+
+  @@index([tenantId, type])
+  @@index([tenantId, name])
+  @@map("crm_account")
+}
+
+model CrmContact {
+  id        String      @id @default(cuid())
+  tenantId  String      @map("tenant_id")
+  accountId String?     @map("account_id")
+  account   CrmAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  name      String
+  email     String?
+  phone     String?
+  title     String?
+  notes     String?
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@index([tenantId, accountId])
+  @@map("crm_contact")
+}
+
+model CrmDeal {
+  id          String      @id @default(cuid())
+  tenantId    String      @map("tenant_id")
+  accountId   String?     @map("account_id")
+  account     CrmAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  title       String
+  stage       String      @default("LEAD") // LEAD | QUALIFIED | PROPOSAL | NEGOTIATION | WON | LOST
+  value       Float       @default(0)
+  currency    String      @default("ETB")
+  probability Int         @default(0)
+  owner       String?
+  closeDate   DateTime?   @map("close_date")
+  notes       String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([tenantId, stage])
+  @@index([tenantId, accountId])
+  @@map("crm_deal")
+}
+
+model SalesOrder {
+  id           String      @id @default(cuid())
+  tenantId     String      @map("tenant_id")
+  orderNo      String      @map("order_no")
+  accountId    String?     @map("account_id")
+  account      CrmAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  customerName String?     @map("customer_name")
+  status       String      @default("DRAFT") // DRAFT | CONFIRMED | FULFILLED | CANCELLED
+  orderDate    DateTime    @default(now()) @map("order_date")
+  total        Float       @default(0)
+  currency     String      @default("ETB")
+  notes        String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  @@unique([tenantId, orderNo])
+  @@index([tenantId, status])
+  @@map("sales_order")
+}
+
+// ============================================================
+// TIER 2 — EXTERNAL PORTALS (MVP)
+// ============================================================
+
+model PortalRequest {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  portalType  String   @map("portal_type") // CUSTOMER | PARTNER | VENDOR
+  requestNo   String   @map("request_no")
+  subject     String
+  requester   String?
+  company     String?
+  status      String   @default("OPEN") // OPEN | IN_REVIEW | APPROVED | REJECTED | CLOSED
+  priority    String   @default("MEDIUM")
+  description String?
+  response    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, requestNo])
+  @@index([tenantId, portalType, status])
+  @@map("portal_request")
+}
+
+// ============================================================
+// TIER 2 — HELPDESK & ITSM (MVP)
+// ============================================================
+
+model SupportTicket {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  ticketNo    String    @map("ticket_no")
+  subject     String
+  description String?
+  requester   String?
+  assignee    String?
+  category    String?
+  priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  status      String    @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  dueAt       DateTime? @map("due_at")
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, ticketNo])
+  @@index([tenantId, status])
+  @@index([tenantId, priority])
+  @@map("support_ticket")
+}
+
+// ============================================================
+// TIER 2 — DMS & RECORDS (MVP)
+// ============================================================
+
+model DmsRecord {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  recordNo      String    @map("record_no")
+  title         String
+  category      String?
+  folder        String?
+  version       String    @default("1.0")
+  status        String    @default("ACTIVE") // DRAFT | ACTIVE | ARCHIVED | DISPOSED
+  owner         String?
+  tags          String[]  @default([])
+  fileName      String?   @map("file_name")
+  fileUrl       String?   @map("file_url")
+  retentionUntil DateTime? @map("retention_until")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, recordNo])
+  @@index([tenantId, status])
+  @@index([tenantId, category])
+  @@map("dms_record")
+}
+
+// ============================================================
+// TIER 3 — GRC, RISK & AUDIT (MVP)
+// ============================================================
+
+model RiskItem {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  riskCode    String    @map("risk_code")
+  title       String
+  category    String?
+  owner       String?
+  likelihood  Int       @default(1) // 1-5
+  impact      Int       @default(1) // 1-5
+  score       Int       @default(1)
+  status      String    @default("OPEN") // OPEN | MITIGATING | ACCEPTED | CLOSED
+  mitigation  String?
+  dueDate     DateTime? @map("due_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, riskCode])
+  @@index([tenantId, status])
+  @@map("risk_item")
+}
+
+model ComplianceItem {
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  controlCode  String    @map("control_code")
+  title        String
+  framework    String?
+  owner        String?
+  status       String    @default("PENDING") // PENDING | COMPLIANT | NON_COMPLIANT | IN_REVIEW
+  evidence     String?
+  lastReviewAt DateTime? @map("last_review_at")
+  nextReviewAt DateTime? @map("next_review_at")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, controlCode])
+  @@index([tenantId, status])
+  @@map("compliance_item")
+}
+
+model AuditFinding {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  findingNo   String    @map("finding_no")
+  auditName   String    @map("audit_name")
+  title       String
+  severity    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  status      String    @default("OPEN") // OPEN | IN_PROGRESS | REMEDIATED | CLOSED
+  owner       String?
+  dueDate     DateTime? @map("due_date")
+  description String?
+  actionPlan  String?   @map("action_plan")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, findingNo])
+  @@index([tenantId, status])
+  @@map("audit_finding")
+}
+
+// ============================================================
+// TIER 3 — BI & ADVANCED ANALYTICS (MVP)
+// ============================================================
+
+model BiReport {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  code        String
+  name        String
+  category    String?
+  description String?
+  dataset     String?
+  config      Json?
+  owner       String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, code])
+  @@index([tenantId, category])
+  @@map("bi_report")
+}
+
+// ============================================================
+// TIER 3 — RESOURCE & CAPACITY, CONTRACTS, EHS (MVP)
+// ============================================================
+
+model ResourceAllocation {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  resource    String
+  role        String?
+  project     String?
+  allocation  Int       @default(100) // percent
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  status      String    @default("PLANNED") // PLANNED | ACTIVE | COMPLETED
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId, status])
+  @@index([tenantId, resource])
+  @@map("resource_allocation")
+}
+
+model ContractRecord {
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  contractNo    String    @map("contract_no")
+  title         String
+  party         String?
+  type          String?
+  value         Float     @default(0)
+  currency      String    @default("ETB")
+  status        String    @default("DRAFT") // DRAFT | ACTIVE | EXPIRED | TERMINATED
+  startDate     DateTime? @map("start_date")
+  endDate       DateTime? @map("end_date")
+  renewalDate   DateTime? @map("renewal_date")
+  owner         String?
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, contractNo])
+  @@index([tenantId, status])
+  @@map("contract_record")
+}
+
+model SafetyIncident {
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  incidentNo   String    @map("incident_no")
+  title        String
+  type         String?
+  severity     String    @default("LOW") // LOW | MEDIUM | HIGH | CRITICAL
+  status       String    @default("REPORTED") // REPORTED | INVESTIGATING | RESOLVED | CLOSED
+  location     String?
+  occurredAt   DateTime? @map("occurred_at")
+  reportedBy   String?   @map("reported_by")
+  description  String?
+  corrective   String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([tenantId, incidentNo])
+  @@index([tenantId, status])
+  @@map("safety_incident")
 }

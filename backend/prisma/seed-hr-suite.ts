@@ -254,6 +254,7 @@ async function main() {
         profileCompletedAt: hireDate,
       },
       create: {
+        tenantId: "tenant_default_ethio_biopharma",
         username: person.username,
         passwordHash,
         firstName: person.firstName,
@@ -272,7 +273,7 @@ async function main() {
         contractEnd: at(365),
         profileCompletedAt: hireDate,
         forceChange: false,
-      },
+      } as any,
     });
     users[person.username] = user;
     counter += 1;

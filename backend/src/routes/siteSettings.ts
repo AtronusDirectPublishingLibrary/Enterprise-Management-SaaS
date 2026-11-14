@@ -100,7 +100,8 @@ router.delete("/logo", requireAuth, requireRole("admin"), async (req, res, next)
 /** Public: banner copy, social links and the visitor-counter switch. */
 router.get("/", async (_req, res, next) => {
   try {
-    const settings = await getPublicSiteSettings();
+    const { runAsPlatform } = await import("../lib/tenantContext");
+    const settings = await runAsPlatform(async () => getPublicSiteSettings());
     // Revalidate every load: the payload is tiny and admin edits should show
     // up on the next page view (Express' ETag keeps repeat loads cheap).
     res.set("Cache-Control", "no-cache");

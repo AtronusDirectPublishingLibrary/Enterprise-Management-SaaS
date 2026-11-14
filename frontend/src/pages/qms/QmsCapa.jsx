@@ -192,7 +192,7 @@ export default function QmsCapa() {
 
   return (
     <div>
-      <Helmet><title>QMS CAPA | EB-EMS</title></Helmet>
+      <Helmet><title>QMS CAPA | BEMS</title></Helmet>
       <QmsShell
         title="Corrective and preventive action"
         description="Turn a quality event into a verified improvement. CAPA tracks the root cause, action plan, owner, due date and the effectiveness check that allows QA to close it."
