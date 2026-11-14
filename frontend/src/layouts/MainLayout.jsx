@@ -314,6 +314,15 @@ export default function MainLayout() {
           className="app-main flex-grow-1 p-4"
           style={{ background: "var(--brand-bg)", overflowY: "auto", overflowX: "auto", minWidth: 0 }}
         >
+          {user?.mfaEnrollmentRequired ? (
+            <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+              <span>
+                <ShieldAlert size={16} className="me-1" />
+                Your role requires authenticator-app two-factor authentication. Enroll it to continue; passkeys are optional.
+              </span>
+              <NavLink className="btn btn-sm btn-dark" to="/account-security">Set up security</NavLink>
+            </div>
+          ) : null}
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

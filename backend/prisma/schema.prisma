@@ -153,6 +153,7 @@ model User {
   coPiName           String?   @map("co_pi_name")
   email              String?
   lastLogin          DateTime? @map("last_login")
+  tokenVersion       Int       @default(0) @map("token_version")
   failedLoginAttempts Int      @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
   lastFailedLoginAt   DateTime? @map("last_failed_login_at")
@@ -243,7 +244,59 @@ model User {
   qmsChangesOwned       QmsChangeControl[] @relation("QmsChangeOwner")
   qmsChangesApproved    QmsChangeControl[] @relation("QmsChangeApprover")
 
+  mfaRecoveryCodes      MfaRecoveryCode[]  @relation("UserRecoveryCodes")
+  webauthnCredentials   WebAuthnCredential[] @relation("UserWebAuthnCredentials")
+
   @@map("users")
+}
+
+// One-time recovery codes are stored as SHA-256 digests. The plaintext is
+// returned exactly once at generation time and is never readable afterwards.
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation("UserRecoveryCodes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
+  @@index([userId, usedAt])
+  @@map("mfa_recovery_code")
+}
+
+// Registered WebAuthn/passkey credentials. Public keys are base64url encoded;
+// the private key never leaves the authenticator.
+model WebAuthnCredential {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  credentialId String    @unique @map("credential_id")
+  publicKey    String    @map("public_key")
+  counter      Int       @default(0)
+  transports   String[]  @default([])
+  deviceType   String    @default("singleDevice") @map("device_type")
+  backedUp     Boolean   @default(false) @map("backed_up")
+  name         String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  lastUsedAt   DateTime? @map("last_used_at")
+  user         User      @relation("UserWebAuthnCredentials", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("webauthn_credential")
+}
+
+// Short-lived challenges with an opaque id returned to the browser. Storing
+// them server-side prevents a client from choosing or replaying a challenge.
+model WebAuthnChallenge {
+  id        String   @id @default(cuid())
+  challenge String   @unique
+  userId    String?  @map("user_id")
+  kind      String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+  @@map("webauthn_challenge")
 }
 
 model AuditLog {
@@ -298,6 +351,39 @@ model FieldChange {
   @@index([entityType, entityId, changedAt])
   @@index([changedById, changedAt])
   @@map("field_change")
+}
+
+// Durable scheduler lease. A web process may only run a background job while
+// it owns the row; this prevents duplicate reminders and reports when more than
+// one API instance is deployed.
+model JobLock {
+  name        String    @id
+  lockedBy    String?   @map("locked_by")
+  lockedUntil DateTime? @map("locked_until")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("job_lock")
+}
+
+// Signed external checkpoint over the audit chain head. The private key stays
+// in the deployment secret store; the public key is used by auditors to verify
+// that an exported range has not been rewritten.
+model AuditCheckpoint {
+  id                 String   @id @default(cuid())
+  headId             BigInt   @map("head_id")
+  headHash           String   @map("head_hash")
+  checkedCount       Int      @map("checked_count")
+  previousHash       String?  @map("previous_hash")
+  algorithm          String   @default("Ed25519")
+  keyId              String   @map("key_id")
+  publicKeyPem       String   @map("public_key_pem")
+  publicKeySha256    String   @map("public_key_sha256")
+  signature          String
+  payload            Json
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("audit_checkpoint")
 }
 
 model Document {

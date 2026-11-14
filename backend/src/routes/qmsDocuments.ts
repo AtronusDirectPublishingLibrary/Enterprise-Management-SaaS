@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { logAudit } from "../lib/audit";
 import { isQmsApprover } from "../lib/access";
+import { scanUploadedFile } from "../lib/fileScan";
 
 const router = Router();
 
@@ -72,7 +73,7 @@ function uploadSingle(req: any, res: any, next: any) {
           : err?.message || "File upload failed";
       return res.status(400).json({ error: message });
     }
-    next();
+    void scanUploadedFile(req, res, next);
   });
 }
 

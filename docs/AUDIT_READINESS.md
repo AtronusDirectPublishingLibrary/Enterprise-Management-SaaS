@@ -61,6 +61,30 @@ by adding a new key ID and retaining the old public verification procedure. An
 export is capped at 20,000 rows; use a date range for larger periods. Requesting
 a limit returns that many rows and sets `truncated` when more remain.
 
+## Ed25519 checkpoints
+
+When `AUDIT_CHECKPOINT_PRIVATE_KEY` is configured, the API creates a signed
+checkpoint over the chain head. Before signing it re-verifies the complete
+chain; a broken chain is refused with `409` rather than anchored.
+
+- `POST /api/audit/checkpoints` creates one (administrator or executive only).
+- `GET /api/audit/checkpoints` returns the latest 50 with a live signature
+  verification flag, the public key and its SHA-256 fingerprint.
+- The scheduled job runs daily when `AUDIT_CHECKPOINT_AUTORUN` is not `false`.
+  Disable it by removing the key or setting the flag to `false`.
+- The payload binds the version, UTC generation time, head id/hash and checked
+  count. `previousHash` chains checkpoints together.
+- Keep the private key outside the database and repository. Published public
+  keys let an auditor verify an old checkpoint without server access.
+
+## Session revocation
+
+New tokens contain `tokenVersion`. Password changes and `POST
+/api/auth/logout-all` increment it, so previously issued cookies stop working
+on the next request. Tokens issued before this control was deployed have no
+version and remain valid until expiry; a global sign-out or password change
+revokes them as well.
+
 ## Login protection
 
 - A login IP limiter allows five failed attempts per 15 minutes and twenty per
@@ -77,16 +101,21 @@ a limit returns that many rows and sets `truncated` when more remain.
 ### CAPTCHA configuration
 
 ```dotenv
+TURNSTILE_ENABLED=true
+TURNSTILE_SITE_KEY="<Cloudflare Turnstile site key>"
 TURNSTILE_SECRET_KEY="<Cloudflare Turnstile secret>"
+TURNSTILE_ALLOWED_HOSTNAMES="ems.example.org"
+TURNSTILE_ACTION=login
 ```
 
-```dotenv
-VITE_TURNSTILE_SITE_KEY="<Cloudflare Turnstile site key>"
-```
-
-Leave both blank to keep CAPTCHA disabled in development. In production, set
-both; the server logs a configuration warning if the secret is absent. The
-Turnstile widget is hidden when no site key is supplied.
+The frontend can use `VITE_TURNSTILE_SITE_KEY` at build time, or read the public
+key from `GET /api/auth/login-config`. Production is fail-closed: the API refuses
+to start without `TURNSTILE_SECRET_KEY` unless `TURNSTILE_ENABLED=false` is an
+explicit, documented exception. Tokens are checked for the configured action,
+allowed hostname and freshness in addition to Cloudflare's `success` flag. The
+widget is hidden when no site key is available; a required-but-unconfigured
+deployment shows a configuration error and disables sign-in rather than bypassing
+the check.
 
 ## CSRF
 
@@ -150,3 +179,7 @@ updates their stored URLs.
    QMS create/approve/reject, and other multi-write workflows.
 5. Add an outbox for external side effects (email, social publishing) where a
    database commit must not be followed by a lost message.
+6. Provision an independent RFC 3161 timestamp authority if required by the
+   Quality Unit, and store its token with each checkpoint.
+7. Move private uploads to encrypted object storage with immutable retention
+   where the record-retention policy requires WORM.

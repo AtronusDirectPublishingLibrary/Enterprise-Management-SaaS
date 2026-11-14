@@ -11,6 +11,7 @@ import HrOperations from "./pages/HrOperations";
 import HRAnalytics from "./pages/HRAnalytics";
 import HRDashboard from "./pages/HRDashboard";
 import HomePage from "./pages/HomePage";
+import AccountSecurity from "./pages/AccountSecurity";
 import FlyInObserver from "./components/FlyInObserver";
 import LandingPage from "./pages/LandingPage";
 import Careers from "./pages/Careers";
@@ -143,7 +144,7 @@ export default function App() {
 
       {/* Auth & Intake */}
       <Route path="/print-timesheet/:id" element={<PrintTimesheet />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/login" element={user ? <Navigate to={user.mfaEnrollmentRequired ? "/account-security" : "/dashboard"} replace /> : <Login />} />
       <Route path="/fleet/gate-pass/:requestId/verify" element={<GatePassVerifyPage />} />
       <Route path="/request" element={<PublicForm />} />
       
@@ -153,6 +154,7 @@ export default function App() {
         {/* Main Dashboard and Database Wrapper */}
         <Route element={<DatabasePage />}>
           <Route path="/dashboard" element={<HomePage />} />
+        <Route path="/account-security" element={<AccountSecurity />} />
           <Route path="/pms-dashboard" element={<Dashboard />} />
         <Route path="/pms/goals" element={<PmsProjectGoals />} />
         <Route path="/pms/portfolio" element={<PmsPortfolio />} />

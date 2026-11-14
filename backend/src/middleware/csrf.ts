@@ -35,7 +35,11 @@ function safeEqual(a: string, b: string) {
  * token yet.
  */
 export function csrfProtection(req: Request, res: Response, next: NextFunction) {
-  if (SAFE_METHODS.has(req.method) || req.path === "/api/auth/login") return next();
+  if (
+    SAFE_METHODS.has(req.method) ||
+    req.path === "/api/auth/login" ||
+    req.path.startsWith("/api/auth/passkeys/login/")
+  ) return next();
   if (!req.cookies?.[COOKIE_NAME]) return next();
 
   const cookieToken = req.cookies?.[CSRF_COOKIE];

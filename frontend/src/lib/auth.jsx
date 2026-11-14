@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { api } from "./api";
 
 const AuthContext = createContext(null);
@@ -16,14 +17,8 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(username, password, token, turnstileToken) {
-    const res = await api.post("/auth/login", {
-      username,
-      password,
-      ...(token ? { token } : {}),
-      ...(turnstileToken ? { turnstileToken } : {}),
-    });
-    const userData = {
+  function toUser(res) {
+    return {
       username: res.username,
       firstName: res.firstName,
       lastName: res.lastName,
@@ -32,12 +27,37 @@ export function AuthProvider({ children }) {
       email: res.email,
       forceChange: res.forceChange,
       mfaEnabled: res.mfaEnabled,
+      mfaEnrollmentRequired: Boolean(res.mfaEnrollmentRequired),
+      passkeyCount: res.passkeyCount || 0,
       signatureUrl: res.signatureUrl,
       initialsUrl: res.initialsUrl,
       initialsText: res.initialsText,
       avatarUrl: res.avatarUrl,
       permissions: res.permissions,
     };
+  }
+
+  async function login(username, password, token, turnstileToken) {
+    const res = await api.post("/auth/login", {
+      username,
+      password,
+      ...(token ? { token } : {}),
+      ...(turnstileToken ? { turnstileToken } : {}),
+    });
+    const userData = toUser(res);
+    setUser(userData);
+    return userData;
+  }
+
+  /** Passwordless path: password remains available as a fallback. */
+  async function loginWithPasskey(username) {
+    const options = await api.post("/auth/passkeys/login/options", { username });
+    const response = await startAuthentication({ optionsJSON: options.options });
+    const res = await api.post("/auth/passkeys/login/verify", {
+      challengeId: options.challengeId,
+      response,
+    });
+    const userData = toUser(res);
     setUser(userData);
     return userData;
   }
@@ -56,7 +76,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithPasskey, logout, setUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

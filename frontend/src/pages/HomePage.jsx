@@ -171,6 +171,8 @@ function greeting(date) {
 }
 
 export default function HomePage() {
+  const { logout } = useAuth();
+  const [revoking, setRevoking] = useState(false);
   const { user } = useAuth();
   const [briefing, setBriefing] = useState(null);
   const [qmsDue, setQmsDue] = useState(null);
@@ -319,6 +321,9 @@ export default function HomePage() {
         <div className="row g-4">
           <div className="col-xl-7">
             <MfaCard />
+            <div className="text-end mt-2">
+              <Link to="/account-security" className="small">Manage passkeys and recovery codes</Link>
+            </div>
           </div>
           <div className="col-xl-5">
             <div className="home-card h-100">
@@ -334,6 +339,22 @@ export default function HomePage() {
                 <li>Bulk imports are previewed first and can be rolled back from the import history.</li>
                 <li>Payroll, HR files and personal records are visible only to the roles that need them.</li>
               </ul>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary mt-3"
+                disabled={revoking}
+                onClick={async () => {
+                  if (!window.confirm("Sign out of every device, including this one?")) return;
+                  setRevoking(true);
+                  try {
+                    await api.post("/auth/logout-all", {});
+                  } finally {
+                    await logout();
+                  }
+                }}
+              >
+                {revoking ? "Signing out…" : "Sign out of all devices"}
+              </button>
             </div>
           </div>
         </div>

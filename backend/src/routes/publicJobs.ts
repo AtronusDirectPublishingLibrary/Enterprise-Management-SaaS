@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { withFileScan } from "../lib/fileScan";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -72,7 +73,7 @@ router.get("/:id", async (req, res) => {
 });
 
 /** POST /api/careers/:id/apply — application with an optional CV. */
-router.post("/:id/apply", upload.single("resume"), async (req, res) => {
+router.post("/:id/apply", withFileScan(upload.single("resume")), async (req, res) => {
   try {
     const { name, email, phone, notes, coverLetter } = req.body as Record<string, string>;
     if (!name?.trim() || !email?.trim()) {

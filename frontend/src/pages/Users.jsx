@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, API_BASE } from "../lib/api";
-import { Edit2, Trash2, Plus, Upload, Download, Users as UsersIcon, X } from "lucide-react";
+import { Edit2, Trash2, Plus, Upload, Download, Users as UsersIcon, X, KeyRound } from "lucide-react";
 import UserForm from "../components/UserForm";
 import PageHeader from "../components/PageHeader";
 
@@ -44,6 +44,15 @@ export default function Users() {
     if (!confirm(`Delete user "${username}"?`)) return;
     try {
       await api.del(`/users/${username}`);
+      loadUsers();
+    } catch (e) { alert(e.message); }
+  };
+
+  const handleMfaReset = async (username) => {
+    if (!confirm(`Reset all passkeys, authenticator and recovery codes for "${username}"? Their sessions will end.`)) return;
+    try {
+      const result = await api.post(`/users/${username}/mfa-reset`, {});
+      alert(result.message);
       loadUsers();
     } catch (e) { alert(e.message); }
   };
@@ -160,6 +169,15 @@ export default function Users() {
                     <button className="btn btn-sm btn-link text-secondary p-0 me-2" onClick={() => { setEditUser(u); setShowModal(true); }}>
                       <Edit2 size={14} />
                     </button>
+                    {u.username !== "admin" && (
+                      <button
+                        className="btn btn-sm btn-link text-warning p-0 me-2"
+                        title="Reset two-factor and passkeys"
+                        onClick={() => handleMfaReset(u.username)}
+                      >
+                        <KeyRound size={14} />
+                      </button>
+                    )}
                     {u.username !== "admin" && (
                       <button className="btn btn-sm btn-link text-danger p-0" onClick={() => handleDelete(u.username)}>
                         <Trash2 size={14} />

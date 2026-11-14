@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
+import { prisma } from "./lib/prisma";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -8,6 +9,7 @@ import rateLimit from "express-rate-limit";
 
 import visitorRoutes from './routes/visitors';
 import authRoutes       from "./routes/auth";
+import passkeyRoutes    from "./routes/passkeys";
 import projectRoutes    from "./routes/projects";
 import milestoneRoutes  from "./routes/milestones";
 import activityRoutes   from "./routes/activities";
@@ -88,17 +90,24 @@ import fileRoutes from "./routes/files";
 import { runDueReportSchedules } from "./lib/reportSchedules";
 import { pruneAuditLog } from "./lib/auditRetention";
 import { runAuditVerification } from "./lib/auditChain";
+import { createAuditCheckpoint } from "./lib/auditCheckpoint";
 import { runPlanAlerts } from "./lib/planAlerts";
 import { runPeriodLifecycle } from "./lib/periodLifecycle";
+import { runExclusiveJob } from "./lib/jobLock";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestId } from "./middleware/requestId";
 import { csrfProtection } from "./middleware/csrf";
 import { optionalAuth, requireAccess, requireAuth } from './middleware/auth';
+import { assertTurnstileProductionConfig } from "./lib/turnstile";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+// Do not start a production instance with a half-enabled CAPTCHA. An explicit
+// TURNSTILE_ENABLED=false is the only supported opt-out.
+assertTurnstileProductionConfig();
 
 app.disable("x-powered-by");
 // A reverse proxy must be trusted explicitly; trusting every forwarded header
@@ -179,10 +188,23 @@ app.use(rateLimit({ windowMs: 60_000, max: 200 }));
 app.use(csrfProtection);
 
 app.get("/api/health", (_req, res) =>
-  res.json({ ok: true, version: "1.0.0", timestamp: new Date().toISOString() })
+  res.json({ ok: true, version: "1.0.0", timestamp: new Date().toISOString(), uptime: process.uptime() })
 );
 
+// Readiness is separate from liveness: a process can be up while PostgreSQL is
+// unavailable, and a load balancer must not route to it in that state.
+app.get("/api/ready", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.set("Cache-Control", "no-store").json({ ok: true, database: "up" });
+  } catch (error) {
+    console.error("[ready] database check failed", error);
+    res.status(503).json({ ok: false, database: "down" });
+  }
+});
+
 app.use("/api/auth",         authRoutes);
+app.use("/api/auth/passkeys", passkeyRoutes);
 app.use("/api/visitors",     visitorRoutes);
 app.use("/api/projects",     projectRoutes);
 app.use("/api/milestones",   milestoneRoutes);
@@ -261,8 +283,9 @@ app.use("/api/media", mediaVideoRoutes);
 // retried here; disabled with SOCIAL_AUTORUN=false.
 if (process.env.SOCIAL_AUTORUN !== "false") {
   const tick = () => {
-    runSocialQueue(20)
-      .then((summary) => {
+    runExclusiveJob("social-queue", () => runSocialQueue(20))
+      .then(({ skipped, result: summary }) => {
+        if (skipped) return;
         if (summary.evaluated) {
           console.log(
             `[social] evaluated=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
@@ -294,16 +317,47 @@ app.use("/api/files", optionalAuth, fileRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Ethio-Biopharma API listening on http://localhost:${PORT}`);
   console.log(`  CORS origin: ${CORS_ORIGIN}`);
+});
+server.requestTimeout = Number(process.env.REQUEST_TIMEOUT_MS) || 30_000;
+server.headersTimeout = Number(process.env.HEADERS_TIMEOUT_MS) || 35_000;
+server.keepAliveTimeout = Number(process.env.KEEP_ALIVE_TIMEOUT_MS) || 65_000;
+
+let shuttingDown = false;
+async function shutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[shutdown] ${signal} received; draining connections`);
+  const force = setTimeout(() => {
+    console.error("[shutdown] graceful drain timed out");
+    process.exit(1);
+  }, 15_000);
+  force.unref();
+  server.close(async () => {
+    try {
+      await prisma.$disconnect();
+    } finally {
+      clearTimeout(force);
+      process.exit(0);
+    }
+  });
+}
+
+process.once("SIGTERM", () => void shutdown("SIGTERM"));
+process.once("SIGINT", () => void shutdown("SIGINT"));
+process.on("unhandledRejection", (reason) => console.error("[process] unhandled rejection", reason));
+process.on("uncaughtException", (error) => {
+  console.error("[process] uncaught exception", error);
+  void shutdown("uncaughtException");
 });
 
 // HR due-date reminders: once shortly after boot, then every six hours so the
 // notification bell stays current without a separate cron service.
 const runRemindersSafely = () =>
-  runHrReminders()
-    .then((result) => console.log(`[hr-reminders] sent ${result.sent}, skipped ${result.skipped}`))
+  runExclusiveJob("hr-reminders", () => runHrReminders())
+    .then(({ skipped, result }) => skipped ? undefined : console.log(`[hr-reminders] sent ${result.sent}, skipped ${result.skipped}`))
     .catch((error) => console.error("[hr-reminders] failed", error));
 
 setTimeout(runRemindersSafely, 10_000);
@@ -313,8 +367,9 @@ setInterval(runRemindersSafely, 6 * 60 * 60 * 1000).unref();
 if (process.env.PLAN_ALERTS_AUTORUN !== "false") {
   const intervalHours = Math.max(1, Number(process.env.PLAN_ALERT_INTERVAL_HOURS) || 6);
   const tick = () => {
-    runPlanAlerts()
-      .then((summary) => {
+    runExclusiveJob("plan-alerts", () => runPlanAlerts(), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result: summary }) => {
+        if (skipped) return;
         if (summary.created || summary.emailsSent || summary.emailsFailed) {
           console.log(
             `[plan-alerts] plans=${summary.evaluated.plans} new=${summary.created} resolved=${summary.resolved} mail=${summary.emailsSent}/${summary.emailsFailed}`
@@ -333,8 +388,9 @@ if (process.env.PLAN_ALERTS_AUTORUN !== "false") {
 if (process.env.PERIOD_LIFECYCLE_AUTORUN !== "false") {
   const intervalHours = Math.max(1, Number(process.env.PERIOD_LIFECYCLE_INTERVAL_HOURS) || 24);
   const tick = () => {
-    runPeriodLifecycle()
-      .then((summary) => {
+    runExclusiveJob("period-lifecycle", () => runPeriodLifecycle(), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result: summary }) => {
+        if (skipped) return;
         const changed =
           summary.prepared.length +
           summary.activated.length +
@@ -355,8 +411,9 @@ if (process.env.PERIOD_LIFECYCLE_AUTORUN !== "false") {
 // Scheduled consolidated-report delivery. Disable with REPORT_SCHEDULES_AUTORUN=false.
 if (process.env.REPORT_SCHEDULES_AUTORUN !== "false") {
   const tick = () => {
-    runDueReportSchedules()
-      .then((summary) => {
+    runExclusiveJob("report-schedules", () => runDueReportSchedules(), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result: summary }) => {
+        if (skipped) return;
         if (summary.evaluated) {
           console.log(
             `[report-schedules] due=${summary.evaluated} sent=${summary.sent} skipped=${summary.skipped} failed=${summary.failed}`
@@ -373,8 +430,9 @@ if (process.env.REPORT_SCHEDULES_AUTORUN !== "false") {
 // Disable with AUDIT_RETENTION_AUTORUN=false.
 if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
   const tick = () => {
-    pruneAuditLog()
-      .then((summary) => {
+    runExclusiveJob("audit-retention", () => pruneAuditLog(), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result: summary }) => {
+        if (skipped) return;
         if (summary.deleted) {
           console.log(`[audit-retention] pruned ${summary.deleted} entries older than ${summary.retentionDays} days`);
         }
@@ -390,8 +448,9 @@ if (process.env.AUDIT_RETENTION_AUTORUN !== "false") {
 // changes the evidence it is checking.
 if (process.env.AUDIT_VERIFY_AUTORUN !== "false") {
   const tick = () => {
-    runAuditVerification("system")
-      .then((result) => {
+    runExclusiveJob("audit-verification", () => runAuditVerification("system"), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result }) => {
+        if (skipped) return;
         if (!result.valid || result.legacyCount || result.truncated) {
           console.log(
             `[audit-chain] valid=${result.valid} checked=${result.checkedCount} legacy=${result.legacyCount} truncated=${result.truncated} brokenAt=${result.brokenAt || "none"}`,
@@ -403,11 +462,27 @@ if (process.env.AUDIT_VERIFY_AUTORUN !== "false") {
   setTimeout(tick, 90_000);
   setInterval(tick, 24 * 60 * 60 * 1000).unref();
 }
+
+// Signed checkpoints are optional until the deployment supplies an Ed25519
+// private key. They anchor the audit head outside the database.
+if (process.env.AUDIT_CHECKPOINT_AUTORUN !== "false" && process.env.AUDIT_CHECKPOINT_PRIVATE_KEY) {
+  const tick = () => {
+    runExclusiveJob("audit-checkpoint", () => createAuditCheckpoint("system"), 2 * 60 * 60 * 1000)
+      .then(({ skipped, result }) => {
+        if (skipped) return;
+        console.log(`[audit-checkpoint] created ${result.id} at head ${result.headId.toString()}`);
+      })
+      .catch((error) => console.error("[audit-checkpoint] run failed", error));
+  };
+  setTimeout(tick, 5 * 60_000);
+  setInterval(tick, 24 * 60 * 60 * 1000).unref();
+}
 // QMS review-due reminders: notify owners of approved documents whose periodic
 // review falls inside the next 30 days. Runs daily, matching the fleet pattern.
 const runQmsRemindersSafely = () =>
-  runQmsReminders()
-    .then((result) => {
+  runExclusiveJob("qms-reminders", () => runQmsReminders())
+    .then(({ skipped, result }) => {
+      if (skipped) return;
       if (result.sent) console.log(`[qms-reminders] sent ${result.sent}`);
     })
     .catch((error) => console.error("[qms-reminders] failed", error));

@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
 import { allows, isAdminUser } from "../lib/access";
 import { logAudit } from "../lib/audit";
+import { withFileScan } from "../lib/fileScan";
 
 /**
  * Job descriptions are HR-owned documents. Files live outside /uploads so the
@@ -99,7 +100,7 @@ router.get("/mine", async (req, res, next) => {
 });
 
 /** HR: upload a new job description. */
-router.post("/", upload.single("file"), async (req, res, next) => {
+router.post("/", withFileScan(upload.single("file")), async (req, res, next) => {
   try {
     if (!canManage(req.user)) {
       if (req.file) removeFile(req.file.path);
@@ -146,7 +147,7 @@ router.post("/", upload.single("file"), async (req, res, next) => {
 });
 
 /** HR: edit metadata and optionally replace the file. */
-router.put("/:id", upload.single("file"), async (req, res, next) => {
+router.put("/:id", withFileScan(upload.single("file")), async (req, res, next) => {
   try {
     if (!canManage(req.user)) {
       if (req.file) removeFile(req.file.path);

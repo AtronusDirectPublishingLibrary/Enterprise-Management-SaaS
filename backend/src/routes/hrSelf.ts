@@ -9,6 +9,7 @@ import { PROFESSIONS, findProfession } from "../lib/professions";
 import { runHrReminders } from "../lib/hrReminders";
 import { cycleForDate } from "../lib/hrCycles";
 import { logAudit } from "../lib/audit";
+import { withFileScan } from "../lib/fileScan";
 import { nextStaffDocumentReference } from "../lib/numbering";
 
 /**
@@ -838,7 +839,7 @@ const documentUpload = multer({
 });
 
 /** Attach a scan (licence, certificate, contract) to a document already filed. */
-router.post("/documents/:id/file", documentUpload.single("file"), async (req, res, next) => {
+router.post("/documents/:id/file", withFileScan(documentUpload.single("file")), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: "A PDF or image file is required" });
     const existing = await prisma.staffDocument.findFirst({
@@ -945,10 +946,10 @@ function removeSignatureFile(url?: string | null) {
  */
 router.post(
   "/signature",
-  signatureUpload.fields([
+  withFileScan(signatureUpload.fields([
     { name: "signature", maxCount: 1 },
     { name: "initials", maxCount: 1 },
-  ]),
+  ])),
   async (req, res, next) => {
     try {
       const files = req.files as Record<string, Express.Multer.File[]> | undefined;
@@ -1062,7 +1063,7 @@ function removeAvatarFile(url?: string | null) {
 }
 
 /** Upload or replace the signed-in person's portrait. */
-router.post("/avatar", avatarUpload.single("avatar"), async (req, res, next) => {
+router.post("/avatar", withFileScan(avatarUpload.single("avatar")), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Choose a portrait photo" });
     const current = await prisma.user.findUnique({

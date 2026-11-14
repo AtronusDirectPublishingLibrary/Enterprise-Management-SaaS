@@ -204,5 +204,6 @@ configured, alerts are still generated in the app and email sends are marked as 
   `brand/`, `hero/`, `media/` and `news/`; archive, QMS, HR, CV and signature files are
   delivered through authenticated `/api/files/...` routes. See `docs/AUDIT_READINESS.md`.
 - Auth uses HttpOnly cookies; JWT secret must be set in backend/.env. Authenticated
-  mutations also use the double-submit `ep_csrf` cookie, and login supports optional
-  Cloudflare Turnstile plus account lockout. See `docs/AUDIT_READINESS.md`.
+  mutations also use the double-submit `ep_csrf` cookie. Login supports Cloudflare
+  Turnstile plus account lockout; production Turnstile is fail-closed when
+  enabled. See `docs/AUDIT_READINESS.md`.

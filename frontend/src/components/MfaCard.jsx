@@ -17,6 +17,7 @@ export default function MfaCard() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
 
   useEffect(() => {
     api.get("/auth/mfa/status")
@@ -37,10 +38,11 @@ export default function MfaCard() {
     event.preventDefault();
     setBusy(true); setError(""); setMessage("");
     try {
-      await api.post("/auth/mfa/enable", { token: code.trim() });
+      const result = await api.post("/auth/mfa/enable", { token: code.trim() });
       setStatus({ enabled: true });
       setSetup(null);
       setCode("");
+      setRecoveryCodes(result.recoveryCodes || []);
       setMessage("Two-factor authentication is now on. You will be asked for a code at every sign-in.");
     } catch (e) {
       setError(e.message);
@@ -69,23 +71,56 @@ export default function MfaCard() {
     } catch { /* clipboard may be blocked; the key is visible on screen */ }
   }
 
+  const secondFactorOn = Boolean(status?.enabled || (status?.passkeyCount || 0) > 0);
+
   return (
     <section className="home-card" aria-label="Account security">
       <div className="home-card-head">
         <div>
           <div className="home-eyebrow">Account security</div>
           <h2 className="d-flex align-items-center gap-2">
-            {status?.enabled ? <ShieldCheck size={20} /> : <KeyRound size={20} />}
+            {secondFactorOn ? <ShieldCheck size={20} /> : <KeyRound size={20} />}
             Two-factor authentication
           </h2>
         </div>
-        <span className={`badge ${status?.enabled ? "bg-success" : "bg-light text-dark border"}`}>
-          {status?.enabled ? "On" : "Off"}
+        <span className={`badge ${secondFactorOn ? "bg-success" : "bg-light text-dark border"}`}>
+          {status?.enabled ? "On" : secondFactorOn ? "Passkey" : "Off"}
         </span>
       </div>
 
+      {status?.required && !status?.enabled && (
+        <div className="alert alert-warning py-2 small">
+          Your role requires authenticator-app two-factor authentication. Set it up before using other workspaces;
+          passkeys remain an optional convenience and do not replace the password fallback.
+        </div>
+      )}
+
       {message && <div className="alert alert-success py-2 small">{message}</div>}
       {error && <div className="alert alert-danger py-2 small">{error}</div>}
+
+      {recoveryCodes.length > 0 && (
+        <div className="alert alert-warning small">
+          <strong>Save these recovery codes now.</strong> They are shown once and each can be used once if your
+          authenticator is unavailable. Store them offline, not in the same place as your password.
+          <div className="d-flex flex-wrap gap-2 my-2">
+            {recoveryCodes.map((recoveryCode) => (
+              <code key={recoveryCode} className="p-1 bg-white rounded border">{recoveryCode}</code>
+            ))}
+          </div>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => navigator.clipboard?.writeText(recoveryCodes.join("\n"))}
+            >
+              Copy all codes
+            </button>
+            <button type="button" className="btn btn-sm btn-light" onClick={() => setRecoveryCodes([])}>
+              I have saved them
+            </button>
+          </div>
+        </div>
+      )}
 
       {status?.enabled ? (
         <form onSubmit={disableMfa} className="mt-2">

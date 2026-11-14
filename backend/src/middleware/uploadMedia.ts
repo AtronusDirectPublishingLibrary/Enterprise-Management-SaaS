@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { withFileScan } from "../lib/fileScan";
 
 /** Uploads for the public Media section (video, poster and WebVTT captions). */
 
@@ -37,8 +38,8 @@ export const uploadMedia = multer({
   },
 });
 
-export const MEDIA_UPLOAD_FIELDS = uploadMedia.fields([
+export const MEDIA_UPLOAD_FIELDS = withFileScan(uploadMedia.fields([
   { name: "video", maxCount: 1 },
   { name: "poster", maxCount: 1 },
   { name: "captions", maxCount: 1 },
-]);
+]));

@@ -10,6 +10,7 @@ import {
   toPublicPayload,
 } from "../lib/siteSettings";
 import { invalidateVisitorCache } from "../lib/ga4";
+import { withFileScan } from "../lib/fileScan";
 
 const router = Router();
 
@@ -54,7 +55,7 @@ function removeUploadedFile(url: string) {
 }
 
 /** Admin: upload a replacement PNG logo (used in the public header, footer and login). */
-router.post("/logo", requireAuth, requireRole("admin"), logoUpload.single("logo"), async (req, res, next) => {
+router.post("/logo", requireAuth, requireRole("admin"), withFileScan(logoUpload.single("logo")), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Choose a PNG logo to upload" });
     if (!isPng(req.file)) {

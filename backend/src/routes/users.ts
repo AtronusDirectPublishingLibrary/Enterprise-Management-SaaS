@@ -37,6 +37,7 @@ router.get("/", async (_req, res, next) => {
         lastLogin: true, 
         createdDate: true, 
         forceChange: true,
+        mfaEnabled: true,
       },
       orderBy: { username: "asc" },
     });
@@ -105,6 +106,37 @@ router.delete("/:username", async (req, res, next) => {
     await prisma.user.delete({ where: { username: req.params.username } });
     await logAudit("PMS", "USER_DELETED", req.user!.username, { target: req.params.username });
     res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+/** Break-glass reset when an employee loses both authenticator and recovery codes. */
+router.post("/:username/mfa-reset", async (req, res, next) => {
+  try {
+    if (req.params.username === req.user!.username) {
+      return res.status(400).json({ message: "Use Account Security to manage your own factors." });
+    }
+    const target = await prisma.user.findUnique({ where: { username: req.params.username } });
+    if (!target) return res.status(404).json({ message: "User not found" });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: target.id },
+        data: {
+          mfaEnabled: false,
+          mfaSecret: null,
+          tokenVersion: { increment: 1 },
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          lastFailedLoginAt: null,
+        },
+      }),
+      prisma.mfaRecoveryCode.deleteMany({ where: { userId: target.id } }),
+      prisma.webAuthnCredential.deleteMany({ where: { userId: target.id } }),
+    ]);
+    await logAudit("SECURITY", "MFA_RESET_BY_ADMIN", req.user!.username, {
+      target: target.username,
+      ip: req.ip,
+    });
+    res.json({ success: true, message: "Two-factor factors reset. The user must sign in and enroll again." });
   } catch (e) { next(e); }
 });
 

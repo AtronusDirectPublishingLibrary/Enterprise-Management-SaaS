@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { verifyAuditChain } from "../lib/auditChain";
 import { buildAuditExport } from "../lib/auditExport";
 import { logAudit } from "../lib/audit";
+import { createAuditCheckpoint, verifyAuditCheckpoint } from "../lib/auditCheckpoint";
 
 const router = Router();
 
@@ -67,6 +68,39 @@ router.get("/history/:entityType/:entityId", async (req, res) => {
   } catch (error) {
     console.error("[audit] field history failed", error);
     res.status(500).json({ error: "Failed to load field history" });
+  }
+});
+
+// GET /api/audit/checkpoints - signed external anchors for the chain head.
+router.get("/checkpoints", async (_req, res) => {
+  try {
+    const rows = await prisma.auditCheckpoint.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
+    res.set("Cache-Control", "no-store").json(
+      rows.map((row) => ({
+        ...row,
+        headId: row.headId.toString(),
+        valid: verifyAuditCheckpoint(row),
+      })),
+    );
+  } catch (error) {
+    console.error("[audit] checkpoints failed", error);
+    res.status(500).json({ error: "Failed to load audit checkpoints" });
+  }
+});
+
+// POST /api/audit/checkpoints - create a signed checkpoint. Signing is a
+// privileged action and requires the private key to be configured.
+router.post("/checkpoints", async (req: any, res) => {
+  try {
+    if (!["admin", "executive"].includes(req.user?.role)) {
+      return res.status(403).json({ error: "Only administrators or executives can create checkpoints" });
+    }
+    const checkpoint = await createAuditCheckpoint(req.user.username);
+    res.status(201).json({ ...checkpoint, headId: checkpoint.headId.toString() });
+  } catch (error: any) {
+    if (error?.status) return res.status(error.status).json({ error: error.message });
+    console.error("[audit] checkpoint failed", error);
+    res.status(500).json({ error: "Failed to create an audit checkpoint" });
   }
 });
 

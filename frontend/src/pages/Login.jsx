@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck } from "lucide-react";
+import { Fingerprint, ShieldCheck } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../lib/auth";
+import { api } from "../lib/api";
 import BrandLogo from "../components/BrandLogo";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginWithPasskey } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -14,10 +15,36 @@ export default function Login() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeysEnabled, setPasskeysEnabled] = useState(false);
+  const buildSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
+  const [siteKey, setSiteKey] = useState(buildSiteKey);
+  const [turnstileRequired, setTurnstileRequired] = useState(false);
+  const [turnstileAction, setTurnstileAction] = useState("login");
+  const [configLoading, setConfigLoading] = useState(true);
   const turnstileBox = useRef(null);
   const turnstileWidget = useRef(null);
   const [turnstileToken, setTurnstileToken] = useState("");
+
+  useEffect(() => {
+    api.get("/auth/passkeys/status")
+      .then((data) => setPasskeysEnabled(Boolean(data?.enabled) && typeof window.PublicKeyCredential !== "undefined"))
+      .catch(() => setPasskeysEnabled(false));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.get("/auth/login-config")
+      .then((data) => {
+        if (!active) return;
+        setTurnstileRequired(Boolean(data?.turnstileRequired));
+        setTurnstileAction(data?.turnstileAction || "login");
+        if (!buildSiteKey && data?.turnstileSiteKey) setSiteKey(data.turnstileSiteKey);
+      })
+      .catch(() => undefined)
+      .finally(() => { if (active) setConfigLoading(false); });
+    return () => { active = false; };
+  }, [buildSiteKey]);
 
   useEffect(() => {
     if (!siteKey) return undefined;
@@ -28,6 +55,7 @@ export default function Login() {
       turnstileBox.current.innerHTML = "";
       turnstileWidget.current = window.turnstile.render(turnstileBox.current, {
         sitekey: siteKey,
+        action: turnstileAction,
         callback: (token) => setTurnstileToken(token),
         "expired-callback": () => setTurnstileToken(""),
         "error-callback": () => setTurnstileToken(""),
@@ -57,7 +85,7 @@ export default function Login() {
       }
       turnstileWidget.current = null;
     };
-  }, [siteKey]);
+  }, [siteKey, turnstileAction]);
 
   const resetTurnstile = () => {
     setTurnstileToken("");
@@ -69,10 +97,14 @@ export default function Login() {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+    if (!mfaRequired && turnstileRequired && !turnstileToken) {
+      setErr("Complete the security check before signing in.");
+      return;
+    }
     setBusy(true);
     try {
-      await login(username.trim(), password, mfaRequired ? code.trim() : undefined, turnstileToken);
-      navigate("/dashboard");
+      const signedIn = await login(username.trim(), password, mfaRequired ? code.trim() : undefined, turnstileToken);
+      navigate(signedIn.mfaEnrollmentRequired ? "/account-security" : "/dashboard");
     } catch (e2) {
       console.error("Login error:", e2);
       if (e2.data?.mfaRequired) {
@@ -84,6 +116,23 @@ export default function Login() {
       setErr(e2.message || "Login failed");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function onPasskey() {
+    if (!username.trim()) {
+      setErr("Enter your username first, then use your passkey.");
+      return;
+    }
+    setErr("");
+    setPasskeyBusy(true);
+    try {
+      const signedIn = await loginWithPasskey(username.trim());
+      navigate(signedIn.mfaEnrollmentRequired ? "/account-security" : "/dashboard");
+    } catch (e2) {
+      setErr(e2.message || "Passkey sign-in was cancelled or failed.");
+    } finally {
+      setPasskeyBusy(false);
     }
   }
 
@@ -146,13 +195,13 @@ export default function Login() {
               onChange={(e) => setCode(e.target.value)}
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
-              placeholder="6-digit code"
+              maxLength={14}
+              placeholder="6-digit or recovery code"
               autoFocus
               required
             />
             <div className="form-text">
-              Open your authenticator app and enter the current 6-digit code.
+              Enter the 6-digit code from your authenticator app, or a recovery code if you lost the device.
             </div>
           </div>
         )}
@@ -166,13 +215,32 @@ export default function Login() {
           </div>
         ) : null}
 
+        {turnstileRequired && !siteKey && !mfaRequired ? (
+          <div className="alert alert-danger py-2 small">
+            Security-check configuration is incomplete: the server requires Cloudflare Turnstile but no site key is
+            available. Contact IT before signing in.
+          </div>
+        ) : null}
+
         <button
           type="submit"
           className="btn-brand w-100 py-2 fs-5"
-          disabled={busy || Boolean(siteKey && !mfaRequired && !turnstileToken)}
+          disabled={busy || configLoading || Boolean(!mfaRequired && turnstileRequired && (!siteKey || !turnstileToken))}
         >
           {busy ? "Signing in..." : mfaRequired ? "Verify and sign in" : "Sign in"}
         </button>
+
+        {passkeysEnabled && !mfaRequired ? (
+          <button
+            type="button"
+            className="btn btn-outline-secondary w-100 mt-2 d-flex align-items-center justify-content-center gap-2"
+            onClick={onPasskey}
+            disabled={passkeyBusy || busy}
+          >
+            <Fingerprint size={17} />
+            {passkeyBusy ? "Waiting for your device…" : "Sign in with a passkey"}
+          </button>
+        ) : null}
 
         <div className="mt-4 pt-3 border-top text-center" style={{ fontSize: "0.8rem", color: "#6c757d" }}>
           Use the account issued to you by the system administrator. Access is recorded in the audit trail.

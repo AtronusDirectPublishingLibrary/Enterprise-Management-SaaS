@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { scanUploadedFile } from "../lib/fileScan";
 
 const uploadRoot = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadRoot)) {
@@ -39,22 +40,28 @@ const imageFilter = (_req: any, file: any, cb: any) => {
   else cb(new Error("Use a JPG, PNG, WebP, GIF or AVIF image"));
 };
 
-export const upload = multer({
+function withScan(uploader: multer.Multer) {
+  const single = uploader.single.bind(uploader);
+  (uploader as any).single = (field: string) => [single(field), scanUploadedFile];
+  return uploader;
+}
+
+export const upload = withScan(multer({
   storage,
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: documentFilter,
-});
+}));
 
 /** Internal archive documents are stored outside the public static roots. */
-export const uploadDocument = multer({
+export const uploadDocument = withScan(multer({
   storage: documentStorage,
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: documentFilter,
-});
+}));
 
 /** News and other editorial images. */
-export const uploadImage = multer({
+export const uploadImage = withScan(multer({
   storage: newsImageStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: imageFilter,
-});
+}));

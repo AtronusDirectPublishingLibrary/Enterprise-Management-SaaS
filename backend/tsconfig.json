@@ -12,5 +12,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src/**/*", "prisma/**/*"]
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["src/**/*.test.ts"]
 }
